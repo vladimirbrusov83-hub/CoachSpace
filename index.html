@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoachSpace</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f6f8;--bg2:#ffffff;--bg3:#f0f1f4;--bg4:#e8eaee;--bg5:#dde0e6;
+  --border:#d4d7de;--text:#111111;--muted:#9da3ae;--muted2:#6b7280;
+  --danger:#dc2626;--blue:#2563eb;--green:#16a34a;--orange:#ea6c00;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:13px;overflow:hidden;height:100vh}
+
+/* ── INPUTS / BTNS ── */
+input[type=text],input[type=email],input[type=password],textarea{
+  width:100%;background:var(--bg4);border:1px solid var(--border);
+  border-radius:5px;padding:6px 9px;color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .15s}
+input:focus,textarea:focus{border-color:var(--blue)}
+textarea{resize:vertical;min-height:52px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 13px;
+  border-radius:5px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;
+  cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn-accent{background:#111;color:#fff}.btn-accent:hover{background:#333}
+.btn-accent:disabled{background:#999;cursor:not-allowed}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:#1d4ed8}
+.btn-ghost{background:transparent;color:var(--muted2);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--muted2)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-xs{padding:3px 8px;font-size:10px}
+
+/* ── LOADING ── */
+#loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;
+  justify-content:center;z-index:9999;flex-direction:column;gap:12px}
+.loading-logo{font-family:'Syne',sans-serif;font-size:24px;font-weight:800}
+.loading-spinner{width:20px;height:20px;border:2px solid var(--border);
+  border-top-color:#111;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── LOGIN ── */
+#login-screen{min-height:100vh;display:none;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 60% 50% at 50% 0%,#e8edf5,transparent),var(--bg)}
+.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:36px 32px;width:340px}
+.login-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:24px}
+.role-tabs{display:flex;background:var(--bg3);border-radius:6px;padding:3px;gap:2px;margin-bottom:18px}
+.role-tab{flex:1;padding:6px;border:none;border-radius:4px;background:transparent;color:var(--muted);
+  font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .18s}
+.role-tab.active{background:#111;color:#fff;font-weight:700}
+.field{margin-bottom:11px}
+label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.login-toggle{text-align:center;margin-top:14px;font-size:11px;color:var(--muted)}
+.login-toggle a{color:var(--blue);cursor:pointer;text-decoration:none}
+.login-toggle a:hover{text-decoration:underline}
+.login-err{background:#fef2f2;border:1px solid #fecaca;border-radius:5px;
+  padding:7px 10px;font-size:11px;color:var(--danger);margin-bottom:10px;display:none}
+
+/* ── SHELL ── */
+#app{display:none;height:100vh;flex-direction:column}
+.topbar{height:48px;display:flex;align-items:center;padding:0 14px;
+  border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;gap:10px;z-index:50}
+.topbar-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.3px;flex-shrink:0}
+.topbar-center{flex:1;display:flex;align-items:center;justify-content:center;gap:7px}
+.cal-nav-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);padding:3px 11px;cursor:pointer;font-size:17px;line-height:1;transition:all .13s}
+.cal-nav-btn:hover{background:var(--bg4)}
+.cal-month-label{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;min-width:145px;text-align:center}
+.today-btn{font-size:11px;padding:4px 10px;border-radius:5px;background:var(--bg3);
+  border:1px solid var(--border);color:var(--muted2);cursor:pointer;transition:all .13s}
+.today-btn:hover{color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.user-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2)}
+.avatar{width:26px;height:26px;border-radius:50%;background:#111;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;
+  font-family:'Syne',sans-serif;flex-shrink:0}
+.app-body{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:200px;background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.8px;padding:12px 13px 5px}
+.client-item{display:flex;align-items:center;gap:8px;padding:7px 13px;cursor:pointer;
+  transition:background .1s;border-left:2px solid transparent}
+.client-item:hover{background:var(--bg3)}
+.client-item.active{background:var(--bg3);border-left-color:#111}
+.ci-info{flex:1;min-width:0}
+.ci-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-email{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.sb-footer{padding:10px 13px;border-top:1px solid var(--border);margin-top:auto}
+.add-client-toggle{display:flex;align-items:center;gap:5px;background:transparent;border:none;
+  color:var(--muted2);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;
+  padding:4px 0;transition:color .12s;width:100%}
+.add-client-toggle:hover{color:var(--text)}
+.add-client-form{display:none;margin-top:9px}
+.add-client-form.open{display:block}
+.add-client-form .field{margin-bottom:6px}
+
+/* ── CONTENT ── */
+.content-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── PASTE BANNER ── */
+.paste-banner{background:#eff6ff;border-bottom:1px solid #bfdbfe;
+  padding:6px 14px;display:none;align-items:center;gap:8px;font-size:12px;color:#1d4ed8;flex-shrink:0}
+
+/* ── CALENDAR HEADER ── */
+.cal-day-headers{display:grid;grid-template-columns:repeat(7,1fr);
+  border-bottom:1px solid var(--border);border-left:1px solid var(--border);flex-shrink:0;background:var(--bg2)}
+.cal-dh{text-align:center;font-size:10px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.6px;padding:6px 0;border-right:1px solid var(--border)}
+.cal-dh:last-child{border-right:none}
+.month-row{grid-column:1/-1;padding:7px 10px 5px;
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--muted2);
+  border-bottom:1px solid var(--border);background:var(--bg3);
+  letter-spacing:.5px;text-transform:uppercase}
+.cal-scroll{flex:1;overflow-y:auto;overflow-x:hidden}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border-left:1px solid var(--border)}
+
+/* ── DAY CELL ── */
+.day-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);
+  min-height:120px;position:relative;overflow:hidden;transition:min-height .15s}
+.day-cell.editing{overflow:visible;z-index:30}
+.day-cell[data-col="7"]{border-right:none}
+.day-cell.paste-mode{cursor:copy}
+.day-cell.paste-mode:hover{background:rgba(37,99,235,.05)}
+.day-num-row{display:flex;align-items:center;justify-content:space-between;padding:5px 6px 2px}
+.day-num{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--muted2);
+  line-height:1;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.day-cell.today .day-num{background:#111;color:#fff;font-weight:800}
+.day-cell.other-month .day-num{opacity:.28}
+.day-add-btn{opacity:0;background:transparent;border:none;color:var(--muted);
+  font-size:20px;font-weight:300;cursor:pointer;line-height:1;padding:0 4px;transition:opacity .12s}
+.day-cell:hover .day-add-btn{opacity:1}
+.day-add-btn:hover{color:#111}
+
+/* ── WORKOUT BLOCK ── */
+.workout-block{margin:0 4px 3px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:5px;overflow:hidden;transition:border-color .1s}
+.workout-block.is-done{background:#f0fdf4;border-color:#bbf7d0}
+.workout-block.is-copy-src{border-color:var(--blue)}
+.wb-header{display:flex;align-items:center;gap:5px;padding:4px 6px;
+  background:var(--bg4);border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.workout-block.is-done .wb-header{background:#dcfce7;border-bottom-color:#bbf7d0}
+.wb-header:hover{filter:brightness(.97)}
+.wb-status{font-size:8px;flex-shrink:0;line-height:1}
+.wb-title{font-size:11px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wb-ex-count{font-size:9px;color:var(--muted);flex-shrink:0}
+.wb-actions{display:flex;gap:1px;opacity:0;transition:opacity .1s;flex-shrink:0}
+.workout-block:hover .wb-actions{opacity:1}
+.wb-btn{background:transparent;border:none;color:var(--muted2);font-size:11px;
+  cursor:pointer;padding:2px 4px;border-radius:3px;transition:all .1s;line-height:1}
+.wb-btn:hover{background:var(--bg2);color:var(--text)}
+.wb-btn.del:hover{color:var(--danger)}
+.wb-exercises{padding:3px 6px 5px}
+.ex-group-preview{margin-bottom:2px}
+.ss-tag{font-size:8px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.3px}
+.ex-line-preview{font-size:10px;color:var(--muted2);line-height:1.5;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-line-preview b{color:var(--text);font-weight:500}
+.ex-free-preview{color:var(--muted);font-size:9px;padding-left:10px;line-height:1.4;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── IN-CELL EDITOR ── */
+.cell-editor{
+  position:absolute;top:0;left:0;width:300px;
+  background:var(--bg2);border:2px solid var(--orange);border-radius:8px;
+  box-shadow:0 8px 32px rgba(0,0,0,.14);
+  padding:10px 13px 12px;z-index:100;
+}
+.day-cell[data-col="5"] .cell-editor,
+.day-cell[data-col="6"] .cell-editor,
+.day-cell[data-col="7"] .cell-editor{left:auto;right:0}
+.ed-title-input{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
+  background:transparent;border:none;color:var(--text);padding:0;width:100%;outline:none;
+  margin-bottom:5px;display:block}
+.ed-title-input::placeholder{color:var(--muted);font-weight:400}
+.ed-notes-input{display:block;width:100%;background:transparent;border:none;resize:none;
+  font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted2);
+  outline:none;min-height:18px;padding:0 0 7px;line-height:1.5;border-bottom:1px solid var(--border)}
+.ed-notes-input::placeholder{color:var(--muted)}
+.ed-notes-input:focus{color:var(--text)}
+#ed-groups{}
+.ed-ex-item{padding:5px 0 0;position:relative;display:flex;flex-direction:column}
+.ed-ex-item.drag-over{border-top:2px solid var(--blue)}
+.ed-ex-header{display:flex;align-items:center;gap:5px}
+.ed-drag-handle{color:var(--muted);font-size:13px;cursor:grab;padding:0 1px;
+  opacity:0;transition:opacity .1s;user-select:none;flex-shrink:0}
+.ed-ex-item:hover .ed-drag-handle{opacity:1}
+.ed-drag-handle:active{cursor:grabbing}
+.ed-ex-lbl{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  color:var(--muted2);min-width:22px;flex-shrink:0;transition:color .15s}
+.ed-ex-item.is-superset .ed-ex-lbl{color:var(--blue)}
+.ed-ex-name-inp{flex:1;background:transparent;border:none;outline:none;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text);padding:1px 0}
+.ed-ex-name-inp::placeholder{color:var(--muted)}
+.ed-ex-del{background:transparent;border:none;color:transparent;
+  font-size:13px;cursor:pointer;padding:0 2px;line-height:1;transition:color .1s;flex-shrink:0}
+.ed-ex-item:hover .ed-ex-del{color:var(--muted)}
+.ed-ex-del:hover{color:var(--danger)!important}
+.ed-ex-free-inp{display:block;width:100%;background:transparent;border:none;resize:none;
+  font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted2);
+  padding:1px 0 4px 26px;outline:none;line-height:1.6;overflow:hidden;min-height:22px}
+.ed-ex-free-inp::placeholder{color:var(--muted)}
+.ed-ex-free-inp:focus{color:var(--text)}
+.ed-divider{display:flex;align-items:center;height:20px;position:relative}
+.ed-divider::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border)}
+.ed-ss-btn{position:relative;z-index:1;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif;
+  background:var(--bg2);border:1px solid var(--border);color:var(--muted);border-radius:100px;
+  padding:0 9px;cursor:pointer;white-space:nowrap;line-height:18px;transition:all .15s;margin-left:22px}
+.ed-ss-btn:hover{border-color:var(--blue);color:var(--blue)}
+.ed-ss-btn.active{background:rgba(37,99,235,.08);border-color:var(--blue);color:var(--blue)}
+.ed-add-ex-link{display:inline-flex;align-items:center;gap:3px;background:transparent;border:none;
+  color:var(--muted);font-size:12px;cursor:pointer;padding:6px 0 1px;
+  font-family:'DM Sans',sans-serif;transition:color .12s}
+.ed-add-ex-link:hover{color:#111}
+.ed-footer{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+
+/* ── UNDO BAR ── */
+.undo-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:#111;color:#fff;border-radius:8px;padding:9px 16px;
+  display:flex;align-items:center;gap:12px;font-size:12px;z-index:9999;
+  animation:slideUp .2s ease;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.undo-btn{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;
+  border-radius:5px;padding:2px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:background .12s}
+.undo-btn:hover{background:rgba(255,255,255,.15)}
+
+/* ── CLIENT VIEW ── */
+#client-view{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.cv-topbar{display:flex;align-items:center;gap:8px;padding:10px 16px;
+  border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.cv-week-nav-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);padding:3px 10px;cursor:pointer;font-size:15px;line-height:1;transition:all .13s}
+.cv-week-nav-btn:hover{background:var(--bg4)}
+.cv-week-label{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex:1;text-align:center}
+.cv-scroll{flex:1;overflow-y:auto;padding:16px 18px}
+.week-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;
+  justify-content:space-between;transition:all .13s;max-width:480px}
+.week-card:hover{border-color:#111;transform:translateX(2px)}
+.week-card.is-done{background:#f0fdf4;border-color:#bbf7d0}
+.wc-title{font-size:13px;font-weight:600;margin-bottom:2px}
+.wc-meta{font-size:11px;color:var(--muted)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.status-dot.done{background:var(--green)}
+.cv-detail{overflow-y:auto;padding:16px 18px}
+.client-ex-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:12px 14px;margin-bottom:8px;max-width:520px}
+.cex-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:6px}
+
+/* ── MISC ── */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 20px;text-align:center}
+.empty-icon{font-size:34px;margin-bottom:11px;opacity:.3}
+.empty-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:5px}
+.empty-sub{font-size:12px;color:var(--muted)}
+.page-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:3px}
+.page-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.tag{display:inline-block;padding:1px 8px;border-radius:100px;font-size:10px;font-weight:700;
+  background:rgba(0,0,0,.07);color:#111;border:1px solid rgba(0,0,0,.15)}
+.back-btn{display:inline-flex;align-items:center;gap:5px;color:var(--muted);
+  font-size:12px;cursor:pointer;margin-bottom:14px;transition:color .1s}
+.back-btn:hover{color:var(--text)}
+.notif{position:fixed;bottom:20px;right:16px;background:#111;border:1px solid #333;
+  border-radius:7px;padding:9px 14px;font-size:12px;color:#fff;z-index:9998;
+  animation:slideUp .2s ease;pointer-events:none}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:10px}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="loading-logo">CoachSpace</div>
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">CoachSpace</div>
+    <div class="login-sub">Remote coaching, simplified.</div>
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="setRole('coach')">I'm a Coach</button>
+      <button class="role-tab" onclick="setRole('client')">I'm a Client</button>
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+    <div class="field" id="login-name-field"><label>Name</label><input type="text" id="login-name" placeholder="Your name"></div>
+    <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+    <button class="btn btn-accent" id="login-btn" style="width:100%;margin-top:6px;padding:10px;font-size:13px" onclick="doLogin()">Enter CoachSpace →</button>
+    <div class="login-toggle" id="login-toggle">
+      No account? <a onclick="toggleSignup()">Sign up free</a>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">CoachSpace</div>
+    <div class="topbar-center" id="cal-nav-bar" style="display:none">
+      <button class="cal-nav-btn" onclick="scrollMonths(-1)">‹</button>
+      <button class="today-btn" onclick="scrollToToday()">Today</button>
+      <div class="cal-month-label" id="cal-month-label">—</div>
+      <button class="cal-nav-btn" onclick="scrollMonths(1)">›</button>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip"><div class="avatar" id="top-avatar">?</div><span id="top-name"></span></div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <div class="sidebar" id="sidebar" style="display:none">
+      <div class="sb-label">Clients</div>
+      <div id="client-list-el"></div>
+      <div class="sb-footer">
+        <button class="add-client-toggle" onclick="toggleAddClient(this)">
+          <span style="font-size:14px;font-weight:300">+</span> Add client
+        </button>
+        <div class="add-client-form" id="add-client-form">
+          <div class="field"><input type="email" id="nc-email" placeholder="Email"></div>
+          <div class="field"><input type="text" id="nc-name" placeholder="Name"></div>
+          <button class="btn btn-accent btn-sm" style="width:100%" onclick="addClient()">Add Client</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-area" id="cal-content" style="display:none">
+      <div class="paste-banner" id="paste-banner"></div>
+      <div class="cal-day-headers">
+        <div class="cal-dh">Mon</div><div class="cal-dh">Tue</div><div class="cal-dh">Wed</div>
+        <div class="cal-dh">Thu</div><div class="cal-dh">Fri</div><div class="cal-dh">Sat</div><div class="cal-dh">Sun</div>
+      </div>
+      <div class="cal-scroll" id="cal-scroll">
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+    </div>
+
+    <div class="content-area" id="coach-empty" style="display:none">
+      <div class="empty-state">
+        <div class="empty-icon">👈</div>
+        <div class="empty-title">Select a client</div>
+        <div class="empty-sub">Choose a client from the sidebar to view their calendar.</div>
+      </div>
+    </div>
+
+    <div id="client-view" style="display:none">
+      <div class="cv-topbar">
+        <button class="cv-week-nav-btn" onclick="cvShiftWeek(-1)">‹</button>
+        <button class="today-btn" onclick="cvGoToday()">Today</button>
+        <div class="cv-week-label" id="cv-week-label">—</div>
+        <button class="cv-week-nav-btn" onclick="cvShiftWeek(1)">›</button>
+      </div>
+      <div class="cv-scroll" id="cv-scroll">
+        <div id="cv-week-list"><div id="cv-list"></div></div>
+        <div id="cv-detail" style="display:none">
+          <div class="back-btn" onclick="cvBack()">← Back to week</div>
+          <div id="cv-detail-content"></div>
+          <div style="max-width:520px;margin-top:16px">
+            <button class="btn btn-accent" onclick="markDone()">Mark as Done ✓</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════
+//  SUPABASE INIT
+// ══════════════════════════════════
+const SUPABASE_URL = 'https://zgmybxpaserhlgiugwpb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_0alk20hGmQUXbFnoiyuY1g_d2qRQTjK';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ══════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════
+const DS = d => d.toISOString().slice(0,10);
+const TODAY = DS(new Date());
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
+function mondayOf(d){const t=new Date(d);t.setHours(0,0,0,0);const dow=t.getDay();t.setDate(t.getDate()-(dow===0?6:dow-1));return t;}
+function weekLabel(mon){
+  const sun=addDays(mon,6);
+  const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return `${fmt(mon)} – ${fmt(sun)}`;
+}
+
+// ══════════════════════════════════
+//  STATE
+// ══════════════════════════════════
+let currentUser=null, currentRole='coach', selectedClientId=null;
+let clientsCache=[], workoutsCache={};
+let copyState=null;
+let editorDate=null, editorWorkoutId=null, edGroupCounter=0;
+let viewingWorkoutId=null;
+let undoTimer=null, undoData=null;
+let cvWeekOffset=0;
+let isSignup=false;
+const MONTHS_BEFORE=3, MONTHS_AFTER=12;
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// ══════════════════════════════════
+//  BOOT — check session
+// ══════════════════════════════════
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  hide('loading-screen');
+  if(session){
+    currentUser=session.user;
+    await initApp();
+  } else {
+    show('login-screen','flex');
+  }
+}
+
+// ══════════════════════════════════
+//  LOGIN / SIGNUP
+// ══════════════════════════════════
+function setRole(r){
+  currentRole=r;
+  document.querySelectorAll('.role-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&r==='coach')||(i===1&&r==='client')));
+  document.getElementById('login-name-field').style.display=r==='coach'&&isSignup?'':'none';
+}
+function toggleSignup(){
+  isSignup=!isSignup;
+  document.getElementById('login-toggle').innerHTML=isSignup
+    ?'Have an account? <a onclick="toggleSignup()">Sign in</a>'
+    :'No account? <a onclick="toggleSignup()">Sign up free</a>';
+  document.getElementById('login-btn').textContent=isSignup?'Create Account →':'Enter CoachSpace →';
+  document.getElementById('login-name-field').style.display=(isSignup&&currentRole==='coach')?'':'none';
+  document.getElementById('login-err').style.display='none';
+}
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const password=document.getElementById('login-password').value;
+  const name=document.getElementById('login-name').value.trim();
+  const errEl=document.getElementById('login-err');
+  const btn=document.getElementById('login-btn');
+  errEl.style.display='none';
+  if(!email||!password){showErr('Please fill in all fields');return;}
+  btn.disabled=true;btn.textContent='Loading…';
+  if(isSignup){
+    const {error}=await sb.auth.signUp({
+      email,password,
+      options:{data:{role:currentRole,name:name||email.split('@')[0]}}
+    });
+    if(error){showErr(error.message);btn.disabled=false;btn.textContent='Create Account →';return;}
+    notify('Account created! Signing you in…');
+    const {data,error:e2}=await sb.auth.signInWithPassword({email,password});
+    if(e2){showErr(e2.message);btn.disabled=false;return;}
+    currentUser=data.user;
+  } else {
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error){showErr(error.message);btn.disabled=false;btn.textContent='Enter CoachSpace →';return;}
+    currentUser=data.user;
+  }
+  hide('login-screen');
+  await initApp();
+}
+function showErr(msg){
+  const e=document.getElementById('login-err');e.textContent=msg;e.style.display='block';
+}
+async function doLogout(){
+  await sb.auth.signOut();
+  currentUser=null;clientsCache=[];workoutsCache={};selectedClientId=null;copyState=null;
+  hide('app');show('login-screen','flex');
+  document.getElementById('login-btn').disabled=false;
+  document.getElementById('login-btn').textContent='Enter CoachSpace →';
+}
+
+// ══════════════════════════════════
+//  INIT APP
+// ══════════════════════════════════
+async function initApp(){
+  const meta=currentUser.user_metadata||{};
+  const role=meta.role||'client';
+  const name=meta.name||currentUser.email.split('@')[0];
+  document.getElementById('top-avatar').textContent=name.slice(0,2).toUpperCase();
+  document.getElementById('top-name').textContent=name;
+  show('app','flex');
+  if(role==='coach'){
+    show('sidebar');show('coach-empty','flex');
+    show('cal-nav-bar','flex');
+    hide('client-view');hide('cal-content');
+    await loadClients();
+    renderClientList();
+  } else {
+    hide('sidebar');hide('cal-nav-bar');hide('cal-content');hide('coach-empty');
+    show('client-view','flex');
+    cvWeekOffset=0;
+    await loadClientWorkouts();
+    renderClientWeek();
+  }
+}
+
+// ══════════════════════════════════
+//  DATA — CLIENTS
+// ══════════════════════════════════
+async function loadClients(){
+  const {data,error}=await sb.from('clients').select('*').order('name');
+  if(error){notify('Error loading clients');return;}
+  clientsCache=data||[];
+}
+async function loadWorkoutsForClient(clientId){
+  const {data,error}=await sb.from('workouts').select('*').eq('client_id',clientId).order('date');
+  if(error){notify('Error loading workouts');return;}
+  workoutsCache[clientId]=data||[];
+}
+async function loadClientWorkouts(){
+  // for client view — find client record by email
+  const {data,error}=await sb.from('workouts')
+    .select('*, clients!inner(email)')
+    .eq('clients.email',currentUser.email)
+    .order('date');
+  if(error){console.error(error);return;}
+  workoutsCache['__client__']=data||[];
+}
+
+// ══════════════════════════════════
+//  SIDEBAR
+// ══════════════════════════════════
+function toggleAddClient(btn){
+  const form=document.getElementById('add-client-form');
+  form.classList.toggle('open');
+  btn.style.color=form.classList.contains('open')?'var(--text)':'';
+}
+function renderClientList(){
+  const el=document.getElementById('client-list-el');el.innerHTML='';
+  if(!clientsCache.length){
+    el.innerHTML=`<div style="padding:10px 13px;font-size:11px;color:var(--muted)">No clients yet</div>`;
+    return;
+  }
+  clientsCache.forEach(c=>{
+    const wks=workoutsCache[c.id]||[];
+    const pending=wks.some(w=>!w.done);
+    const d=document.createElement('div');
+    d.className='client-item'+(c.id===selectedClientId?' active':'');
+    d.innerHTML=`<div class="avatar" style="width:26px;height:26px;font-size:10px">${c.name.slice(0,2).toUpperCase()}</div>
+      <div class="ci-info"><div class="ci-name">${c.name}</div><div class="ci-email">${c.email}</div></div>
+      ${pending?'<div class="ci-dot"></div>':''}`;
+    d.onclick=()=>selectClient(c.id);
+    el.appendChild(d);
+  });
+}
+async function selectClient(id){
+  selectedClientId=id;cancelCopy();closeEditor();
+  renderClientList();
+  hide('coach-empty');show('cal-content','flex');
+  if(!workoutsCache[id])await loadWorkoutsForClient(id);
+  buildCalendar();
+}
+async function addClient(){
+  const email=document.getElementById('nc-email').value.trim();
+  const name=document.getElementById('nc-name').value.trim();
+  if(!email){notify('Enter email');return;}
+  const coachId=currentUser.id;
+  const {data,error}=await sb.from('clients').insert({
+    coach_id:coachId,
+    name:name||email.split('@')[0],
+    email
+  }).select().single();
+  if(error){notify(error.message.includes('unique')?'Client already exists':'Error adding client');return;}
+  clientsCache.push(data);
+  workoutsCache[data.id]=[];
+  document.getElementById('nc-email').value='';
+  document.getElementById('nc-name').value='';
+  document.getElementById('add-client-form').classList.remove('open');
+  renderClientList();
+  notify('✓ Client added');
+}
+
+// ══════════════════════════════════
+//  CALENDAR
+// ══════════════════════════════════
+function buildCalendar(){
+  closeEditor();
+  renderCalGrid();
+  requestAnimationFrame(()=>{
+    const el=document.getElementById('day-'+TODAY);
+    if(el){const s=document.getElementById('cal-scroll');s.scrollTop=el.offsetTop-60;}
+    updateMonthLabel();
+  });
+  document.getElementById('cal-scroll').onscroll=updateMonthLabel;
+  document.getElementById('cal-scroll').addEventListener('mousedown',e=>{
+    const ed=document.getElementById('inline-editor');
+    if(ed&&!ed.contains(e.target)&&!e.target.closest('.day-cell.editing'))closeEditor();
+  },true);
+}
+function renderCalGrid(){
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  const wks=workoutsCache[selectedClientId]||[];
+  const now=new Date();
+  let yr=now.getFullYear(),mo=now.getMonth()-MONTHS_BEFORE;
+  while(mo<0){mo+=12;yr--;}
+  const total=MONTHS_BEFORE+1+MONTHS_AFTER;
+  for(let m=0;m<total;m++){
+    const lbl=document.createElement('div');
+    lbl.className='month-row';lbl.id=`month-${yr}-${mo}`;
+    lbl.dataset.year=yr;lbl.dataset.month=mo;
+    lbl.textContent=MONTH_NAMES[mo]+' '+yr;
+    grid.appendChild(lbl);
+    const first=new Date(yr,mo,1),last=new Date(yr,mo+1,0);
+    const start=mondayOf(first);
+    let end=new Date(last);const dow=end.getDay();if(dow!==0)end.setDate(end.getDate()+(7-dow));
+    let col=1,cur=new Date(start);
+    while(cur<=end){
+      const ds=DS(cur),isToday=ds===TODAY,isOther=cur.getMonth()!==mo;
+      const dayWks=wks.filter(w=>w.date===ds);
+      const cell=document.createElement('div');
+      cell.className='day-cell'+(isToday?' today':'')+(isOther?' other-month':'')+(copyState?' paste-mode':'');
+      cell.id='day-'+ds;cell.dataset.date=ds;cell.dataset.col=col;
+      if(copyState)cell.onclick=()=>pasteWorkout(ds);
+      const nr=document.createElement('div');nr.className='day-num-row';
+      const dn=document.createElement('span');dn.className='day-num';dn.textContent=cur.getDate();
+      nr.appendChild(dn);
+      if(!copyState){
+        const ab=document.createElement('button');ab.className='day-add-btn';ab.textContent='+';
+        ab.onclick=e=>{e.stopPropagation();openEditor(ds,null,cell);};
+        nr.appendChild(ab);
+      }
+      cell.appendChild(nr);
+      dayWks.forEach(wk=>cell.appendChild(buildWorkoutBlock(wk,ds)));
+      grid.appendChild(cell);
+      col=col===7?1:col+1;
+      cur.setDate(cur.getDate()+1);
+    }
+    mo++;if(mo>11){mo=0;yr++;}
+  }
+}
+function buildWorkoutBlock(wk,ds){
+  const block=document.createElement('div');
+  block.className='workout-block'+(wk.done?' is-done':'')+(copyState&&copyState.workoutId===wk.id?' is-copy-src':'');
+  block.id='wb-'+wk.id;
+  const exCount=(wk.groups||[]).reduce((s,g)=>s+(g.exercises||[]).length,0);
+  const hdr=document.createElement('div');hdr.className='wb-header';
+  hdr.onclick=e=>{e.stopPropagation();
+    if(copyState)pasteWorkout(ds);
+    else openEditor(ds,wk.id,document.getElementById('day-'+ds));
+  };
+  hdr.innerHTML=`<span class="wb-status">${wk.done?'✓':'○'}</span>
+    <span class="wb-title">${wk.title||'Workout'}</span>
+    <span class="wb-ex-count">${exCount}ex</span>`;
+  if(!copyState){
+    const acts=document.createElement('div');acts.className='wb-actions';
+    acts.innerHTML=`
+      <button class="wb-btn" title="Move" onclick="event.stopPropagation();startMove('${wk.id}')">↕️</button>
+      <button class="wb-btn" title="Copy" onclick="event.stopPropagation();startCopy('${wk.id}')">📋</button>
+      <button class="wb-btn del" title="Delete" onclick="event.stopPropagation();deleteById('${wk.id}')">🗑</button>`;
+    hdr.appendChild(acts);
+  }
+  block.appendChild(hdr);
+  const exWrap=document.createElement('div');exWrap.className='wb-exercises';
+  (wk.groups||[]).forEach(g=>{
+    const gd=document.createElement('div');gd.className='ex-group-preview';
+    if(g.type==='superset')gd.innerHTML=`<span class="ss-tag">⚡ ${g.label}</span>`;
+    (g.exercises||[]).forEach((ex,i)=>{
+      const lbl=g.type==='superset'?`${g.label}${i+1}`:g.label;
+      const lines=(ex.freeText||'').split('\n').filter(l=>l.trim()).slice(0,3);
+      gd.innerHTML+=`<div class="ex-line-preview"><b>${lbl}) ${ex.name}</b></div>
+        ${lines.map(l=>`<div class="ex-free-preview">${l}</div>`).join('')}`;
+    });
+    exWrap.appendChild(gd);
+  });
+  block.appendChild(exWrap);
+  return block;
+}
+function updateMonthLabel(){
+  const scroll=document.getElementById('cal-scroll');
+  const top=scroll.scrollTop;let label='';
+  for(const r of document.querySelectorAll('.month-row')){
+    if(r.offsetTop-scroll.offsetTop<=top+10)label=r.textContent;else break;
+  }
+  if(label)document.getElementById('cal-month-label').textContent=label;
+}
+function scrollMonths(dir){
+  const scroll=document.getElementById('cal-scroll');
+  const rows=[...document.querySelectorAll('.month-row')];
+  const top=scroll.scrollTop;let ci=0;
+  for(let i=0;i<rows.length;i++){if(rows[i].offsetTop-scroll.offsetTop<=top+10)ci=i;else break;}
+  const ti=Math.max(0,Math.min(rows.length-1,ci+dir));
+  scroll.scrollTo({top:rows[ti].offsetTop-scroll.offsetTop,behavior:'smooth'});
+}
+function scrollToToday(){
+  const el=document.getElementById('day-'+TODAY);
+  if(el){const s=document.getElementById('cal-scroll');s.scrollTo({top:el.offsetTop-60,behavior:'smooth'});}
+}
+
+// ══════════════════════════════════
+//  COPY / MOVE
+// ══════════════════════════════════
+function startCopy(wid){
+  copyState={workoutId:wid,mode:'copy'};
+  const pb=document.getElementById('paste-banner');
+  pb.style.display='flex';
+  pb.innerHTML=`📋 <strong style="color:#1d4ed8">Copy mode</strong> — click any day to paste.
+    <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="cancelCopy()">✕ Cancel</button>`;
+  closeEditor();renderCalGrid();
+}
+function startMove(wid){
+  copyState={workoutId:wid,mode:'move'};
+  const pb=document.getElementById('paste-banner');
+  pb.style.display='flex';
+  pb.innerHTML=`↕️ <strong style="color:#1d4ed8">Move mode</strong> — click the destination day.
+    <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="cancelCopy()">✕ Cancel</button>`;
+  closeEditor();renderCalGrid();
+}
+function cancelCopy(){
+  copyState=null;
+  document.getElementById('paste-banner').style.display='none';
+  if(selectedClientId)renderCalGrid();
+}
+async function pasteWorkout(ds){
+  if(!copyState)return;
+  const wks=workoutsCache[selectedClientId]||[];
+  const orig=wks.find(w=>w.id===copyState.workoutId);
+  if(!orig){cancelCopy();return;}
+  if(copyState.mode==='move'){
+    const {error}=await sb.from('workouts').update({date:ds}).eq('id',orig.id);
+    if(error){notify('Error moving workout');return;}
+    orig.date=ds;
+  } else {
+    const copy={
+      client_id:orig.client_id,coach_id:orig.coach_id,
+      date:ds,title:orig.title,notes:orig.notes,
+      groups:orig.groups,done:false,client_notes:''
+    };
+    const {data,error}=await sb.from('workouts').insert(copy).select().single();
+    if(error){notify('Error copying workout');return;}
+    workoutsCache[selectedClientId].push(data);
+  }
+  const mode=copyState.mode;const origTitle=orig.title;
+  cancelCopy();renderCalGrid();
+  notify(`${mode==='move'?'Moved':'Copied'} "${origTitle}"`);
+}
+
+// ══════════════════════════════════
+//  DELETE WITH UNDO
+// ══════════════════════════════════
+async function deleteById(wid){
+  const wks=workoutsCache[selectedClientId]||[];
+  const wk=wks.find(w=>w.id===wid);if(!wk)return;
+  // optimistic remove
+  workoutsCache[selectedClientId]=wks.filter(w=>w.id!==wid);
+  refreshDay(wk.date);
+  undoData={workout:JSON.parse(JSON.stringify(wk))};
+  showUndo(`Deleted "${wk.title||'Workout'}"`);
+  // actually delete after undo window
+  undoTimer=setTimeout(async()=>{
+    await sb.from('workouts').delete().eq('id',wid);
+    undoData=null;
+  },5000);
+}
+function showUndo(msg){
+  clearTimeout(undoTimer);
+  document.querySelectorAll('.undo-bar').forEach(e=>e.remove());
+  const bar=document.createElement('div');bar.className='undo-bar';
+  bar.innerHTML=`<span>${msg}</span><button class="undo-btn" onclick="doUndo()">Undo</button>`;
+  document.body.appendChild(bar);
+}
+function doUndo(){
+  clearTimeout(undoTimer);
+  document.querySelectorAll('.undo-bar').forEach(e=>e.remove());
+  if(!undoData)return;
+  workoutsCache[selectedClientId]=workoutsCache[selectedClientId]||[];
+  workoutsCache[selectedClientId].push(undoData.workout);
+  refreshDay(undoData.workout.date);
+  undoData=null;notify('Restored ✓');
+}
+
+// ══════════════════════════════════
+//  IN-CELL EDITOR
+// ══════════════════════════════════
+function openEditor(ds,workoutId,cellEl){
+  closeEditor();
+  editorDate=ds;editorWorkoutId=workoutId;edGroupCounter=0;
+  const wks=workoutsCache[selectedClientId]||[];
+  const existing=workoutId?wks.find(w=>w.id===workoutId):null;
+  cellEl.classList.add('editing');
+  const addBtn=cellEl.querySelector('.day-add-btn');
+  if(addBtn)addBtn.style.display='none';
+  const panel=document.createElement('div');
+  panel.className='cell-editor';panel.id='inline-editor';
+  const ti=document.createElement('input');ti.type='text';ti.className='ed-title-input';
+  ti.id='ed-title';ti.placeholder='Workout name…';ti.value=existing?.title||'';
+  panel.appendChild(ti);
+  const na=document.createElement('textarea');na.className='ed-notes-input';na.id='ed-notes';
+  na.placeholder='Notes…';na.value=existing?.notes||'';
+  autoResize(na);na.addEventListener('input',()=>autoResize(na));
+  panel.appendChild(na);
+  const gc=document.createElement('div');gc.id='ed-groups';panel.appendChild(gc);
+  const addLink=document.createElement('button');addLink.className='ed-add-ex-link';
+  addLink.innerHTML='＋ exercise';addLink.onclick=()=>edAddExItem();
+  panel.appendChild(addLink);
+  const footer=document.createElement('div');footer.className='ed-footer';
+  footer.innerHTML=`<button class="btn btn-blue btn-sm" onclick="edSave()">Save</button>
+    <button class="btn btn-ghost btn-sm" onclick="closeEditor()">✕</button>
+    ${existing?`<button class="btn btn-sm" style="margin-left:auto;color:var(--danger);background:transparent;border:none;cursor:pointer;font-size:11px" onclick="editorDeleteWorkout()">Delete</button>`:''}`;
+  panel.appendChild(footer);
+  cellEl.appendChild(panel);
+  if(existing?.groups&&existing.groups.length){
+    existing.groups.forEach((g,gi)=>{
+      g.exercises.forEach((ex,ei)=>{
+        if(gi>0||ei>0)edAddDivider(g.type==='superset'&&ei>0);
+        edAddExItem(ex.name,ex.freeText||'',true);
+      });
+    });
+  } else {
+    edAddExItem('','',true);
+  }
+  requestAnimationFrame(()=>cellEl.scrollIntoView({behavior:'smooth',block:'nearest'}));
+  ti.focus();
+}
+function closeEditor(){
+  const panel=document.getElementById('inline-editor');
+  if(panel){
+    const cell=panel.closest('.day-cell');
+    if(cell){
+      cell.classList.remove('editing');
+      const addBtn=cell.querySelector('.day-add-btn');
+      if(addBtn)addBtn.style.display='';
+    }
+    panel.remove();
+  }
+  editorDate=null;editorWorkoutId=null;
+}
+
+// exercise helpers
+function edAddDivider(isSuper=false){
+  const gc=document.getElementById('ed-groups');
+  const div=document.createElement('div');div.className='ed-divider';div.dataset.super=isSuper?'1':'0';
+  div.innerHTML=`<button class="ed-ss-btn${isSuper?' active':''}" onclick="edToggleSuperset(this)">⚡ Superset</button>`;
+  gc.appendChild(div);
+}
+function edToggleSuperset(btn){
+  const div=btn.closest('.ed-divider');
+  const now=div.dataset.super!=='1';div.dataset.super=now?'1':'0';
+  btn.classList.toggle('active',now);edReIndex();
+}
+function edAddExItem(name='',freeText='',skipDivider=false){
+  const gc=document.getElementById('ed-groups');
+  if(!skipDivider&&gc.querySelector('.ed-ex-item'))edAddDivider(false);
+  const item=document.createElement('div');item.className='ed-ex-item';
+  item.draggable=true;
+  item.innerHTML=`<div class="ed-ex-header">
+    <span class="ed-drag-handle" title="Drag to reorder">⠿</span>
+    <span class="ed-ex-lbl">A)</span>
+    <input type="text" class="ed-ex-name-inp" placeholder="Exercise name" value="${name.replace(/"/g,'&quot;')}">
+    <button class="ed-ex-del" onclick="edDelEx(this)">✕</button>
+  </div>
+  <textarea class="ed-ex-free-inp" placeholder="85×12&#10;95×10&#10;135×10">${freeText}</textarea>`;
+  const ta=item.querySelector('.ed-ex-free-inp');
+  ta.addEventListener('input',()=>autoResize(ta));
+  setTimeout(()=>autoResize(ta),0);
+  item.addEventListener('dragstart',e=>{e.dataTransfer.effectAllowed='move';item.style.opacity='.4';edDragSrc=item;});
+  item.addEventListener('dragend',()=>{item.style.opacity='';document.querySelectorAll('.ed-ex-item').forEach(i=>i.classList.remove('drag-over'));});
+  item.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';item.classList.add('drag-over');});
+  item.addEventListener('dragleave',()=>item.classList.remove('drag-over'));
+  item.addEventListener('drop',e=>{
+    e.preventDefault();item.classList.remove('drag-over');
+    if(edDragSrc&&edDragSrc!==item){
+      const kids=[...gc.children];
+      const si=kids.indexOf(edDragSrc),ti=kids.indexOf(item);
+      if(si<ti)item.insertAdjacentElement('afterend',edDragSrc);
+      else item.insertAdjacentElement('beforebegin',edDragSrc);
+      edReIndex();
+    }
+  });
+  gc.appendChild(item);edReIndex();
+}
+let edDragSrc=null;
+function autoResize(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';}
+function edDelEx(btn){
+  const item=btn.closest('.ed-ex-item');
+  const gc=document.getElementById('ed-groups');
+  const kids=[...gc.children];const idx=kids.indexOf(item);
+  if(idx>0&&kids[idx-1].classList.contains('ed-divider'))kids[idx-1].remove();
+  item.remove();edReIndex();
+}
+function edReIndex(){
+  const gc=document.getElementById('ed-groups');if(!gc)return;
+  const LETTERS='ABCDEFGHIJKLMNOP';
+  let groups=[],cur=[];
+  [...gc.children].forEach(k=>{
+    if(k.classList.contains('ed-ex-item'))cur.push(k);
+    else if(k.classList.contains('ed-divider')&&k.dataset.super!=='1'&&cur.length){groups.push(cur);cur=[];}
+  });
+  if(cur.length)groups.push(cur);
+  groups.forEach((grp,gi)=>{
+    const L=LETTERS[gi]||'?';
+    grp.forEach((item,ei)=>{
+      item.classList.toggle('is-superset',grp.length>1);
+      const lbl=item.querySelector('.ed-ex-lbl');
+      if(lbl)lbl.textContent=grp.length>1?`${L}${ei+1})`:`${L})`;
+    });
+  });
+}
+async function edSave(){
+  const title=document.getElementById('ed-title')?.value.trim();
+  const notes=document.getElementById('ed-notes')?.value.trim()||'';
+  const gc=document.getElementById('ed-groups');
+  const LETTERS='ABCDEFGHIJKLMNOP';
+  let rawGroups=[],cur=[];
+  [...gc.children].forEach(k=>{
+    if(k.classList.contains('ed-ex-item'))cur.push(k);
+    else if(k.classList.contains('ed-divider')&&k.dataset.super!=='1'&&cur.length){rawGroups.push(cur);cur=[];}
+  });
+  if(cur.length)rawGroups.push(cur);
+  const groups=rawGroups.map((grp,gi)=>({
+    label:LETTERS[gi]||'?',type:grp.length>1?'superset':'single',
+    exercises:grp.map(item=>({
+      name:item.querySelector('.ed-ex-name-inp')?.value.trim()||'',
+      freeText:item.querySelector('.ed-ex-free-inp')?.value||''
+    })).filter(e=>e.name)
+  })).filter(g=>g.exercises.length);
+  if(!groups.length){notify('Add at least one exercise');return;}
+  const dayName=new Date(editorDate+'T12:00').toLocaleDateString('en-US',{weekday:'long'});
+  const finalTitle=title||(editorDate===TODAY?'Today\'s Session':`${dayName} Session`);
+  const client=clientsCache.find(c=>c.id===selectedClientId);
+  if(editorWorkoutId){
+    const {error}=await sb.from('workouts').update({title:finalTitle,notes,groups}).eq('id',editorWorkoutId);
+    if(error){notify('Error saving');return;}
+    const wk=workoutsCache[selectedClientId].find(w=>w.id===editorWorkoutId);
+    if(wk)Object.assign(wk,{title:finalTitle,notes,groups});
+  } else {
+    const {data,error}=await sb.from('workouts').insert({
+      client_id:selectedClientId,
+      coach_id:currentUser.id,
+      date:editorDate,title:finalTitle,notes,groups,done:false,client_notes:''
+    }).select().single();
+    if(error){notify('Error saving');return;}
+    workoutsCache[selectedClientId]=workoutsCache[selectedClientId]||[];
+    workoutsCache[selectedClientId].push(data);
+  }
+  const sd=editorDate;closeEditor();refreshDay(sd);renderClientList();notify('Saved ✓');
+}
+async function editorDeleteWorkout(){
+  if(!editorWorkoutId)return;
+  const wks=workoutsCache[selectedClientId]||[];
+  const wk=wks.find(w=>w.id===editorWorkoutId);if(!wk)return;
+  workoutsCache[selectedClientId]=wks.filter(w=>w.id!==editorWorkoutId);
+  const date=wk.date;
+  undoData={workout:JSON.parse(JSON.stringify(wk))};
+  closeEditor();refreshDay(date);renderClientList();
+  showUndo(`Deleted "${wk.title||'Workout'}"`);
+  undoTimer=setTimeout(async()=>{
+    await sb.from('workouts').delete().eq('id',wk.id);
+    undoData=null;
+  },5000);
+}
+function refreshDay(ds){
+  const cell=document.getElementById('day-'+ds);if(!cell)return;
+  cell.classList.remove('editing');
+  const addBtn=cell.querySelector('.day-add-btn');if(addBtn)addBtn.style.display='';
+  [...cell.querySelectorAll('.workout-block,.cell-editor')].forEach(b=>b.remove());
+  const wks=workoutsCache[selectedClientId]||[];
+  wks.filter(w=>w.date===ds).forEach(wk=>cell.appendChild(buildWorkoutBlock(wk,ds)));
+}
+
+// ══════════════════════════════════
+//  CLIENT VIEW
+// ══════════════════════════════════
+function cvShiftWeek(dir){cvWeekOffset+=dir;renderClientWeek();}
+function cvGoToday(){cvWeekOffset=0;renderClientWeek();}
+function renderClientWeek(){
+  const mon=mondayOf(addDays(new Date(),cvWeekOffset*7));
+  document.getElementById('cv-week-label').textContent=weekLabel(mon);
+  const weekSet=new Set(Array.from({length:7},(_,i)=>DS(addDays(mon,i))));
+  const wks=(workoutsCache['__client__']||[]).filter(w=>weekSet.has(w.date));
+  const list=document.getElementById('cv-list');list.innerHTML='';
+  document.getElementById('cv-week-list').style.display='block';
+  document.getElementById('cv-detail').style.display='none';
+  if(!wks.length){
+    list.innerHTML=`<div class="empty-state"><div class="empty-icon">🏖️</div>
+      <div class="empty-title">Rest week</div><div class="empty-sub">No workouts scheduled.</div></div>`;
+    return;
+  }
+  wks.sort((a,b)=>a.date.localeCompare(b.date)).forEach(w=>{
+    const dayLabel=new Date(w.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+    const exCount=(w.groups||[]).reduce((s,g)=>s+(g.exercises||[]).length,0);
+    const card=document.createElement('div');
+    card.className='week-card'+(w.done?' is-done':'');
+    card.innerHTML=`<div><div class="wc-title">${w.title||'Workout'}</div>
+      <div class="wc-meta">${dayLabel} · ${exCount} exercise${exCount!==1?'s':''}</div></div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <div class="status-dot${w.done?' done':''}"></div>
+        <span style="font-size:16px;color:var(--muted)">›</span>
+      </div>`;
+    card.onclick=()=>cvOpen(w.id);list.appendChild(card);
+  });
+}
+function cvOpen(wid){
+  const wk=(workoutsCache['__client__']||[]).find(w=>w.id===wid);if(!wk)return;
+  viewingWorkoutId=wid;
+  document.getElementById('cv-week-list').style.display='none';
+  document.getElementById('cv-detail').style.display='block';
+  const dayLabel=new Date(wk.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  let html=`<div class="page-title">${wk.title||'Workout'}${wk.done?' <span class="tag">✓ Done</span>':''}</div>
+    <div class="page-sub">${dayLabel}</div>`;
+  if(wk.notes)html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;
+    padding:10px 13px;margin-bottom:13px;font-size:12px;color:var(--muted2);max-width:520px">
+    <strong style="display:block;margin-bottom:3px;font-size:9px;text-transform:uppercase;letter-spacing:.5px">Coach Notes</strong>${wk.notes}</div>`;
+  (wk.groups||[]).forEach(g=>{
+    if(g.type==='superset')html+=`<div style="font-size:10px;font-weight:700;color:var(--blue);
+      text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">⚡ Superset ${g.label}</div>`;
+    (g.exercises||[]).forEach((ex,i)=>{
+      const lbl=g.type==='superset'?`${g.label}${i+1}`:g.label;
+      html+=`<div class="client-ex-card">
+        <div class="cex-name">${lbl}) ${ex.name}</div>
+        ${ex.freeText?`<div style="font-size:12px;color:var(--muted2);white-space:pre-line;line-height:1.8;padding-bottom:6px">${ex.freeText}</div>`:''}
+        <label style="font-size:9px;margin-top:4px">Your notes</label>
+        <textarea style="min-height:36px;font-size:11px" placeholder="How did it feel?"></textarea>
+      </div>`;
+    });
+  });
+  html+=`<div style="max-width:520px;margin-top:4px">
+    <label>Overall notes</label>
+    <textarea id="cv-note" style="min-height:50px">${wk.client_notes||''}</textarea></div>`;
+  document.getElementById('cv-detail-content').innerHTML=html;
+}
+function cvBack(){
+  document.getElementById('cv-week-list').style.display='block';
+  document.getElementById('cv-detail').style.display='none';
+  viewingWorkoutId=null;
+}
+async function markDone(){
+  const wk=(workoutsCache['__client__']||[]).find(w=>w.id===viewingWorkoutId);if(!wk)return;
+  const n=document.getElementById('cv-note');
+  const clientNotes=n?n.value:'';
+  const {error}=await sb.from('workouts').update({done:true,client_notes:clientNotes}).eq('id',wk.id);
+  if(error){notify('Error saving');return;}
+  wk.done=true;wk.client_notes=clientNotes;
+  notify('Workout completed! 🎉');cvBack();renderClientWeek();
+}
+
+// ══════════════════════════════════
+//  UTILS
+// ══════════════════════════════════
+function show(id,display='block'){document.getElementById(id).style.display=display;}
+function hide(id){document.getElementById(id).style.display='none';}
+function notify(msg){
+  const el=document.createElement('div');el.className='notif';el.textContent=msg;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),2600);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeEditor();cancelCopy();}
+  if(e.key==='Enter'){
+    const ls=document.getElementById('login-screen');
+    if(ls.style.display!=='none')doLogin();
+  }
+});
+
+// Start
+boot();
+</script>
+</body>
+</html>
