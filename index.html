@@ -293,7 +293,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
     </div>
     <div class="login-err" id="login-err"></div>
     <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
-    <div class="field" id="login-name-field"><label>Name</label><input type="text" id="login-name" placeholder="Your name"></div>
+    <div class="field" id="login-name-field" style="display:none"><label>Name</label><input type="text" id="login-name" placeholder="Your name"></div>
     <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
     <button class="btn btn-accent" id="login-btn" style="width:100%;margin-top:6px;padding:10px;font-size:13px" onclick="doLogin()">Enter CoachSpace →</button>
     <div class="login-toggle" id="login-toggle">
@@ -474,8 +474,13 @@ async function doLogout(){
   await sb.auth.signOut();
   currentUser=null;clientsCache=[];workoutsCache={};selectedClientId=null;copyState=null;
   hide('app');show('login-screen','flex');
+  // Fully reset login form to sign-in state
+  isSignup=false;
   document.getElementById('login-btn').disabled=false;
   document.getElementById('login-btn').textContent='Enter CoachSpace →';
+  document.getElementById('login-name-field').style.display='none';
+  document.getElementById('login-toggle').innerHTML='No account? <a onclick="toggleSignup()">Sign up free</a>';
+  document.getElementById('login-err').style.display='none';
 }
 
 // ══════════════════════════════════
