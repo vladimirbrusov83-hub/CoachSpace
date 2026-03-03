@@ -545,8 +545,9 @@ function renderClientList(){
     const pending=wks.some(w=>!w.done);
     const d=document.createElement('div');
     d.className='client-item'+(c.id===selectedClientId?' active':'');
-    d.innerHTML=`<div class="avatar" style="width:26px;height:26px;font-size:10px">${c.name.slice(0,2).toUpperCase()}</div>
-      <div class="ci-info"><div class="ci-name">${c.name}</div><div class="ci-email">${c.email}</div></div>
+    const safeName=c.name||'?';
+    d.innerHTML=`<div class="avatar" style="width:26px;height:26px;font-size:10px">${escapeHtml(safeName.slice(0,2).toUpperCase())}</div>
+      <div class="ci-info"><div class="ci-name">${escapeHtml(c.name||'')}</div><div class="ci-email">${escapeHtml(c.email||'')}</div></div>
       ${pending?'<div class="ci-dot"></div>':''}`;
     d.onclick=()=>selectClient(c.id);
     el.appendChild(d);
@@ -591,10 +592,10 @@ function buildCalendar(){
     updateMonthLabel();
   });
   document.getElementById('cal-scroll').onscroll=updateMonthLabel;
-  document.getElementById('cal-scroll').addEventListener('mousedown',e=>{
+  document.getElementById('cal-scroll').onmousedown=e=>{
     const ed=document.getElementById('inline-editor');
     if(ed&&!ed.contains(e.target)&&!e.target.closest('.day-cell.editing'))closeEditor();
-  },true);
+  };
 }
 function renderCalGrid(){
   const grid=document.getElementById('cal-grid');grid.innerHTML='';
@@ -648,7 +649,7 @@ function buildWorkoutBlock(wk,ds){
     else openEditor(ds,wk.id,document.getElementById('day-'+ds));
   };
   hdr.innerHTML=`<span class="wb-status">${wk.done?'✓':'○'}</span>
-    <span class="wb-title">${wk.title||'Workout'}</span>
+    <span class="wb-title">${escapeHtml(wk.title||'Workout')}</span>
     <span class="wb-ex-count">${exCount}ex</span>`;
   if(!copyState){
     const acts=document.createElement('div');acts.className='wb-actions';
@@ -662,12 +663,12 @@ function buildWorkoutBlock(wk,ds){
   const exWrap=document.createElement('div');exWrap.className='wb-exercises';
   (wk.groups||[]).forEach(g=>{
     const gd=document.createElement('div');gd.className='ex-group-preview';
-    if(g.type==='superset')gd.innerHTML=`<span class="ss-tag">⚡ ${g.label}</span>`;
+    if(g.type==='superset')gd.innerHTML=`<span class="ss-tag">⚡ ${escapeHtml(g.label)}</span>`;
     (g.exercises||[]).forEach((ex,i)=>{
-      const lbl=g.type==='superset'?`${g.label}${i+1}`:g.label;
+      const lbl=g.type==='superset'?`${escapeHtml(g.label)}${i+1}`:escapeHtml(g.label);
       const lines=(ex.freeText||'').split('\n').filter(l=>l.trim()).slice(0,3);
-      gd.innerHTML+=`<div class="ex-line-preview"><b>${lbl}) ${ex.name}</b></div>
-        ${lines.map(l=>`<div class="ex-free-preview">${l}</div>`).join('')}`;
+      gd.innerHTML+=`<div class="ex-line-preview"><b>${lbl}) ${escapeHtml(ex.name)}</b></div>
+        ${lines.map(l=>`<div class="ex-free-preview">${escapeHtml(l)}</div>`).join('')}`;
     });
     exWrap.appendChild(gd);
   });
@@ -854,11 +855,12 @@ function edAddExItem(name='',freeText='',skipDivider=false){
   item.innerHTML=`<div class="ed-ex-header">
     <span class="ed-drag-handle" title="Drag to reorder">⠿</span>
     <span class="ed-ex-lbl">A)</span>
-    <input type="text" class="ed-ex-name-inp" placeholder="Exercise name" value="${name.replace(/"/g,'&quot;')}">
+    <input type="text" class="ed-ex-name-inp" placeholder="Exercise name" value="${escapeHtml(name)}">
     <button class="ed-ex-del" onclick="edDelEx(this)">✕</button>
   </div>
-  <textarea class="ed-ex-free-inp" placeholder="85×12&#10;95×10&#10;135×10">${freeText}</textarea>`;
+  <textarea class="ed-ex-free-inp" placeholder="85×12&#10;95×10&#10;135×10"></textarea>`;
   const ta=item.querySelector('.ed-ex-free-inp');
+  ta.value=freeText;
   ta.addEventListener('input',()=>autoResize(ta));
   setTimeout(()=>autoResize(ta),0);
   item.addEventListener('dragstart',e=>{e.dataTransfer.effectAllowed='move';item.style.opacity='.4';edDragSrc=item;});
@@ -989,7 +991,7 @@ function renderClientWeek(){
     const exCount=(w.groups||[]).reduce((s,g)=>s+(g.exercises||[]).length,0);
     const card=document.createElement('div');
     card.className='week-card'+(w.done?' is-done':'');
-    card.innerHTML=`<div><div class="wc-title">${w.title||'Workout'}</div>
+    card.innerHTML=`<div><div class="wc-title">${escapeHtml(w.title||'Workout')}</div>
       <div class="wc-meta">${dayLabel} · ${exCount} exercise${exCount!==1?'s':''}</div></div>
       <div style="display:flex;align-items:center;gap:7px">
         <div class="status-dot${w.done?' done':''}"></div>
@@ -1004,19 +1006,19 @@ function cvOpen(wid){
   document.getElementById('cv-week-list').style.display='none';
   document.getElementById('cv-detail').style.display='block';
   const dayLabel=new Date(wk.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  let html=`<div class="page-title">${wk.title||'Workout'}${wk.done?' <span class="tag">✓ Done</span>':''}</div>
+  let html=`<div class="page-title">${escapeHtml(wk.title||'Workout')}${wk.done?' <span class="tag">✓ Done</span>':''}</div>
     <div class="page-sub">${dayLabel}</div>`;
   if(wk.notes)html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;
     padding:10px 13px;margin-bottom:13px;font-size:12px;color:var(--muted2);max-width:520px">
-    <strong style="display:block;margin-bottom:3px;font-size:9px;text-transform:uppercase;letter-spacing:.5px">Coach Notes</strong>${wk.notes}</div>`;
+    <strong style="display:block;margin-bottom:3px;font-size:9px;text-transform:uppercase;letter-spacing:.5px">Coach Notes</strong>${escapeHtml(wk.notes)}</div>`;
   (wk.groups||[]).forEach(g=>{
     if(g.type==='superset')html+=`<div style="font-size:10px;font-weight:700;color:var(--blue);
-      text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">⚡ Superset ${g.label}</div>`;
+      text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">⚡ Superset ${escapeHtml(g.label)}</div>`;
     (g.exercises||[]).forEach((ex,i)=>{
-      const lbl=g.type==='superset'?`${g.label}${i+1}`:g.label;
+      const lbl=g.type==='superset'?`${escapeHtml(g.label)}${i+1}`:escapeHtml(g.label);
       html+=`<div class="client-ex-card">
-        <div class="cex-name">${lbl}) ${ex.name}</div>
-        ${ex.freeText?`<div style="font-size:12px;color:var(--muted2);white-space:pre-line;line-height:1.8;padding-bottom:6px">${ex.freeText}</div>`:''}
+        <div class="cex-name">${lbl}) ${escapeHtml(ex.name)}</div>
+        ${ex.freeText?`<div style="font-size:12px;color:var(--muted2);white-space:pre-line;line-height:1.8;padding-bottom:6px">${escapeHtml(ex.freeText)}</div>`:''}
         <label style="font-size:9px;margin-top:4px">Your notes</label>
         <textarea style="min-height:36px;font-size:11px" placeholder="How did it feel?"></textarea>
       </div>`;
@@ -1024,8 +1026,9 @@ function cvOpen(wid){
   });
   html+=`<div style="max-width:520px;margin-top:4px">
     <label>Overall notes</label>
-    <textarea id="cv-note" style="min-height:50px">${wk.client_notes||''}</textarea></div>`;
+    <textarea id="cv-note" style="min-height:50px"></textarea></div>`;
   document.getElementById('cv-detail-content').innerHTML=html;
+  document.getElementById('cv-note').value=wk.client_notes||'';
 }
 function cvBack(){
   document.getElementById('cv-week-list').style.display='block';
@@ -1051,6 +1054,7 @@ function notify(msg){
   const el=document.createElement('div');el.className='notif';el.textContent=msg;
   document.body.appendChild(el);setTimeout(()=>el.remove(),2600);
 }
+function escapeHtml(s){if(!s&&s!==0)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){closeEditor();cancelCopy();}
   if(e.key==='Enter'){
