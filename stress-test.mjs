@@ -7,14 +7,11 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 9337;
 
-// Serve index.html + local Supabase bundle
+// Serve index.html
 const server = http.createServer((req, res) => {
-  if (req.url === '/') {
+  if (req.url === '/' || req.url.startsWith('/?')) {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(fs.readFileSync(path.join(__dirname, 'index.html')));
-  } else if (req.url === '/supabase.js') {
-    res.writeHead(200, { 'Content-Type': 'application/javascript' });
-    res.end(fs.readFileSync(path.join(__dirname, 'node_modules/@supabase/supabase-js/dist/umd/supabase.js')));
   } else {
     res.writeHead(404); res.end();
   }
@@ -165,37 +162,33 @@ async function run() {
     await browser.close(); server.close(); printSummary(); return;
   }
 
-  // ── 2. Role tabs ───────────────────────────────────────────────────────────
-  await page.click('button.role-tab:nth-child(1)');
-  const coachActive = await page.$eval('.role-tab:nth-child(1)', el => el.classList.contains('active'));
-  log('Coach role tab activates', coachActive);
+  // ── 2. Login form structure ─────────────────────────────────────────────
+  const noRoleTabs = !(await page.$('.role-tabs'));
+  log('No role tabs on login screen', noRoleTabs);
+  const noSignupToggle = !(await page.$('#login-toggle'));
+  log('No signup toggle on login screen', noSignupToggle);
+  const btnText = await page.$eval('#login-btn', el => el.textContent.trim());
+  log('Login button says "Enter CoachSpace →"', btnText === 'Enter CoachSpace →', `"${btnText}"`);
 
-  await page.click('button.role-tab:nth-child(2)');
-  const clientActive = await page.$eval('.role-tab:nth-child(2)', el => el.classList.contains('active'));
-  const coachDeactivated = !(await page.$eval('.role-tab:nth-child(1)', el => el.classList.contains('active')));
-  log('Client role tab activates & deselects Coach', clientActive && coachDeactivated);
+  // ── 3. Login as coach ──────────────────────────────────────────────────────
+  // Seed coach user via the mock's shared closure (all createClient() instances
+  // share the same _users / _session arrays), then clear the auto-session.
+  await page.evaluate(async () => {
+    const tmp = window.supabase.createClient('', '');
+    await tmp.auth.signUp({
+      email: 'coach@test.com',
+      password: 'pass123',
+      options: { data: { role: 'coach', name: 'Test Coach' } }
+    });
+    await tmp.auth.signOut(); // clear auto-session so login screen is still showing
+  });
 
-  await page.click('button.role-tab:nth-child(1)'); // back to Coach
-
-  // ── 3. Signup toggle ───────────────────────────────────────────────────────
-  const nameFieldBefore = await page.$eval('#login-name-field', el => el.style.display);
-  log('Name field hidden on sign-in mode', nameFieldBefore !== 'block');
-
-  await page.click('#login-toggle a');
-  const btnTextSignup = await page.$eval('#login-btn', el => el.textContent.trim());
-  log('Signup toggle changes button text', btnTextSignup.includes('Create Account'));
-
-  const nameFieldAfter = await page.isVisible('#login-name-field');
-  log('Name field shows in signup mode (coach)', nameFieldAfter);
-
-  // ── 4. Signup as coach ─────────────────────────────────────────────────────
-  await page.fill('#login-name', 'Test Coach');
   await page.fill('#login-email', 'coach@test.com');
   await page.fill('#login-password', 'pass123');
   await page.click('#login-btn');
   await page.waitForSelector('#app', { state: 'visible', timeout: 10000 }).catch(() => {});
   const appVisible = await page.isVisible('#app');
-  log('Coach signup → app loads', appVisible);
+  log('Coach login → app loads', appVisible);
 
   // ── 5. App layout ──────────────────────────────────────────────────────────
   const sidebarVisible = await page.isVisible('.sidebar');
@@ -612,22 +605,15 @@ async function run() {
   const appHidden = !(await page.isVisible('#app'));
   log('App hidden after logout', appHidden);
 
-  // ── 23. Login as client ───────────────────────────────────────────────────
-  // Switch to client role and sign up
-  await page.click('button.role-tab:nth-child(2)'); // client role
-  await wait(200);
-
-  // Sign up as client
-  await page.click('#login-toggle a'); // switch to signup if needed
-  await wait(100);
-  if (!(await page.$eval('#login-btn', el => el.textContent)).includes('Create Account')) {
-    await page.click('#login-toggle a');
-    await wait(100);
-  }
-
-  await page.fill('#login-email', 'client@test.com');
-  await page.fill('#login-password', 'pass123');
-  await page.click('#login-btn');
+  // ── 23. Register and login as client ─────────────────────────────────────
+  // Navigate to the client registration URL
+  await page.goto(`${BASE}/?register&email=client@test.com`, { waitUntil: 'commit', timeout: 15000 });
+  await page.waitForSelector('#loading-screen', { state: 'hidden', timeout: 12000 }).catch(() => {});
+  await page.waitForSelector('#client-register-screen', { state: 'visible', timeout: 8000 }).catch(() => {});
+  await page.fill('#reg-name', 'Test Client');
+  // email is pre-filled from URL
+  await page.fill('#reg-password', 'pass123');
+  await page.click('#reg-btn');
   await page.waitForSelector('#app', { state: 'visible', timeout: 10000 }).catch(() => {});
 
   const clientViewVisible = await page.isVisible('#client-view');
