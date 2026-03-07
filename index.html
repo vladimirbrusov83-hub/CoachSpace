@@ -288,8 +288,8 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
     <div class="login-logo">CoachSpace</div>
     <div class="login-sub">Remote coaching, simplified.</div>
     <div class="role-tabs">
-      <button class="role-tab active" onclick="setRole('coach')">I'm a Coach</button>
-      <button class="role-tab" onclick="setRole('client')">I'm a Client</button>
+      <button class="role-tab" onclick="setRole('coach')">I'm a Coach</button>
+      <button class="role-tab active" onclick="setRole('client')">I'm a Client</button>
     </div>
     <div class="login-err" id="login-err"></div>
     <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
@@ -398,7 +398,7 @@ function weekLabel(mon){
 // ══════════════════════════════════
 //  STATE
 // ══════════════════════════════════
-let currentUser=null, currentRole='coach', selectedClientId=null;
+let currentUser=null, currentRole='client', selectedClientId=null;
 let clientsCache=[], workoutsCache={};
 let copyState=null;
 let editorDate=null, editorWorkoutId=null, edGroupCounter=0;
