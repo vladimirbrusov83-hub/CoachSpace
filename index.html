@@ -551,7 +551,7 @@ function renderClientList(){
     d.innerHTML=`<div class="avatar" style="width:26px;height:26px;font-size:10px">${c.name.slice(0,2).toUpperCase()}</div>
       <div class="ci-info"><div class="ci-name">${c.name}</div><div class="ci-email">${c.email}</div></div>
       ${pending?'<div class="ci-dot"></div>':''}
-      <button class="ci-del" title="Delete client" onclick="event.stopPropagation();deleteClient(${c.id},'${c.name.replace(/'/g,"\\'")}')">✕</button>`;
+      <button class="ci-del" title="Delete client" onclick="event.stopPropagation();deleteClient('${c.id}','${c.name.replace(/'/g,"\\'")}')">✕</button>`;
     d.onclick=()=>selectClient(c.id);
     el.appendChild(d);
   });
