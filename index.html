@@ -92,6 +92,9 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .ci-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ci-email{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ci-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.ci-del{display:none;background:none;border:none;cursor:pointer;color:var(--muted);padding:2px 4px;font-size:14px;line-height:1;border-radius:3px;transition:color .12s}
+.ci-del:hover{color:var(--danger)}
+.client-item:hover .ci-del{display:block}
 .sb-footer{padding:10px 13px;border-top:1px solid var(--border);margin-top:auto}
 .add-client-toggle{display:flex;align-items:center;gap:5px;background:transparent;border:none;
   color:var(--muted2);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;
@@ -547,7 +550,8 @@ function renderClientList(){
     d.className='client-item'+(c.id===selectedClientId?' active':'');
     d.innerHTML=`<div class="avatar" style="width:26px;height:26px;font-size:10px">${c.name.slice(0,2).toUpperCase()}</div>
       <div class="ci-info"><div class="ci-name">${c.name}</div><div class="ci-email">${c.email}</div></div>
-      ${pending?'<div class="ci-dot"></div>':''}`;
+      ${pending?'<div class="ci-dot"></div>':''}
+      <button class="ci-del" title="Delete client" onclick="event.stopPropagation();deleteClient(${c.id},'${c.name.replace(/'/g,"\\'")}')">✕</button>`;
     d.onclick=()=>selectClient(c.id);
     el.appendChild(d);
   });
@@ -577,6 +581,16 @@ async function addClient(){
   document.getElementById('add-client-form').classList.remove('open');
   renderClientList();
   notify('✓ Client added');
+}
+async function deleteClient(id,name){
+  if(!confirm(`Delete ${name} and all their workouts? This cannot be undone.`))return;
+  await sb.from('workouts').delete().eq('client_id',id);
+  await sb.from('clients').delete().eq('id',id);
+  clientsCache=clientsCache.filter(c=>c.id!==id);
+  delete workoutsCache[id];
+  if(selectedClientId===id){selectedClientId=null;hide('cal-content');show('coach-empty','flex');}
+  renderClientList();
+  notify('Client deleted');
 }
 
 // ══════════════════════════════════
