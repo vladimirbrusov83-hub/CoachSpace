@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>CoachSpace</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -61,7 +61,8 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 
 /* ── SHELL ── */
 #app{display:none;height:100vh;flex-direction:column}
-.topbar{height:48px;display:flex;align-items:center;padding:0 14px;
+.topbar{height:calc(48px + env(safe-area-inset-top));display:flex;align-items:center;
+  padding:env(safe-area-inset-top) 14px 0;
   border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;gap:10px;z-index:50}
 .topbar-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.3px;flex-shrink:0}
 .topbar-center{flex:1;display:flex;align-items:center;justify-content:center;gap:7px}
@@ -236,7 +237,6 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 /* ── CLIENT VIEW ── */
 #client-view{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .cv-topbar{display:flex;align-items:center;gap:8px;padding:10px 16px;
-  padding-top:calc(16px + env(safe-area-inset-top));
   border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
 .cv-week-nav-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
   color:var(--text);padding:3px 10px;cursor:pointer;font-size:15px;line-height:1;transition:all .13s}
