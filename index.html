@@ -61,8 +61,8 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 
 /* ── SHELL ── */
 #app{display:none;height:100vh;flex-direction:column}
-.topbar{height:calc(48px + env(safe-area-inset-top));display:flex;align-items:center;
-  padding:env(safe-area-inset-top) 14px 0;
+.safe-area-top{height:env(safe-area-inset-top);background:var(--bg2);flex-shrink:0}
+.topbar{height:48px;display:flex;align-items:center;padding:0 14px;
   border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;gap:10px;z-index:50}
 .topbar-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.3px;flex-shrink:0}
 .topbar-center{flex:1;display:flex;align-items:center;justify-content:center;gap:7px}
@@ -304,6 +304,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 
 <!-- APP -->
 <div id="app">
+  <div class="safe-area-top"></div>
   <div class="topbar">
     <div class="topbar-logo">CoachSpace</div>
     <div class="topbar-center" id="cal-nav-bar" style="display:none">
