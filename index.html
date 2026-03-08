@@ -294,6 +294,9 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
     <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
     <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
     <button class="btn btn-accent" id="login-btn" style="width:100%;margin-top:6px;padding:10px;font-size:13px" onclick="doLogin()">Enter CoachSpace →</button>
+    <div class="login-toggle" id="login-toggle">
+      No account? <a onclick="toggleSignup()">Sign up free</a>
+    </div>
   </div>
 </div>
 
@@ -424,7 +427,6 @@ async function boot(){
 function setRole(r){
   currentRole=r;
   document.querySelectorAll('.role-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&r==='coach')||(i===1&&r==='client')));
-  document.getElementById('login-name-field').style.display=r==='coach'&&isSignup?'':'none';
 }
 function toggleSignup(){
   isSignup=!isSignup;
@@ -432,7 +434,6 @@ function toggleSignup(){
     ?'Have an account? <a onclick="toggleSignup()">Sign in</a>'
     :'No account? <a onclick="toggleSignup()">Sign up free</a>';
   document.getElementById('login-btn').textContent=isSignup?'Create Account →':'Enter CoachSpace →';
-  document.getElementById('login-name-field').style.display=(isSignup&&currentRole==='coach')?'':'none';
   document.getElementById('login-err').style.display='none';
 }
 async function doLogin(){
@@ -446,7 +447,7 @@ async function doLogin(){
   if(isSignup){
     const {error}=await sb.auth.signUp({
       email,password,
-      options:{data:{role:currentRole,name:name||email.split('@')[0]}}
+      options:{data:{role:currentRole,name:email.split('@')[0]}}
     });
     if(error){showErr(error.message);btn.disabled=false;btn.textContent='Create Account →';return;}
     notify('Account created! Signing you in…');
