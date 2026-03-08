@@ -667,6 +667,7 @@ function buildWorkoutBlock(wk,ds){
   if(!copyState){
     const acts=document.createElement('div');acts.className='wb-actions';
     acts.innerHTML=`
+      <button class="wb-btn" title="Edit" onclick="event.stopPropagation();openEditor('${ds}','${wk.id}',document.getElementById('day-${ds}'))">✏️</button>
       <button class="wb-btn" title="Move" onclick="event.stopPropagation();startMove('${wk.id}')">↕️</button>
       <button class="wb-btn" title="Copy" onclick="event.stopPropagation();startCopy('${wk.id}')">📋</button>
       <button class="wb-btn del" title="Delete" onclick="event.stopPropagation();deleteById('${wk.id}')">🗑</button>`;
