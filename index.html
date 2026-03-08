@@ -277,6 +277,20 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 @keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:10px}
+
+/* ── EXERCISE PICKER ── */
+.ex-picker{position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--border);
+  border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.18);width:270px;
+  display:flex;flex-direction:column;overflow:hidden}
+.ex-picker-search{padding:8px 10px;border:none;border-bottom:1px solid var(--border);
+  background:var(--bg3);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;color:var(--text)}
+.ex-picker-search::placeholder{color:var(--muted)}
+.ex-picker-list{overflow-y:auto;max-height:260px}
+.ex-picker-group{padding:5px 10px 2px;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--muted);position:sticky;top:0;background:var(--bg2);pointer-events:none}
+.ex-picker-item{padding:5px 12px;font-size:12px;cursor:pointer;transition:background .1s}
+.ex-picker-item:hover{background:var(--bg3)}
+.ex-picker-empty{padding:10px 12px;font-size:12px;color:var(--muted);font-style:italic}
 </style>
 </head>
 <body>
@@ -408,6 +422,24 @@ let undoTimer=null, undoData=null;
 let cvWeekOffset=0;
 let isSignup=false;
 const MONTHS_BEFORE=3, MONTHS_AFTER=12;
+
+// ══════════════════════════════════
+//  EXERCISE DATABASE
+// ══════════════════════════════════
+const EXERCISE_DB = {
+  'Chest':          ['Bench Press','Incline Bench Press','Decline Bench Press','Dumbbell Bench Press','Incline Dumbbell Press','Chest Dip','Push-Up','Cable Fly','Dumbbell Fly','Machine Chest Press','Pec Deck','Landmine Press'],
+  'Shoulders':      ['Overhead Press','Seated Dumbbell Press','Arnold Press','Lateral Raise','Front Raise','Rear Delt Fly','Face Pull','Upright Row','Cable Lateral Raise','Machine Shoulder Press','Landmine Press','Bradford Press'],
+  'Triceps':        ['Tricep Pushdown','Skull Crusher','Close-Grip Bench Press','Overhead Tricep Extension','Tricep Dip','Diamond Push-Up','Cable Overhead Extension','Kickback','JM Press'],
+  'Back':           ['Pull-Up','Chin-Up','Lat Pulldown','Seated Cable Row','Bent-Over Row','Single-Arm Dumbbell Row','T-Bar Row','Chest-Supported Row','Deadlift','Rack Pull','Good Morning','Hyperextension','Straight-Arm Pulldown','Pendlay Row','Meadows Row'],
+  'Biceps':         ['Barbell Curl','Dumbbell Curl','Hammer Curl','Preacher Curl','Cable Curl','Concentration Curl','Incline Dumbbell Curl','EZ Bar Curl','Spider Curl','Reverse Curl','Zottman Curl'],
+  'Legs — Quads':   ['Squat','Front Squat','Hack Squat','Leg Press','Bulgarian Split Squat','Lunge','Walking Lunge','Step-Up','Box Jump','Leg Extension','Sissy Squat','Goblet Squat','Zercher Squat'],
+  'Legs — Hamstrings':['Romanian Deadlift','Stiff-Leg Deadlift','Nordic Hamstring Curl','Lying Leg Curl','Seated Leg Curl','Glute-Ham Raise','Good Morning'],
+  'Legs — Glutes':  ['Hip Thrust','Glute Bridge','Cable Kickback','Sumo Squat','Sumo Deadlift','Single-Leg Hip Thrust','Clamshell','Abduction Machine'],
+  'Calves':         ['Standing Calf Raise','Seated Calf Raise','Donkey Calf Raise','Single-Leg Calf Raise','Tibialis Raise'],
+  'Core':           ['Plank','Side Plank','Ab Rollout','Cable Crunch','Hanging Leg Raise','Sit-Up','Russian Twist','Dead Bug','Pallof Press','Hollow Hold','L-Sit','Toes-to-Bar','Dragon Flag','Weighted Crunch','Landmine Twist'],
+  'Olympic / Full Body':['Clean','Power Clean','Snatch','Clean and Jerk','Thruster','Kettlebell Swing','Kettlebell Clean','Kettlebell Snatch','Turkish Get-Up','Barbell Complex','Push Press'],
+  'Cardio':         ['Run','Bike','Row Machine','Ski Erg','Jump Rope','Sled Push','Sled Pull','Battle Ropes','Burpee','Mountain Climber','Assault Bike','Stair Climber'],
+};
 const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 // ══════════════════════════════════
@@ -809,7 +841,7 @@ function openEditor(ds,workoutId,cellEl){
   panel.appendChild(na);
   const gc=document.createElement('div');gc.id='ed-groups';panel.appendChild(gc);
   const addLink=document.createElement('button');addLink.className='ed-add-ex-link';
-  addLink.innerHTML='＋ exercise';addLink.onclick=()=>edAddExItem();
+  addLink.innerHTML='＋ exercise';addLink.onclick=e=>{e.stopPropagation();openExPicker(addLink);};
   panel.appendChild(addLink);
   const footer=document.createElement('div');footer.className='ed-footer';
   footer.innerHTML=`<button class="btn btn-blue btn-sm" onclick="edSave()">Save</button>
@@ -831,6 +863,7 @@ function openEditor(ds,workoutId,cellEl){
   ti.focus();
 }
 function closeEditor(){
+  closeExPicker();
   const panel=document.getElementById('inline-editor');
   if(panel){
     const cell=panel.closest('.day-cell');
@@ -842,6 +875,58 @@ function closeEditor(){
     panel.remove();
   }
   editorDate=null;editorWorkoutId=null;
+}
+
+// ── exercise picker ──
+function openExPicker(anchorBtn){
+  closeExPicker();
+  const entries=Object.entries(EXERCISE_DB);
+  const overlay=document.createElement('div');
+  overlay.id='ex-picker';overlay.className='ex-picker';
+  const search=document.createElement('input');
+  search.type='text';search.className='ex-picker-search';
+  search.placeholder='Search or type a name…';
+  overlay.appendChild(search);
+  const list=document.createElement('div');list.className='ex-picker-list';
+  overlay.appendChild(list);
+  function renderList(q){
+    list.innerHTML='';q=q.toLowerCase().trim();
+    entries.forEach(([group,exercises])=>{
+      const filtered=q?exercises.filter(e=>e.toLowerCase().includes(q)):exercises;
+      if(!filtered.length)return;
+      const gh=document.createElement('div');gh.className='ex-picker-group';gh.textContent=group;list.appendChild(gh);
+      filtered.forEach(name=>{
+        const item=document.createElement('div');item.className='ex-picker-item';item.textContent=name;
+        item.onclick=()=>{edAddExItem(name);closeExPicker();};
+        list.appendChild(item);
+      });
+    });
+    if(!list.children.length){
+      const msg=document.createElement('div');msg.className='ex-picker-empty';
+      msg.textContent=`Press Enter to add "${search.value.trim()}"`;
+      list.appendChild(msg);
+    }
+  }
+  search.addEventListener('input',()=>renderList(search.value));
+  search.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){const v=search.value.trim();if(v){edAddExItem(v);closeExPicker();}}
+    if(e.key==='Escape')closeExPicker();
+  });
+  renderList('');
+  const rect=anchorBtn.getBoundingClientRect();
+  const top=rect.bottom+5;const left=Math.min(rect.left,window.innerWidth-280);
+  overlay.style.top=top+'px';overlay.style.left=left+'px';
+  document.body.appendChild(overlay);
+  setTimeout(()=>document.addEventListener('click',_exPickerOutside),0);
+  search.focus();
+}
+function _exPickerOutside(e){
+  const p=document.getElementById('ex-picker');
+  if(p&&!p.contains(e.target))closeExPicker();
+}
+function closeExPicker(){
+  const p=document.getElementById('ex-picker');if(p)p.remove();
+  document.removeEventListener('click',_exPickerOutside);
 }
 
 // exercise helpers
