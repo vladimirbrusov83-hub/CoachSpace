@@ -290,18 +290,10 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   <div class="login-box">
     <div class="login-logo">CoachSpace</div>
     <div class="login-sub">Remote coaching, simplified.</div>
-    <div class="role-tabs">
-      <button class="role-tab" onclick="setRole('coach')">I'm a Coach</button>
-      <button class="role-tab active" onclick="setRole('client')">I'm a Client</button>
-    </div>
     <div class="login-err" id="login-err"></div>
     <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
-    <div class="field" id="login-name-field"><label>Name</label><input type="text" id="login-name" placeholder="Your name"></div>
     <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
     <button class="btn btn-accent" id="login-btn" style="width:100%;margin-top:6px;padding:10px;font-size:13px" onclick="doLogin()">Enter CoachSpace →</button>
-    <div class="login-toggle" id="login-toggle">
-      No account? <a onclick="toggleSignup()">Sign up free</a>
-    </div>
   </div>
 </div>
 
