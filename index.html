@@ -278,6 +278,12 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:10px}
 
+/* ── EXERCISE NAME AUTOCOMPLETE ── */
+.ex-ac{position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--border);
+  border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.15);width:220px;overflow:hidden}
+.ex-ac-item{padding:5px 10px;font-size:12px;cursor:pointer;transition:background .1s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-ac-item:hover,.ex-ac-item.active{background:var(--bg3)}
+
 /* ── EXERCISE PICKER ── */
 .ex-picker{position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--border);
   border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.18);width:270px;
@@ -934,6 +940,44 @@ function closeExPicker(){
   document.removeEventListener('click',_exPickerOutside);
 }
 
+// ── exercise name autocomplete ──
+const ALL_EXERCISES=Object.values(EXERCISE_DB).flat();
+function attachExAc(inp){
+  let acEl=null,acIdx=-1;
+  function closeAc(){if(acEl){acEl.remove();acEl=null;acIdx=-1;}}
+  function openAc(matches){
+    closeAc();
+    if(!matches.length)return;
+    acEl=document.createElement('div');acEl.className='ex-ac';
+    const rect=inp.getBoundingClientRect();
+    acEl.style.top=(rect.bottom+3)+'px';
+    acEl.style.left=rect.left+'px';
+    matches.forEach((name,i)=>{
+      const row=document.createElement('div');row.className='ex-ac-item';row.textContent=name;
+      row.onmousedown=e=>{e.preventDefault();inp.value=name;closeAc();};
+      acEl.appendChild(row);
+    });
+    document.body.appendChild(acEl);
+  }
+  inp.addEventListener('input',()=>{
+    const q=inp.value.trim().toLowerCase();
+    if(!q){closeAc();return;}
+    const matches=ALL_EXERCISES.filter(e=>e.toLowerCase().includes(q)).slice(0,8);
+    openAc(matches);acIdx=-1;
+  });
+  inp.addEventListener('keydown',e=>{
+    if(!acEl)return;
+    const items=acEl.querySelectorAll('.ex-ac-item');
+    if(e.key==='ArrowDown'){e.preventDefault();acIdx=Math.min(acIdx+1,items.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();acIdx=Math.max(acIdx-1,0);}
+    else if(e.key==='Enter'&&acIdx>=0){e.preventDefault();inp.value=items[acIdx].textContent;closeAc();return;}
+    else if(e.key==='Escape'){closeAc();return;}
+    items.forEach((it,i)=>it.classList.toggle('active',i===acIdx));
+    if(acIdx>=0)items[acIdx].scrollIntoView({block:'nearest'});
+  });
+  inp.addEventListener('blur',()=>setTimeout(closeAc,150));
+}
+
 // exercise helpers
 function edAddDivider(isSuper=false){
   const gc=document.getElementById('ed-groups');
@@ -958,6 +1002,8 @@ function edAddExItem(name='',freeText='',skipDivider=false){
     <button class="ed-ex-del" onclick="edDelEx(this)">✕</button>
   </div>
   <textarea class="ed-ex-free-inp" placeholder="85×12&#10;95×10&#10;135×10">${freeText}</textarea>`;
+  const inp=item.querySelector('.ed-ex-name-inp');
+  attachExAc(inp);
   const ta=item.querySelector('.ed-ex-free-inp');
   ta.addEventListener('input',()=>autoResize(ta));
   setTimeout(()=>autoResize(ta),0);
