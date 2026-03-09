@@ -840,9 +840,14 @@ function openEditor(ds,workoutId,cellEl){
   autoResize(na);na.addEventListener('input',()=>autoResize(na));
   panel.appendChild(na);
   const gc=document.createElement('div');gc.id='ed-groups';panel.appendChild(gc);
+  const addRow=document.createElement('div');addRow.style.cssText='display:flex;align-items:center;gap:10px;';
   const addLink=document.createElement('button');addLink.className='ed-add-ex-link';
   addLink.innerHTML='＋ exercise';addLink.onclick=e=>{e.stopPropagation();openExPicker(addLink);};
-  panel.appendChild(addLink);
+  const addManual=document.createElement('button');addManual.className='ed-add-ex-link';
+  addManual.style.cssText='color:var(--muted);font-size:11px;';
+  addManual.innerHTML='✎ type manually';addManual.onclick=e=>{e.stopPropagation();closeExPicker();edAddExItem();};
+  addRow.appendChild(addLink);addRow.appendChild(addManual);
+  panel.appendChild(addRow);
   const footer=document.createElement('div');footer.className='ed-footer';
   footer.innerHTML=`<button class="btn btn-blue btn-sm" onclick="edSave()">Save</button>
     <button class="btn btn-ghost btn-sm" onclick="closeEditor()">✕</button>
