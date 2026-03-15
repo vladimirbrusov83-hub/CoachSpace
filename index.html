@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://*.supabase.co wss://*.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'self';">
 <title>CoachSpace</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -43,66 +43,22 @@ textarea{resize:vertical;min-height:52px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── LOGIN ── */
-#login-screen{min-height:100vh;display:none;flex-direction:column;
-  background:#0A0A0A;position:relative;overflow:hidden}
-#login-screen::before{content:'';position:fixed;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  opacity:0.4;pointer-events:none;z-index:0}
-.login-nav{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;
-  justify-content:space-between;align-items:center;padding:18px 48px;
-  background:rgba(10,10,10,0.97);border-bottom:1px solid rgba(200,16,46,0.2)}
-.login-nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#F5F0E8}
-.login-nav-logo span{color:#C8102E}
-.login-nav-info{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
-  text-transform:uppercase;color:#888;display:flex;gap:8px;align-items:center}
-.login-nav-info .nav-dot{color:#C8102E}
-.login-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:36px;padding:100px 20px 48px;position:relative;z-index:1}
-.login-hero{text-align:center}
-.login-hero-eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;
-  color:#C8102E;text-transform:uppercase;margin-bottom:14px}
-.login-hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,12vw,88px);
-  letter-spacing:4px;color:#F5F0E8;line-height:0.95;margin-bottom:18px}
-.login-hero-tagline{font-family:'Crimson Pro',serif;font-style:italic;font-size:18px;
-  color:#888;border-left:3px solid #C9A84C;padding-left:12px;display:inline-block;text-align:left}
-.login-box{background:#111111;border:1px solid rgba(200,16,46,0.25);padding:36px 32px;width:100%;max-width:380px}
-.login-logo{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:4px;color:#F5F0E8;margin-bottom:4px}
-.login-logo span{color:#C8102E}
-.login-sub{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
-  text-transform:uppercase;color:#888;margin-bottom:28px}
-.role-tabs{display:flex;background:#1A1A1A;border:1px solid rgba(255,255,255,0.07);
-  padding:3px;gap:2px;margin-bottom:18px}
-.role-tab{flex:1;padding:7px;border:none;background:transparent;color:#888;
-  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;
-  text-transform:uppercase;cursor:pointer;transition:all .18s}
-.role-tab.active{background:#C8102E;color:#F5F0E8}
-.field{margin-bottom:14px}
-label{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
-  color:#C8102E;text-transform:uppercase;margin-bottom:6px}
-#login-screen input[type=email],#login-screen input[type=password]{
-  background:#1A1A1A;border:1px solid rgba(255,255,255,0.1);border-radius:0;
-  color:#F5F0E8;font-family:'JetBrains Mono',monospace;font-size:13px}
-#login-screen input:focus{border-color:#C8102E}
-#login-btn{background:#C8102E;color:#F5F0E8;font-family:'JetBrains Mono',monospace;
-  font-size:11px;letter-spacing:3px;text-transform:uppercase;border-radius:0;
-  width:100%;margin-top:6px;padding:14px;border:none;cursor:pointer;transition:background .2s}
-#login-btn:hover{background:#8B0A1F}
-#login-btn:disabled{background:#555;cursor:not-allowed}
-.login-toggle{text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;
-  font-size:10px;letter-spacing:1px;color:#888}
-.login-toggle a{color:#C9A84C;cursor:pointer;text-decoration:none}
+#login-screen{min-height:100vh;display:none;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 60% 50% at 50% 0%,#e8edf5,transparent),var(--bg)}
+.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:36px 32px;width:340px}
+.login-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:24px}
+.role-tabs{display:flex;background:var(--bg3);border-radius:6px;padding:3px;gap:2px;margin-bottom:18px}
+.role-tab{flex:1;padding:6px;border:none;border-radius:4px;background:transparent;color:var(--muted);
+  font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .18s}
+.role-tab.active{background:#111;color:#fff;font-weight:700}
+.field{margin-bottom:11px}
+label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.login-toggle{text-align:center;margin-top:14px;font-size:11px;color:var(--muted)}
+.login-toggle a{color:var(--blue);cursor:pointer;text-decoration:none}
 .login-toggle a:hover{text-decoration:underline}
-.login-err{background:rgba(200,16,46,0.1);border:1px solid rgba(200,16,46,0.4);
-  padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;
-  color:#C8102E;margin-bottom:12px;display:none}
-@media(max-width:600px){
-  #login-screen{overflow-y:auto}
-  .login-nav{padding:14px 20px}
-  .login-nav-info{display:none}
-  .login-center{padding:80px 16px 40px;justify-content:flex-start;gap:28px}
-  .login-hero-tagline{font-size:16px}
-  .login-box{padding:28px 20px}
-}
+.login-err{background:#fef2f2;border:1px solid #fecaca;border-radius:5px;
+  padding:7px 10px;font-size:11px;color:var(--danger);margin-bottom:10px;display:none}
 
 /* ── VOLUME TOPBAR ── */
 .vol-tb-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
@@ -402,32 +358,15 @@ label{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter
 
 <!-- LOGIN -->
 <div id="login-screen">
-  <nav class="login-nav">
-    <div class="login-nav-logo">EARN IT. / NO SHORTCUTS.</div>
-    <div class="login-nav-info">
-      <span>Vladimir Brusov</span>
-      <span class="nav-dot">·</span>
-      <span>Strength Coach</span>
-      <span class="nav-dot">·</span>
-      <span>St. Louis, MO</span>
-    </div>
-  </nav>
-  <div class="login-center">
-    <div class="login-hero">
-      <div class="login-hero-eyebrow">Personal Coaching Platform</div>
-      <div class="login-hero-title">OLD SCHOOL.<br>REAL RESULTS.</div>
-      <div class="login-hero-tagline">Vladimir Brusov &nbsp;·&nbsp; 20 years coaching</div>
-    </div>
-    <div class="login-box">
-      <div class="login-logo">Coach<span>Space</span></div>
-      <div class="login-sub">Remote coaching, simplified.</div>
-      <div class="login-err" id="login-err"></div>
-      <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
-      <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
-      <button id="login-btn" onclick="doLogin()">Enter CoachSpace →</button>
-      <div class="login-toggle" id="login-toggle">
-        No account? <a onclick="toggleSignup()">Sign up free</a>
-      </div>
+  <div class="login-box">
+    <div class="login-logo">CoachSpace</div>
+    <div class="login-sub">Remote coaching, simplified.</div>
+    <div class="login-err" id="login-err"></div>
+    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+    <button class="btn btn-accent" id="login-btn" style="width:100%;margin-top:6px;padding:10px;font-size:13px" onclick="doLogin()">Enter CoachSpace →</button>
+    <div class="login-toggle" id="login-toggle">
+      No account? <a onclick="toggleSignup()">Sign up free</a>
     </div>
   </div>
 </div>
