@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://*.supabase.co wss://*.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'self';">
 <title>CoachSpace</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -42,22 +43,114 @@ textarea{resize:vertical;min-height:52px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── LOGIN ── */
-#login-screen{min-height:100vh;display:none;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse 60% 50% at 50% 0%,#e8edf5,transparent),var(--bg)}
-.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:36px 32px;width:340px}
-.login-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
-.login-sub{font-size:12px;color:var(--muted);margin-bottom:24px}
-.role-tabs{display:flex;background:var(--bg3);border-radius:6px;padding:3px;gap:2px;margin-bottom:18px}
-.role-tab{flex:1;padding:6px;border:none;border-radius:4px;background:transparent;color:var(--muted);
-  font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .18s}
-.role-tab.active{background:#111;color:#fff;font-weight:700}
-.field{margin-bottom:11px}
-label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.login-toggle{text-align:center;margin-top:14px;font-size:11px;color:var(--muted)}
-.login-toggle a{color:var(--blue);cursor:pointer;text-decoration:none}
+#login-screen{min-height:100vh;display:none;flex-direction:column;
+  background:#0A0A0A;position:relative;overflow:hidden}
+#login-screen::before{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity:0.4;pointer-events:none;z-index:0}
+.login-nav{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;
+  justify-content:space-between;align-items:center;padding:18px 48px;
+  background:rgba(10,10,10,0.97);border-bottom:1px solid rgba(200,16,46,0.2)}
+.login-nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#F5F0E8}
+.login-nav-logo span{color:#C8102E}
+.login-nav-info{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;color:#888;display:flex;gap:8px;align-items:center}
+.login-nav-info .nav-dot{color:#C8102E}
+.login-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:36px;padding:100px 20px 48px;position:relative;z-index:1}
+.login-hero{text-align:center}
+.login-hero-eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;
+  color:#C8102E;text-transform:uppercase;margin-bottom:14px}
+.login-hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,12vw,88px);
+  letter-spacing:4px;color:#F5F0E8;line-height:0.95;margin-bottom:18px}
+.login-hero-tagline{font-family:'Crimson Pro',serif;font-style:italic;font-size:18px;
+  color:#888;border-left:3px solid #C9A84C;padding-left:12px;display:inline-block;text-align:left}
+.login-box{background:#111111;border:1px solid rgba(200,16,46,0.25);padding:36px 32px;width:100%;max-width:380px}
+.login-logo{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:4px;color:#F5F0E8;margin-bottom:4px}
+.login-logo span{color:#C8102E}
+.login-sub{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;color:#888;margin-bottom:28px}
+.role-tabs{display:flex;background:#1A1A1A;border:1px solid rgba(255,255,255,0.07);
+  padding:3px;gap:2px;margin-bottom:18px}
+.role-tab{flex:1;padding:7px;border:none;background:transparent;color:#888;
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;
+  text-transform:uppercase;cursor:pointer;transition:all .18s}
+.role-tab.active{background:#C8102E;color:#F5F0E8}
+.field{margin-bottom:14px}
+label{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
+  color:#C8102E;text-transform:uppercase;margin-bottom:6px}
+#login-screen input[type=email],#login-screen input[type=password]{
+  background:#1A1A1A;border:1px solid rgba(255,255,255,0.1);border-radius:0;
+  color:#F5F0E8;font-family:'JetBrains Mono',monospace;font-size:13px}
+#login-screen input:focus{border-color:#C8102E}
+#login-btn{background:#C8102E;color:#F5F0E8;font-family:'JetBrains Mono',monospace;
+  font-size:11px;letter-spacing:3px;text-transform:uppercase;border-radius:0;
+  width:100%;margin-top:6px;padding:14px;border:none;cursor:pointer;transition:background .2s}
+#login-btn:hover{background:#8B0A1F}
+#login-btn:disabled{background:#555;cursor:not-allowed}
+.login-toggle{text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:1px;color:#888}
+.login-toggle a{color:#C9A84C;cursor:pointer;text-decoration:none}
 .login-toggle a:hover{text-decoration:underline}
-.login-err{background:#fef2f2;border:1px solid #fecaca;border-radius:5px;
-  padding:7px 10px;font-size:11px;color:var(--danger);margin-bottom:10px;display:none}
+.login-err{background:rgba(200,16,46,0.1);border:1px solid rgba(200,16,46,0.4);
+  padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:#C8102E;margin-bottom:12px;display:none}
+@media(max-width:600px){
+  #login-screen{overflow-y:auto}
+  .login-nav{padding:14px 20px}
+  .login-nav-info{display:none}
+  .login-center{padding:80px 16px 40px;justify-content:flex-start;gap:28px}
+  .login-hero-tagline{font-size:16px}
+  .login-box{padding:28px 20px}
+}
+
+/* ── VOLUME TOPBAR ── */
+.vol-tb-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  padding:3px 10px;cursor:pointer;font-size:11px;color:var(--muted2);
+  font-family:'DM Sans',sans-serif;font-weight:600;transition:all .13s;white-space:nowrap}
+.vol-tb-btn:hover{background:var(--bg4);color:var(--text)}
+.vol-tb-panel{position:fixed;top:60px;right:20px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  box-shadow:0 4px 20px rgba(0,0,0,.15);min-width:260px;z-index:500;user-select:none}
+.vol-tb-drag{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;cursor:grab;background:var(--bg3);border-radius:8px 8px 0 0;
+  border-bottom:1px solid var(--border)}
+.vol-tb-drag:active{cursor:grabbing}
+.vol-tb-drag-title{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--muted)}
+.vol-tb-close{background:none;border:none;cursor:pointer;color:var(--muted);
+  font-size:14px;line-height:1;padding:0 2px}
+.vol-tb-close:hover{color:var(--text)}
+.vol-tb-inner{padding:12px 14px}
+.vol-tb-range-label{font-size:10px;color:var(--muted);margin-bottom:8px}
+
+/* ── VOLUME PANEL ── */
+.vol-panel{border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;background:var(--bg2)}
+.vol-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;
+  cursor:pointer;background:var(--bg3);font-size:11px;font-weight:700;color:var(--muted2);user-select:none}
+.vol-header:hover{background:var(--bg4)}
+.vol-panel.collapsed .vol-body{display:none}
+.vol-toggle{font-size:10px;transition:transform .15s;display:inline-block}
+.vol-panel.collapsed .vol-toggle{transform:rotate(-90deg)}
+.vol-body{padding:8px 10px}
+.vol-table{width:100%;border-collapse:collapse;font-size:11px}
+.vol-table th{text-transform:uppercase;font-size:9px;letter-spacing:.5px;color:var(--muted);
+  font-weight:600;padding:2px 6px 5px;text-align:left}
+.vol-table th:not(:first-child){text-align:center}
+.vol-table td{padding:2px 6px;color:var(--text)}
+.vol-table td:not(:first-child){text-align:center;font-weight:600}
+.vol-table tr:hover td{background:var(--bg3)}
+.vol-ok{color:var(--green)}
+.vol-hi{color:var(--danger)}
+.vol-lo{color:var(--muted2)}
+.vol-unknown{display:inline-block;background:var(--bg4);border-radius:3px;
+  padding:0 4px;font-size:9px;font-weight:700;color:var(--muted2);margin-right:3px}
+.vol-adj{text-align:right;white-space:nowrap}
+.vol-adj-btn{background:var(--bg4);border:1px solid var(--border);border-radius:3px;
+  width:20px;height:20px;cursor:pointer;font-size:13px;line-height:1;color:var(--muted2);
+  padding:0;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle}
+.vol-adj-btn:hover{background:var(--bg5);color:var(--text)}
+.vol-manual-badge{font-size:9px;color:var(--blue);font-weight:700;margin:0 2px;vertical-align:middle}
 
 /* ── SHELL ── */
 #app{display:none;height:100vh;flex-direction:column}
@@ -309,15 +402,32 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 
 <!-- LOGIN -->
 <div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">CoachSpace</div>
-    <div class="login-sub">Remote coaching, simplified.</div>
-    <div class="login-err" id="login-err"></div>
-    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
-    <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
-    <button class="btn btn-accent" id="login-btn" style="width:100%;margin-top:6px;padding:10px;font-size:13px" onclick="doLogin()">Enter CoachSpace →</button>
-    <div class="login-toggle" id="login-toggle">
-      No account? <a onclick="toggleSignup()">Sign up free</a>
+  <nav class="login-nav">
+    <div class="login-nav-logo">EARN IT. / NO SHORTCUTS.</div>
+    <div class="login-nav-info">
+      <span>Vladimir Brusov</span>
+      <span class="nav-dot">·</span>
+      <span>Strength Coach</span>
+      <span class="nav-dot">·</span>
+      <span>St. Louis, MO</span>
+    </div>
+  </nav>
+  <div class="login-center">
+    <div class="login-hero">
+      <div class="login-hero-eyebrow">Personal Coaching Platform</div>
+      <div class="login-hero-title">OLD SCHOOL.<br>REAL RESULTS.</div>
+      <div class="login-hero-tagline">Vladimir Brusov &nbsp;·&nbsp; 20 years coaching</div>
+    </div>
+    <div class="login-box">
+      <div class="login-logo">Coach<span>Space</span></div>
+      <div class="login-sub">Remote coaching, simplified.</div>
+      <div class="login-err" id="login-err"></div>
+      <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+      <button id="login-btn" onclick="doLogin()">Enter CoachSpace →</button>
+      <div class="login-toggle" id="login-toggle">
+        No account? <a onclick="toggleSignup()">Sign up free</a>
+      </div>
     </div>
   </div>
 </div>
@@ -332,6 +442,16 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
       <button class="today-btn" onclick="scrollToToday()">Today</button>
       <div class="cal-month-label" id="cal-month-label">—</div>
       <button class="cal-nav-btn" onclick="scrollMonths(1)">›</button>
+      <div id="vol-topbar" style="display:none;position:relative">
+        <button class="vol-tb-btn" onclick="toggleVolTopbar()">📊 Volume</button>
+        <div class="vol-tb-panel" id="vol-tb-panel" style="display:none">
+          <div class="vol-tb-drag" id="vol-tb-drag">
+            <span class="vol-tb-drag-title">Volume · <span id="vol-tb-range"></span></span>
+            <button class="vol-tb-close" onclick="event.stopPropagation();toggleVolTopbar()">✕</button>
+          </div>
+          <div class="vol-tb-inner"><div id="vol-tb-body"></div></div>
+        </div>
+      </div>
     </div>
     <div class="topbar-right">
       <div class="user-chip"><div class="avatar" id="top-avatar">?</div><span id="top-name"></span></div>
@@ -406,6 +526,10 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ══════════════════════════════════
 //  HELPERS
 // ══════════════════════════════════
+function esc(s){
+  if(s===null||s===undefined)return'';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 const DS = d => d.toISOString().slice(0,10);
 const TODAY = DS(new Date());
 function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
@@ -428,6 +552,7 @@ let undoTimer=null, undoData=null;
 let cvWeekOffset=0;
 let isSignup=false;
 const MONTHS_BEFORE=3, MONTHS_AFTER=12;
+let calGridBuilt=false;
 
 // ══════════════════════════════════
 //  EXERCISE DATABASE
@@ -508,7 +633,7 @@ function showErr(msg){
 }
 async function doLogout(){
   await sb.auth.signOut();
-  currentUser=null;clientsCache=[];workoutsCache={};selectedClientId=null;copyState=null;
+  currentUser=null;clientsCache=[];workoutsCache={};selectedClientId=null;copyState=null;calGridBuilt=false;
   hide('app');show('login-screen','flex');
   document.getElementById('login-btn').disabled=false;
   document.getElementById('login-btn').textContent='Enter CoachSpace →';
@@ -520,6 +645,7 @@ async function doLogout(){
 async function initApp(){
   const meta=currentUser.user_metadata||{};
   const role=meta.role||'client';
+  currentRole=role;
   const name=meta.name||currentUser.email.split('@')[0];
   document.getElementById('top-avatar').textContent=name.slice(0,2).toUpperCase();
   document.getElementById('top-name').textContent=name;
@@ -543,7 +669,7 @@ async function initApp(){
 //  DATA — CLIENTS
 // ══════════════════════════════════
 async function loadClients(){
-  const {data,error}=await sb.from('clients').select('*').order('name');
+  const {data,error}=await sb.from('clients').select('*').eq('coach_id',currentUser.id).order('name');
   if(error){notify('Error loading clients');return;}
   clientsCache=data||[];
 }
@@ -581,25 +707,30 @@ function renderClientList(){
     const pending=wks.some(w=>!w.done);
     const d=document.createElement('div');
     d.className='client-item'+(c.id===selectedClientId?' active':'');
-    d.innerHTML=`<div class="avatar" style="width:26px;height:26px;font-size:10px">${c.name.slice(0,2).toUpperCase()}</div>
-      <div class="ci-info"><div class="ci-name">${c.name}</div><div class="ci-email">${c.email}</div></div>
+    d.innerHTML=`<div class="avatar" style="width:26px;height:26px;font-size:10px">${esc(c.name.slice(0,2).toUpperCase())}</div>
+      <div class="ci-info"><div class="ci-name">${esc(c.name)}</div><div class="ci-email">${esc(c.email)}</div></div>
       ${pending?'<div class="ci-dot"></div>':''}
-      <button class="ci-del" title="Delete client" onclick="event.stopPropagation();deleteClient('${c.id}','${c.name.replace(/'/g,"\\'")}')">✕</button>`;
+      <button class="ci-del" title="Delete client">✕</button>`;
+    d.querySelector('.ci-del').addEventListener('click',e=>{e.stopPropagation();deleteClient(c.id,c.name);});
     d.onclick=()=>selectClient(c.id);
     el.appendChild(d);
   });
 }
 async function selectClient(id){
   selectedClientId=id;cancelCopy();closeEditor();
+  const p=document.getElementById('vol-tb-panel');if(p)p.style.display='none';
   renderClientList();
   hide('coach-empty');show('cal-content','flex');
   if(!workoutsCache[id])await loadWorkoutsForClient(id);
   buildCalendar();
+  if(currentRole==='coach')show('vol-topbar','inline-block');
 }
 async function addClient(){
   const email=document.getElementById('nc-email').value.trim();
   const name=document.getElementById('nc-name').value.trim();
   if(!email){notify('Enter email');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){notify('Enter a valid email address');return;}
+  if(name.length>100){notify('Name must be 100 characters or less');return;}
   const coachId=currentUser.id;
   const {data,error}=await sb.from('clients').insert({
     coach_id:coachId,
@@ -631,21 +762,22 @@ async function deleteClient(id,name){
 // ══════════════════════════════════
 function buildCalendar(){
   closeEditor();
+  if(!calGridBuilt)buildCalGrid();
   renderCalGrid();
   requestAnimationFrame(()=>{
     const el=document.getElementById('day-'+TODAY);
     if(el){const s=document.getElementById('cal-scroll');s.scrollTop=el.offsetTop-60;}
     updateMonthLabel();
   });
-  document.getElementById('cal-scroll').onscroll=updateMonthLabel;
-  document.getElementById('cal-scroll').addEventListener('mousedown',e=>{
+  const scr=document.getElementById('cal-scroll');
+  scr.onscroll=updateMonthLabel;
+  scr.onmousedown=e=>{
     const ed=document.getElementById('inline-editor');
     if(ed&&!ed.contains(e.target)&&!e.target.closest('.day-cell.editing'))closeEditor();
-  },true);
+  };
 }
-function renderCalGrid(){
+function buildCalGrid(){
   const grid=document.getElementById('cal-grid');grid.innerHTML='';
-  const wks=workoutsCache[selectedClientId]||[];
   const now=new Date();
   let yr=now.getFullYear(),mo=now.getMonth()-MONTHS_BEFORE;
   while(mo<0){mo+=12;yr--;}
@@ -662,27 +794,35 @@ function renderCalGrid(){
     let col=1,cur=new Date(start);
     while(cur<=end){
       const ds=DS(cur),isToday=ds===TODAY,isOther=cur.getMonth()!==mo;
-      const dayWks=wks.filter(w=>w.date===ds);
       const cell=document.createElement('div');
-      cell.className='day-cell'+(isToday?' today':'')+(isOther?' other-month':'')+(copyState?' paste-mode':'');
+      cell.className='day-cell'+(isToday?' today':'')+(isOther?' other-month':'');
       cell.id='day-'+ds;cell.dataset.date=ds;cell.dataset.col=col;
-      if(copyState)cell.onclick=()=>pasteWorkout(ds);
       const nr=document.createElement('div');nr.className='day-num-row';
       const dn=document.createElement('span');dn.className='day-num';dn.textContent=cur.getDate();
       nr.appendChild(dn);
-      if(!copyState){
-        const ab=document.createElement('button');ab.className='day-add-btn';ab.textContent='+';
-        ab.onclick=e=>{e.stopPropagation();openEditor(ds,null,cell);};
-        nr.appendChild(ab);
-      }
+      const ab=document.createElement('button');ab.className='day-add-btn';ab.textContent='+';
+      ab.onclick=e=>{e.stopPropagation();openEditor(ds,null,cell);};
+      nr.appendChild(ab);
       cell.appendChild(nr);
-      dayWks.forEach(wk=>cell.appendChild(buildWorkoutBlock(wk,ds)));
       grid.appendChild(cell);
       col=col===7?1:col+1;
       cur.setDate(cur.getDate()+1);
     }
     mo++;if(mo>11){mo=0;yr++;}
   }
+  calGridBuilt=true;
+}
+function renderCalGrid(){
+  const wks=workoutsCache[selectedClientId]||[];
+  document.querySelectorAll('#cal-grid .day-cell').forEach(cell=>{
+    const ds=cell.dataset.date;
+    cell.classList.toggle('paste-mode',!!copyState);
+    cell.onclick=copyState?()=>pasteWorkout(ds):null;
+    const ab=cell.querySelector('.day-add-btn');
+    if(ab)ab.style.visibility=copyState?'hidden':'';
+    cell.querySelectorAll('.workout-block').forEach(b=>b.remove());
+    wks.filter(w=>w.date===ds).forEach(wk=>cell.appendChild(buildWorkoutBlock(wk,ds)));
+  });
 }
 function buildWorkoutBlock(wk,ds){
   const block=document.createElement('div');
@@ -695,27 +835,36 @@ function buildWorkoutBlock(wk,ds){
     else openEditor(ds,wk.id,document.getElementById('day-'+ds));
   };
   hdr.innerHTML=`<span class="wb-status">${wk.done?'✓':'○'}</span>
-    <span class="wb-title">${wk.title||'Workout'}</span>
-    <span class="wb-ex-count">${exCount}ex</span>`;
+    <span class="wb-title">${esc(wk.title||'Workout')}</span>
+    <span class="wb-ex-count">${esc(String(exCount))}ex</span>`;
   if(!copyState){
     const acts=document.createElement('div');acts.className='wb-actions';
     acts.innerHTML=`
-      <button class="wb-btn" title="Edit" onclick="event.stopPropagation();openEditor('${ds}','${wk.id}',document.getElementById('day-${ds}'))">✏️</button>
-      <button class="wb-btn" title="Move" onclick="event.stopPropagation();startMove('${wk.id}')">↕️</button>
-      <button class="wb-btn" title="Copy" onclick="event.stopPropagation();startCopy('${wk.id}')">📋</button>
-      <button class="wb-btn del" title="Delete" onclick="event.stopPropagation();deleteById('${wk.id}')">🗑</button>`;
+      <button class="wb-btn" title="Edit" data-action="edit">✏️</button>
+      <button class="wb-btn" title="Move" data-action="move">↕️</button>
+      <button class="wb-btn" title="Copy" data-action="copy">📋</button>
+      <button class="wb-btn del" title="Delete" data-action="delete">🗑</button>`;
+    acts.addEventListener('click',e=>{
+      e.stopPropagation();
+      const btn=e.target.closest('[data-action]');if(!btn)return;
+      const action=btn.dataset.action;
+      if(action==='edit')openEditor(ds,wk.id,document.getElementById('day-'+ds));
+      else if(action==='move')startMove(wk.id);
+      else if(action==='copy')startCopy(wk.id);
+      else if(action==='delete')deleteById(wk.id);
+    });
     hdr.appendChild(acts);
   }
   block.appendChild(hdr);
   const exWrap=document.createElement('div');exWrap.className='wb-exercises';
   (wk.groups||[]).forEach(g=>{
     const gd=document.createElement('div');gd.className='ex-group-preview';
-    if(g.type==='superset')gd.innerHTML=`<span class="ss-tag">⚡ ${g.label}</span>`;
+    if(g.type==='superset')gd.innerHTML=`<span class="ss-tag">⚡ ${esc(g.label)}</span>`;
     (g.exercises||[]).forEach((ex,i)=>{
-      const lbl=g.type==='superset'?`${g.label}${i+1}`:g.label;
+      const lbl=g.type==='superset'?`${esc(g.label)}${i+1}`:esc(g.label);
       const lines=(ex.freeText||'').split('\n').filter(l=>l.trim()).slice(0,3);
-      gd.innerHTML+=`<div class="ex-line-preview"><b>${lbl}) ${ex.name}</b></div>
-        ${lines.map(l=>`<div class="ex-free-preview">${l}</div>`).join('')}`;
+      gd.innerHTML+=`<div class="ex-line-preview"><b>${lbl}) ${esc(ex.name)}</b></div>
+        ${lines.map(l=>`<div class="ex-free-preview">${esc(l)}</div>`).join('')}`;
     });
     exWrap.appendChild(gd);
   });
@@ -812,7 +961,7 @@ function showUndo(msg){
   clearTimeout(undoTimer);
   document.querySelectorAll('.undo-bar').forEach(e=>e.remove());
   const bar=document.createElement('div');bar.className='undo-bar';
-  bar.innerHTML=`<span>${msg}</span><button class="undo-btn" onclick="doUndo()">Undo</button>`;
+  bar.innerHTML=`<span>${esc(msg)}</span><button class="undo-btn" onclick="doUndo()">Undo</button>`;
   document.body.appendChild(bar);
 }
 function doUndo(){
@@ -826,6 +975,115 @@ function doUndo(){
 }
 
 // ══════════════════════════════════
+//  VOLUME PANEL HELPERS
+// ══════════════════════════════════
+const DISPLAY_MUSCLES=['Chest','Back','Quads','Hamstrings','Biceps','Triceps','Shoulders'];
+const MUSCLE_MAP={
+  'Chest':'Chest','Back':'Back','Shoulders':'Shoulders',
+  'Biceps':'Biceps','Triceps':'Triceps',
+  'Legs — Quads':'Quads','Legs — Hamstrings':'Hamstrings'
+};
+function getMuscleGroup(name){
+  if(!name)return null;
+  const lower=name.toLowerCase();
+  for(const[group,exs]of Object.entries(EXERCISE_DB)){
+    if(exs.some(e=>e.toLowerCase()===lower))return group;
+  }
+  return null;
+}
+function getMuscleDisplay(name){
+  const raw=getMuscleGroup(name);
+  return raw?MUSCLE_MAP[raw]||null:null;
+}
+function countSetsFromText(freeText){
+  return(freeText||'').split('\n').filter(l=>l.trim()).length;
+}
+function getWeekRange(ds){
+  const d=new Date(ds+'T12:00');
+  const day=d.getDay();
+  const diff=day===0?-6:1-day;
+  const mon=new Date(d);mon.setDate(d.getDate()+diff);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  return{mon:mon.toISOString().slice(0,10),sun:sun.toISOString().slice(0,10)};
+}
+function getVolManualKey(mon){return`vol_${selectedClientId}_${mon}`;}
+function getVolManual(mon){try{return JSON.parse(localStorage.getItem(getVolManualKey(mon))||'{}')}catch{return{};}}
+function setVolManual(mon,adj){localStorage.setItem(getVolManualKey(mon),JSON.stringify(adj));}
+function adjustManualSets(muscle,delta){
+  const ref=editorDate||TODAY;
+  const{mon}=getWeekRange(ref);
+  const adj=getVolManual(mon);
+  adj[muscle]=Math.max(0,(adj[muscle]||0)+delta);
+  setVolManual(mon,adj);
+  renderVolTopbar();
+}
+function toggleVolTopbar(){
+  const p=document.getElementById('vol-tb-panel');
+  if(!p)return;
+  if(p.style.display==='none'){
+    // restore saved position
+    const pos=JSON.parse(localStorage.getItem('vol_panel_pos')||'null');
+    if(pos){p.style.top=pos.top;p.style.left=pos.left;p.style.right='auto';}
+    renderVolTopbar();p.style.display='block';
+  } else {
+    p.style.display='none';
+  }
+}
+function initVolDrag(){
+  const panel=document.getElementById('vol-tb-panel');
+  const handle=document.getElementById('vol-tb-drag');
+  if(!panel||!handle)return;
+  let startX,startY,startL,startT;
+  handle.addEventListener('mousedown',e=>{
+    if(e.target.classList.contains('vol-tb-close'))return;
+    const rect=panel.getBoundingClientRect();
+    startX=e.clientX;startY=e.clientY;
+    startL=rect.left;startT=rect.top;
+    panel.style.left=startL+'px';panel.style.right='auto';panel.style.top=startT+'px';
+    document.addEventListener('mousemove',onDrag);
+    document.addEventListener('mouseup',onDragEnd,{once:true});
+    e.preventDefault();
+  });
+  function onDrag(e){
+    const l=Math.max(0,Math.min(window.innerWidth-panel.offsetWidth,startL+(e.clientX-startX)));
+    const t=Math.max(0,Math.min(window.innerHeight-panel.offsetHeight,startT+(e.clientY-startY)));
+    panel.style.left=l+'px';panel.style.top=t+'px';
+  }
+  function onDragEnd(){
+    document.removeEventListener('mousemove',onDrag);
+    localStorage.setItem('vol_panel_pos',JSON.stringify({top:panel.style.top,left:panel.style.left}));
+  }
+}
+function renderVolTopbar(){
+  const body=document.getElementById('vol-tb-body');
+  const rangeEl=document.getElementById('vol-tb-range');
+  if(!body||!selectedClientId)return;
+
+  const ref=editorDate||TODAY;
+  const{mon,sun}=getWeekRange(ref);
+  if(rangeEl){
+    const fmt=d=>new Date(d+'T12:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    rangeEl.textContent=fmt(mon)+' – '+fmt(sun);
+  }
+
+  const adj=getVolManual(mon);
+  let html='<table class="vol-table"><thead><tr><th>Muscle</th><th>Sets</th><th></th></tr></thead><tbody>';
+  DISPLAY_MUSCLES.forEach(muscle=>{
+    const sets=adj[muscle]||0;
+    const cls=sets>=20?'vol-hi':sets>=10?'vol-ok':sets>0?'vol-lo':'';
+    html+=`<tr>
+      <td>${muscle}</td>
+      <td class="${cls}" style="font-weight:600">${sets||'—'}</td>
+      <td class="vol-adj">
+        <button class="vol-adj-btn" onclick="event.stopPropagation();adjustManualSets('${muscle}',-1)">−</button>
+        <button class="vol-adj-btn" onclick="event.stopPropagation();adjustManualSets('${muscle}',1)">+</button>
+      </td>
+    </tr>`;
+  });
+  html+='</tbody></table>';
+  body.innerHTML=html;
+}
+
 //  IN-CELL EDITOR
 // ══════════════════════════════════
 function openEditor(ds,workoutId,cellEl){
@@ -846,6 +1104,7 @@ function openEditor(ds,workoutId,cellEl){
   autoResize(na);na.addEventListener('input',()=>autoResize(na));
   panel.appendChild(na);
   const gc=document.createElement('div');gc.id='ed-groups';panel.appendChild(gc);
+
   const addRow=document.createElement('div');addRow.style.cssText='display:flex;align-items:center;gap:10px;';
   const addLink=document.createElement('button');addLink.className='ed-add-ex-link';
   addLink.innerHTML='＋ exercise';addLink.onclick=e=>{e.stopPropagation();openExPicker(addLink);};
@@ -871,6 +1130,7 @@ function openEditor(ds,workoutId,cellEl){
     edAddExItem('','',true);
   }
   requestAnimationFrame(()=>cellEl.scrollIntoView({behavior:'smooth',block:'nearest'}));
+  if(document.getElementById('vol-tb-panel')?.style.display!=='none')renderVolTopbar();
   ti.focus();
 }
 function closeEditor(){
@@ -998,13 +1258,14 @@ function edAddExItem(name='',freeText='',skipDivider=false){
   item.innerHTML=`<div class="ed-ex-header">
     <span class="ed-drag-handle" title="Drag to reorder">⠿</span>
     <span class="ed-ex-lbl">A)</span>
-    <input type="text" class="ed-ex-name-inp" placeholder="Exercise name" value="${name.replace(/"/g,'&quot;')}">
+    <input type="text" class="ed-ex-name-inp" placeholder="Exercise name" value="${esc(name)}">
     <button class="ed-ex-del" onclick="edDelEx(this)">✕</button>
   </div>
-  <textarea class="ed-ex-free-inp" placeholder="85×12&#10;95×10&#10;135×10">${freeText}</textarea>`;
+  <textarea class="ed-ex-free-inp" placeholder="85×12&#10;95×10&#10;135×10"></textarea>`;
   const inp=item.querySelector('.ed-ex-name-inp');
   attachExAc(inp);
   const ta=item.querySelector('.ed-ex-free-inp');
+  ta.value=freeText;
   ta.addEventListener('input',()=>autoResize(ta));
   setTimeout(()=>autoResize(ta),0);
   item.addEventListener('dragstart',e=>{e.dataTransfer.effectAllowed='move';item.style.opacity='.4';edDragSrc=item;});
@@ -1087,7 +1348,9 @@ async function edSave(){
     workoutsCache[selectedClientId]=workoutsCache[selectedClientId]||[];
     workoutsCache[selectedClientId].push(data);
   }
-  const sd=editorDate;closeEditor();refreshDay(sd);renderClientList();notify('Saved ✓');
+  const sd=editorDate;closeEditor();refreshDay(sd);renderClientList();
+  if(document.getElementById('vol-tb-panel')?.style.display!=='none')renderVolTopbar();
+  notify('Saved ✓');
 }
 async function editorDeleteWorkout(){
   if(!editorWorkoutId)return;
@@ -1134,13 +1397,13 @@ function renderClientWeek(){
     const dayLabel=new Date(w.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
     const exCount=(w.groups||[]).reduce((s,g)=>s+(g.exercises||[]).length,0);
     const allEx=(w.groups||[]).flatMap(g=>g.exercises||[]);
-    const preview=allEx.slice(0,5).map(ex=>ex.name||'').filter(Boolean);
+    const preview=allEx.slice(0,5).map(ex=>esc(ex.name||'')).filter(Boolean);
     const more=allEx.length>5?`<span style="color:var(--muted)">+${allEx.length-5} more</span>`:'';
     const card=document.createElement('div');
     card.className='week-card'+(w.done?' is-done':'');
     card.innerHTML=`<div style="flex:1">
-        <div class="wc-title">${w.title||'Workout'}</div>
-        <div class="wc-meta">${dayLabel} · ${exCount} exercise${exCount!==1?'s':''}</div>
+        <div class="wc-title">${esc(w.title||'Workout')}</div>
+        <div class="wc-meta">${esc(dayLabel)} · ${exCount} exercise${exCount!==1?'s':''}</div>
         ${preview.length?`<div class="wc-preview">${preview.join('<br>')}${more?'<br>'+more:''}</div>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:7px;margin-left:10px;flex-shrink:0">
@@ -1156,19 +1419,19 @@ function cvOpen(wid){
   document.getElementById('cv-week-list').style.display='none';
   document.getElementById('cv-detail').style.display='block';
   const dayLabel=new Date(wk.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  let html=`<div class="page-title">${wk.title||'Workout'}${wk.done?' <span class="tag">✓ Done</span>':''}</div>
-    <div class="page-sub">${dayLabel}</div>`;
+  let html=`<div class="page-title">${esc(wk.title||'Workout')}${wk.done?' <span class="tag">✓ Done</span>':''}</div>
+    <div class="page-sub">${esc(dayLabel)}</div>`;
   if(wk.notes)html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;
-    padding:10px 13px;margin-bottom:13px;font-size:12px;color:var(--muted2);max-width:520px">
-    <strong style="display:block;margin-bottom:3px;font-size:9px;text-transform:uppercase;letter-spacing:.5px">Coach Notes</strong>${wk.notes}</div>`;
+    padding:10px 13px;margin-bottom:13px;font-size:12px;color:var(--muted2);max-width:520px;white-space:pre-line">
+    <strong style="display:block;margin-bottom:3px;font-size:9px;text-transform:uppercase;letter-spacing:.5px">Coach Notes</strong>${esc(wk.notes)}</div>`;
   (wk.groups||[]).forEach(g=>{
     if(g.type==='superset')html+=`<div style="font-size:10px;font-weight:700;color:var(--blue);
-      text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">⚡ Superset ${g.label}</div>`;
+      text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">⚡ Superset ${esc(g.label)}</div>`;
     (g.exercises||[]).forEach((ex,i)=>{
-      const lbl=g.type==='superset'?`${g.label}${i+1}`:g.label;
+      const lbl=g.type==='superset'?`${esc(g.label)}${i+1}`:esc(g.label);
       html+=`<div class="client-ex-card">
-        <div class="cex-name">${lbl}) ${ex.name}</div>
-        ${ex.freeText?`<div style="font-size:12px;color:var(--muted2);white-space:pre-line;line-height:1.8;padding-bottom:6px">${ex.freeText}</div>`:''}
+        <div class="cex-name">${lbl}) ${esc(ex.name)}</div>
+        ${ex.freeText?`<div style="font-size:12px;color:var(--muted2);white-space:pre-line;line-height:1.8;padding-bottom:6px">${esc(ex.freeText)}</div>`:''}
         <label style="font-size:9px;margin-top:4px">Your notes</label>
         <textarea style="min-height:36px;font-size:11px" placeholder="How did it feel?"></textarea>
       </div>`;
@@ -1176,8 +1439,9 @@ function cvOpen(wid){
   });
   html+=`<div style="max-width:520px;margin-top:4px">
     <label>Overall notes</label>
-    <textarea id="cv-note" style="min-height:50px">${wk.client_notes||''}</textarea></div>`;
+    <textarea id="cv-note" style="min-height:50px"></textarea></div>`;
   document.getElementById('cv-detail-content').innerHTML=html;
+  document.getElementById('cv-note').value=wk.client_notes||'';
 }
 function cvBack(){
   document.getElementById('cv-week-list').style.display='block';
@@ -1212,7 +1476,7 @@ document.addEventListener('keydown',e=>{
 });
 
 // Start
-boot();
+boot();initVolDrag();
 </script>
 </body>
 </html>
