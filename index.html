@@ -43,22 +43,50 @@ textarea{resize:vertical;min-height:52px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── LOGIN ── */
-#login-screen{min-height:100vh;display:none;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse 60% 50% at 50% 0%,#e8edf5,transparent),var(--bg)}
-.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:36px 32px;width:340px}
-.login-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
-.login-sub{font-size:12px;color:var(--muted);margin-bottom:24px}
-.role-tabs{display:flex;background:var(--bg3);border-radius:6px;padding:3px;gap:2px;margin-bottom:18px}
-.role-tab{flex:1;padding:6px;border:none;border-radius:4px;background:transparent;color:var(--muted);
-  font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .18s}
-.role-tab.active{background:#111;color:#fff;font-weight:700}
+#login-screen{min-height:100vh;display:none;background:#08080f;overflow:auto}
+.lp-wrap{min-height:100vh;display:flex}
+.lp-brand{flex:1;display:flex;flex-direction:column;justify-content:center;padding:60px 56px;
+  position:relative;border-right:1px solid #1e1e2e;background:#08080f;overflow:hidden}
+.lp-brand::before{content:'';position:absolute;top:-100px;left:-60px;width:500px;height:500px;
+  background:radial-gradient(ellipse,rgba(204,31,53,0.1) 0%,transparent 65%);pointer-events:none}
+.lp-brand::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:#cc1f35}
+.lp-eyebrow{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;
+  text-transform:uppercase;color:#cc1f35;margin-bottom:18px}
+.lp-name{font-family:'Syne',sans-serif;font-size:62px;font-weight:800;color:#fff;
+  line-height:1.0;text-transform:uppercase;letter-spacing:1px;margin-bottom:28px}
+.lp-divider{width:48px;height:3px;background:#cc1f35;margin-bottom:24px}
+.lp-quote{font-size:17px;color:#a8a8c0;font-weight:300;line-height:1.75;max-width:380px}
+.lp-quote strong{color:#fff;font-weight:600}
+.lp-form-side{width:420px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  padding:40px 32px;background:#0d0d18}
+.lp-form-box{width:100%;max-width:340px}
+.lp-form-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px}
+.lp-form-sub{font-size:12px;color:#55556a;margin-bottom:24px}
+#login-screen input[type=email],#login-screen input[type=password]{
+  background:#131321;border-color:#1e1e2e;color:#e4e4f0}
+#login-screen input[type=email]:focus,#login-screen input[type=password]:focus{border-color:#cc1f35}
+#login-screen input::placeholder{color:#3a3a52}
+#login-screen label{color:#55556a}
+#login-screen .login-err{background:rgba(204,31,53,0.08);border:1px solid rgba(204,31,53,0.3);
+  border-radius:5px;padding:7px 10px;font-size:11px;color:#e88080;margin-bottom:10px;display:none}
+#login-screen #login-btn{background:#cc1f35}
+#login-screen #login-btn:hover{background:#d92a40}
+#login-screen #login-btn:disabled{background:#6b1020}
+.login-toggle{text-align:center;margin-top:14px;font-size:11px;color:#44445a}
+.login-toggle a{color:#cc1f35;cursor:pointer;text-decoration:none}
+.login-toggle a:hover{text-decoration:underline}
 .field{margin-bottom:11px}
 label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.login-toggle{text-align:center;margin-top:14px;font-size:11px;color:var(--muted)}
-.login-toggle a{color:var(--blue);cursor:pointer;text-decoration:none}
-.login-toggle a:hover{text-decoration:underline}
 .login-err{background:#fef2f2;border:1px solid #fecaca;border-radius:5px;
   padding:7px 10px;font-size:11px;color:var(--danger);margin-bottom:10px;display:none}
+@media(max-width:700px){
+  .lp-wrap{flex-direction:column}
+  .lp-brand{padding:48px 28px 40px;border-right:none;border-bottom:1px solid #1e1e2e}
+  .lp-brand::after{width:100%;height:3px;top:0;left:0}
+  .lp-name{font-size:42px}
+  .lp-quote{font-size:15px}
+  .lp-form-side{width:100%;padding:36px 24px 48px;align-items:flex-start}
+}
 
 /* ── VOLUME TOPBAR ── */
 .vol-tb-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
@@ -358,15 +386,25 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 
 <!-- LOGIN -->
 <div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">CoachSpace</div>
-    <div class="login-sub">Remote coaching, simplified.</div>
-    <div class="login-err" id="login-err"></div>
-    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
-    <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
-    <button class="btn btn-accent" id="login-btn" style="width:100%;margin-top:6px;padding:10px;font-size:13px" onclick="doLogin()">Enter CoachSpace →</button>
-    <div class="login-toggle" id="login-toggle">
-      No account? <a onclick="toggleSignup()">Sign up free</a>
+  <div class="lp-wrap">
+    <div class="lp-brand">
+      <div class="lp-eyebrow">Online Coaching</div>
+      <div class="lp-name">Vladimir<br>Brusov</div>
+      <div class="lp-divider"></div>
+      <div class="lp-quote"><strong>Get coached by the best.</strong><br>Real programs. Real accountability.<br>Let's get to your goal.</div>
+    </div>
+    <div class="lp-form-side">
+      <div class="lp-form-box">
+        <div class="lp-form-title">CoachSpace</div>
+        <div class="lp-form-sub">Sign in to continue</div>
+        <div class="login-err" id="login-err"></div>
+        <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+        <button class="btn btn-accent" id="login-btn" style="width:100%;margin-top:6px;padding:10px;font-size:13px" onclick="doLogin()">Enter CoachSpace →</button>
+        <div class="login-toggle" id="login-toggle">
+          No account? <a onclick="toggleSignup()">Sign up free</a>
+        </div>
+      </div>
     </div>
   </div>
 </div>
