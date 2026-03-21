@@ -47,56 +47,61 @@ textarea{resize:vertical;min-height:52px}
 
 /* ── LOGIN ── */
 #login-screen{position:fixed;inset:0;display:none;background:#08080f;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.lp-wrap{min-height:100%;display:flex}
-.lp-brand{flex:1;display:flex;flex-direction:column;justify-content:center;padding:60px 56px;
-  position:relative;border-right:1px solid #1e1e2e;background:#08080f;overflow:hidden}
-.lp-brand::before{content:'';position:absolute;top:-100px;left:-60px;width:500px;height:500px;
-  background:radial-gradient(ellipse,rgba(204,31,53,0.1) 0%,transparent 65%);pointer-events:none}
-.lp-brand::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:#cc1f35}
-.lp-eyebrow{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;
-  text-transform:uppercase;color:#cc1f35;margin-bottom:18px}
-.lp-name{font-family:'Syne',sans-serif;font-size:62px;font-weight:800;color:#fff;
-  line-height:1.0;text-transform:uppercase;letter-spacing:1px;margin-bottom:28px}
-.lp-divider{width:48px;height:3px;background:#cc1f35;margin-bottom:24px}
-.lp-quote{font-size:17px;color:#a8a8c0;font-weight:300;line-height:1.75;max-width:380px}
-.lp-quote strong{color:#fff;font-weight:600}
-.lp-form-side{width:420px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  padding:40px 32px;background:#0d0d18}
-.lp-form-box{width:100%;max-width:340px}
-.lp-form-name{display:none}
-.lp-form-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px}
-.lp-form-sub{font-size:12px;color:#55556a;margin-bottom:24px}
-#login-screen input[type=email],#login-screen input[type=password]{
-  background:#131321;border-color:#1e1e2e;color:#e4e4f0}
-#login-screen input[type=email]:focus,#login-screen input[type=password]:focus{border-color:#cc1f35}
-#login-screen input::placeholder{color:#3a3a52}
-#login-screen label{color:#55556a}
-#login-screen .login-err{background:rgba(204,31,53,0.08);border:1px solid rgba(204,31,53,0.3);
-  border-radius:5px;padding:7px 10px;font-size:11px;color:#e88080;margin-bottom:10px;display:none}
-#login-screen #login-btn{background:#cc1f35}
-#login-screen #login-btn:hover{background:#d92a40}
-#login-screen #login-btn:disabled{background:#6b1020}
-.login-toggle{text-align:center;margin-top:14px;font-size:11px;color:#44445a}
-.login-toggle a{color:#cc1f35;cursor:pointer;text-decoration:none}
-.login-toggle a:hover{text-decoration:underline}
-.field{margin-bottom:11px}
+/* login inner wrap */
+.lp-wrap{min-height:100%;width:100%;display:flex;flex-direction:column;background:#08080f}
+/* mobile top branding */
+.lp-mob-top{padding:max(32px,env(safe-area-inset-top,0px)) 28px 0;display:flex;flex-direction:column;align-items:center;text-align:center;flex-shrink:0}
+.lp-mob-eyebrow{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:3.5px;text-transform:uppercase;color:#cc1f35;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.lp-mob-eyebrow::before,.lp-mob-eyebrow::after{content:'';width:18px;height:1px;background:#cc1f35;opacity:.6}
+.lp-mob-name{font-family:'DM Sans',sans-serif;font-size:36px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1.5px;line-height:1;margin-bottom:10px}
+.lp-mob-tagline{font-size:13px;color:rgba(255,255,255,.3);font-weight:300;line-height:1.65;max-width:260px}
+.lp-mob-tagline strong{color:rgba(255,255,255,.55);font-weight:400}
+.lp-mob-bar{width:36px;height:3px;background:#cc1f35;margin:20px auto 0;flex-shrink:0}
+/* mobile form area */
+.lp-form-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 28px max(24px,env(safe-area-inset-bottom,0px))}
+.lp-form-box{width:100%;max-width:360px;margin:0 auto}
+.lp-form-title{font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:4px}
+.lp-form-sub{font-size:12px;color:#55556a;font-weight:300;margin-bottom:24px;line-height:1.6}
+/* inputs */
+.field{margin-bottom:14px}
 label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.login-err{background:#fef2f2;border:1px solid #fecaca;border-radius:5px;
-  padding:7px 10px;font-size:11px;color:var(--danger);margin-bottom:10px;display:none}
-@media(max-width:700px){
-  .lp-wrap{flex-direction:column;min-height:100%}
-  .lp-brand{display:none}
-  .lp-form-side{
-    width:100%;flex:1;min-height:100%;
-    padding:0 28px;
-    background:#08080f;
-    align-items:center;
-    justify-content:center
-  }
-  .lp-form-box{max-width:100%}
-  .lp-form-title{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#cc1f35;font-weight:700;margin-bottom:6px}
-  .lp-form-name{display:block;font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:0.5px;line-height:1.1;margin-bottom:6px}
-  .lp-form-sub{font-size:11px;margin-bottom:28px}
+.login-err{background:#fef2f2;border:1px solid #fecaca;border-radius:5px;padding:7px 10px;font-size:11px;color:var(--danger);margin-bottom:10px;display:none}
+#login-screen input[type=email],#login-screen input[type=password]{background:#111122;border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#e4e4f0;padding:14px 16px;font-size:16px;font-weight:300;transition:border-color .15s,-webkit-appearance 0s;-webkit-appearance:none;appearance:none}
+#login-screen input[type=email]:focus,#login-screen input[type=password]:focus{border-color:rgba(204,31,53,.5);background:#131325}
+#login-screen input::placeholder{color:rgba(255,255,255,.15)}
+#login-screen label{color:rgba(255,255,255,.3)}
+#login-screen .login-err{background:rgba(204,31,53,.08);border:1px solid rgba(204,31,53,.25);border-left:3px solid #cc1f35;border-radius:6px;padding:10px 14px;font-size:12px;color:#e88080;margin-bottom:16px;display:none}
+/* button */
+#login-screen #login-btn{width:100%;background:#cc1f35;color:#fff;border:none;border-radius:8px;padding:16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;min-height:52px;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s;margin-top:4px}
+#login-screen #login-btn:hover{background:#d92a40}
+#login-screen #login-btn:active{transform:scale(.985)}
+#login-screen #login-btn:disabled{background:#5a0f1c;cursor:not-allowed;opacity:.7;transform:none}
+.login-toggle{text-align:center;margin-top:20px;font-size:12px;color:#44445a;font-weight:300}
+.login-toggle a{color:#cc1f35;cursor:pointer;font-weight:500;text-decoration:none}
+.login-toggle a:hover{text-decoration:underline}
+/* desktop brand panel */
+.lp-brand{display:none}
+@media(min-width:640px){
+  .lp-wrap{flex-direction:row;min-height:100%}
+  .lp-mob-top{display:none}
+  .lp-mob-bar{display:none}
+  .lp-brand{flex:1;display:flex;flex-direction:column;justify-content:center;padding:60px 56px;position:relative;border-right:1px solid rgba(255,255,255,.07);background:#08080f;overflow:hidden}
+  .lp-brand::before{content:'';position:absolute;top:-100px;left:-60px;width:500px;height:500px;background:radial-gradient(ellipse,rgba(204,31,53,.08) 0%,transparent 65%);pointer-events:none}
+  .lp-brand::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:#cc1f35}
+  .lp-brand-ey{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:3.5px;text-transform:uppercase;color:#cc1f35;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+  .lp-brand-ey::before{content:'';width:22px;height:2px;background:#cc1f35}
+  .lp-brand-name{font-family:'DM Sans',sans-serif;font-size:64px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1.5px;line-height:1;margin-bottom:24px}
+  .lp-brand-divider{width:40px;height:3px;background:#cc1f35;margin-bottom:20px}
+  .lp-brand-quote{font-size:17px;color:rgba(255,255,255,.3);font-weight:300;line-height:1.82;max-width:380px}
+  .lp-brand-quote strong{color:rgba(255,255,255,.75);font-weight:500}
+  .lp-brand-foot{margin-top:32px;font-size:11px;color:rgba(255,255,255,.12);font-weight:300}
+  .lp-form-wrap{width:400px;flex-shrink:0;background:#0d0d1a;padding:48px 40px;justify-content:center}
+  .lp-form-box{max-width:320px;margin:0}
+}
+@media(min-width:1024px){
+  .lp-brand{padding:72px}
+  .lp-brand-name{font-size:72px}
+  .lp-form-wrap{width:440px;padding:56px 48px}
 }
 
 /* ── VOLUME TOPBAR ── */
@@ -398,26 +403,39 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="lp-wrap">
+
+    <!-- Desktop brand panel -->
     <div class="lp-brand">
-      <div class="lp-eyebrow">Online Coaching</div>
-      <div class="lp-name">Vladimir<br>Brusov</div>
-      <div class="lp-divider"></div>
-      <div class="lp-quote"><strong>Get coached by the best.</strong><br>Real programs. Real results.<br>Let's get to your goal.</div>
+      <div class="lp-brand-ey">Online Coaching</div>
+      <div class="lp-brand-name">Vladimir<br>Brusov</div>
+      <div class="lp-brand-divider"></div>
+      <div class="lp-brand-quote">Get coached by the <strong>best</strong> — real programs, real results. Built for athletes who don't make excuses.</div>
+      <div class="lp-brand-foot">app.brusovcoach.org</div>
     </div>
-    <div class="lp-form-side">
+
+    <!-- Mobile top branding -->
+    <div class="lp-mob-top">
+      <div class="lp-mob-eyebrow">Online Coaching</div>
+      <div class="lp-mob-name">Vladimir<br>Brusov</div>
+      <div class="lp-mob-tagline">Get coached by the <strong>best</strong> — real programs, real results.</div>
+    </div>
+    <div class="lp-mob-bar"></div>
+
+    <!-- Form -->
+    <div class="lp-form-wrap">
       <div class="lp-form-box">
-        <div class="lp-form-title">Online Coaching</div>
-        <span class="lp-form-name">Vladimir Brusov</span>
-        <div class="lp-form-sub">Get coached by the best — sign in to continue</div>
+        <div class="lp-form-title" id="formHeading">Sign In</div>
+        <div class="lp-form-sub" id="formSub">Enter your credentials to access CoachSpace</div>
         <div class="login-err" id="login-err"></div>
-        <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
-        <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
-        <button class="btn btn-accent" id="login-btn" style="width:100%;margin-top:6px;padding:10px;font-size:13px" onclick="doLogin()">Enter CoachSpace →</button>
+        <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" inputmode="email"></div>
+        <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
+        <button id="login-btn" onclick="doLogin()">Enter CoachSpace</button>
         <div class="login-toggle" id="login-toggle">
           No account? <a onclick="toggleSignup()">Sign up free</a>
         </div>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -585,10 +603,12 @@ function setRole(r){
 }
 function toggleSignup(){
   isSignup=!isSignup;
+  document.getElementById('formHeading').textContent=isSignup?'Create Account':'Sign In';
+  document.getElementById('formSub').textContent=isSignup?'Create your CoachSpace account':'Enter your credentials to access CoachSpace';
   document.getElementById('login-toggle').innerHTML=isSignup
     ?'Have an account? <a onclick="toggleSignup()">Sign in</a>'
     :'No account? <a onclick="toggleSignup()">Sign up free</a>';
-  document.getElementById('login-btn').textContent=isSignup?'Create Account →':'Enter CoachSpace →';
+  document.getElementById('login-btn').textContent=isSignup?'Create Account':'Enter CoachSpace';
   document.getElementById('login-err').style.display='none';
 }
 async function doLogin(){
@@ -604,14 +624,14 @@ async function doLogin(){
       email,password,
       options:{data:{role:currentRole,name:email.split('@')[0]}}
     });
-    if(error){showErr(error.message);btn.disabled=false;btn.textContent='Create Account →';return;}
+    if(error){showErr(error.message);btn.disabled=false;btn.textContent='Create Account';return;}
     notify('Account created! Signing you in…');
     const {data,error:e2}=await sb.auth.signInWithPassword({email,password});
     if(e2){showErr(e2.message);btn.disabled=false;return;}
     currentUser=data.user;
   } else {
     const {data,error}=await sb.auth.signInWithPassword({email,password});
-    if(error){showErr(error.message);btn.disabled=false;btn.textContent='Enter CoachSpace →';return;}
+    if(error){showErr(error.message);btn.disabled=false;btn.textContent='Enter CoachSpace';return;}
     currentUser=data.user;
   }
   hide('login-screen');
@@ -625,7 +645,7 @@ async function doLogout(){
   currentUser=null;clientsCache=[];workoutsCache={};selectedClientId=null;copyState=null;calGridBuilt=false;
   hide('app');show('login-screen','flex');
   document.getElementById('login-btn').disabled=false;
-  document.getElementById('login-btn').textContent='Enter CoachSpace →';
+  document.getElementById('login-btn').textContent='Enter CoachSpace';
 }
 
 // ══════════════════════════════════
