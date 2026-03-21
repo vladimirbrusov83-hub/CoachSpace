@@ -43,8 +43,8 @@ textarea{resize:vertical;min-height:52px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── LOGIN ── */
-#login-screen{min-height:100vh;display:none;background:#08080f;overflow:auto}
-.lp-wrap{min-height:100vh;display:flex}
+#login-screen{position:fixed;inset:0;display:none;background:#08080f;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.lp-wrap{min-height:100%;display:flex}
 .lp-brand{flex:1;display:flex;flex-direction:column;justify-content:center;padding:60px 56px;
   position:relative;border-right:1px solid #1e1e2e;background:#08080f;overflow:hidden}
 .lp-brand::before{content:'';position:absolute;top:-100px;left:-60px;width:500px;height:500px;
@@ -60,6 +60,7 @@ textarea{resize:vertical;min-height:52px}
 .lp-form-side{width:420px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
   padding:40px 32px;background:#0d0d18}
 .lp-form-box{width:100%;max-width:340px}
+.lp-form-name{display:none}
 .lp-form-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px}
 .lp-form-sub{font-size:12px;color:#55556a;margin-bottom:24px}
 #login-screen input[type=email],#login-screen input[type=password]{
@@ -80,12 +81,19 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .login-err{background:#fef2f2;border:1px solid #fecaca;border-radius:5px;
   padding:7px 10px;font-size:11px;color:var(--danger);margin-bottom:10px;display:none}
 @media(max-width:700px){
-  .lp-wrap{flex-direction:column}
-  .lp-brand{padding:48px 28px 40px;border-right:none;border-bottom:1px solid #1e1e2e}
-  .lp-brand::after{width:100%;height:3px;top:0;left:0}
-  .lp-name{font-size:42px}
-  .lp-quote{font-size:15px}
-  .lp-form-side{width:100%;padding:36px 24px 48px;align-items:flex-start}
+  .lp-wrap{flex-direction:column;min-height:100%}
+  .lp-brand{display:none}
+  .lp-form-side{
+    width:100%;flex:1;min-height:100%;
+    padding:0 28px;
+    background:#08080f;
+    align-items:center;
+    justify-content:center
+  }
+  .lp-form-box{max-width:100%}
+  .lp-form-title{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#cc1f35;font-weight:700;margin-bottom:2px}
+  .lp-form-name{display:block;font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#fff;text-transform:uppercase;line-height:1;margin-bottom:6px}
+  .lp-form-sub{margin-bottom:28px}
 }
 
 /* ── VOLUME TOPBAR ── */
@@ -396,6 +404,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
     <div class="lp-form-side">
       <div class="lp-form-box">
         <div class="lp-form-title">CoachSpace</div>
+        <span class="lp-form-name">Vladimir Brusov</span>
         <div class="lp-form-sub">Sign in to continue</div>
         <div class="login-err" id="login-err"></div>
         <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
