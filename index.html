@@ -157,7 +157,11 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .safe-area-top{height:env(safe-area-inset-top);background:var(--bg2);flex-shrink:0}
 .topbar{height:48px;display:flex;align-items:center;padding:0 14px;
   border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;gap:10px;z-index:50}
-.topbar-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.3px;flex-shrink:0}
+.topbar-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:-.2px;flex-shrink:0;display:flex;align-items:center;gap:6px;line-height:1}
+.topbar-logo-mark{width:22px;height:22px;border-radius:5px;background:#cc1f35;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;letter-spacing:0;flex-shrink:0}
+.topbar-logo-text{display:flex;flex-direction:column;gap:0px}
+.topbar-logo-name{font-size:13px;font-weight:800;color:var(--text);letter-spacing:.2px;line-height:1.1}
+.topbar-logo-sub{font-size:9px;font-weight:600;color:#cc1f35;letter-spacing:1.5px;text-transform:uppercase;line-height:1}
 .topbar-center{flex:1;display:flex;align-items:center;justify-content:center;gap:7px}
 .cal-nav-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
   color:var(--text);padding:3px 11px;cursor:pointer;font-size:17px;line-height:1;transition:all .13s}
@@ -443,7 +447,13 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 <div id="app">
   <div class="safe-area-top"></div>
   <div class="topbar">
-    <div class="topbar-logo">CoachSpace</div>
+    <div class="topbar-logo">
+      <div class="topbar-logo-mark">B</div>
+      <div class="topbar-logo-text">
+        <span class="topbar-logo-name">Brusov</span>
+        <span class="topbar-logo-sub">Coach</span>
+      </div>
+    </div>
     <div class="topbar-center" id="cal-nav-bar" style="display:none">
       <button class="cal-nav-btn" onclick="scrollMonths(-1)">‹</button>
       <button class="today-btn" onclick="scrollToToday()">Today</button>
