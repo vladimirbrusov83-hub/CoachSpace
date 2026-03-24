@@ -1300,8 +1300,8 @@ function openEditor(ds,workoutId,cellEl){
   const ti=document.createElement('input');ti.type='text';ti.className='ed-title-input';
   ti.id='ed-title';ti.placeholder='Workout name…';ti.value=existing?.title||'';
   panel.appendChild(ti);
-  _buildEditorContent(panel,existing);
   cellEl.appendChild(panel);
+  _buildEditorContent(panel,existing);
   requestAnimationFrame(()=>cellEl.scrollIntoView({behavior:'smooth',block:'nearest'}));
   if(document.getElementById('vol-tb-panel')?.style.display!=='none')renderVolTopbar();
   ti.focus();
