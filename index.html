@@ -1333,20 +1333,26 @@ function _buildEditorContent(panel,existing){
       g.exercises.forEach((ex,ei)=>{
         if(gi>0||ei>0)edAddDivider(g.type==='superset'&&ei>0);
         edAddExItem(ex.name,ex.freeText||'',true);
-        // Show saved coach note inline (desktop + mobile)
-        const coachNote=(cn.coach_ex||{})[`${gi}_${ei}`];
-        if(coachNote){
-          const items=gc.querySelectorAll('.ed-ex-item');
-          const lastItem=items[items.length-1];
-          if(lastItem){
+      });
+    });
+    // Inject coach notes under each exercise after all are loaded
+    const gcEl=document.getElementById('ed-groups');
+    if(gcEl){
+      const exItems=gcEl.querySelectorAll('.ed-ex-item');
+      let idx=0;
+      existing.groups.forEach((g,gi)=>{
+        (g.exercises||[]).forEach((ex,ei)=>{
+          const coachNote=(cn.coach_ex||{})[`${gi}_${ei}`];
+          if(coachNote&&exItems[idx]){
             const nd=document.createElement('div');
             nd.className='ed-coach-note-display';
             nd.textContent='📝 '+coachNote;
-            lastItem.appendChild(nd);
+            exItems[idx].appendChild(nd);
           }
-        }
+          idx++;
+        });
       });
-    });
+    }
     // Mobile-only: coach notes per exercise
     const LETTERS='ABCDEFGHIJKLMNOP';
     const ns=document.createElement('div');ns.className='coach-ex-notes-section';
