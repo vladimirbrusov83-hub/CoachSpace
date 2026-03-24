@@ -1714,11 +1714,12 @@ function cvOpen(wid){
     <textarea id="cv-note" style="min-height:50px"></textarea></div>`;
   document.getElementById('cv-detail-content').innerHTML=html;
   document.getElementById('cv-note').value=cn.overall||'';
-  // Auto-save each exercise note on blur
+  // Auto-save each exercise note on blur — capture wid now so cvBack() nulling viewingWorkoutId doesn't break it
+  const capturedWid=wid;
   (wk.groups||[]).forEach((g,gi)=>{
     (g.exercises||[]).forEach((ex,ei)=>{
       const ta=document.getElementById(`ex-note-${gi}-${ei}`);
-      if(ta)ta.addEventListener('blur',()=>saveExNote(gi,ei));
+      if(ta)ta.addEventListener('blur',()=>saveExNote(gi,ei,capturedWid));
     });
   });
 }
@@ -1740,8 +1741,8 @@ async function saveCoachExNote(gi,ei){
   refreshDay(wk.date);
 }
 
-async function saveExNote(gi,ei){
-  const wk=(workoutsCache['__client__']||[]).find(w=>w.id===viewingWorkoutId);if(!wk)return;
+async function saveExNote(gi,ei,wid){
+  const wk=(workoutsCache['__client__']||[]).find(w=>w.id===(wid||viewingWorkoutId));if(!wk)return;
   const ta=document.getElementById(`ex-note-${gi}-${ei}`);if(!ta)return;
   const cn=parseClientNotes(wk.client_notes);
   cn.v=2;cn.ex=cn.ex||{};
