@@ -785,6 +785,8 @@ async function initApp(){
     hide('client-view');hide('cal-content');
     await loadClients();
     renderClientList();
+    const lastId=localStorage.getItem('lastClientId');
+    if(lastId&&clientsCache.find(c=>c.id===lastId))selectClient(lastId);
   } else {
     hide('sidebar');hide('cal-nav-bar');hide('cal-content');hide('coach-empty');
     show('client-view','flex');
@@ -848,7 +850,7 @@ function renderClientList(){
 function isMobile(){return window.innerWidth<=768;}
 
 async function selectClient(id){
-  selectedClientId=id;cancelCopy();closeEditor();
+  selectedClientId=id;localStorage.setItem('lastClientId',id);cancelCopy();closeEditor();
   const p=document.getElementById('vol-tb-panel');if(p)p.style.display='none';
   renderClientList();
   hide('coach-empty');show('cal-content','flex');
@@ -1731,8 +1733,9 @@ async function saveCoachExNote(gi,ei){
   if(!wk){notify('Error: workout not found in cache');return;}
   const ta=document.getElementById(`coach-note-${gi}-${ei}`);
   if(!ta){notify('Error: textarea not found');return;}
-  const btn=document.getElementById(`coach-note-btn-${gi}-${ei}`);
-  const cn=parseClientNotes(wk.client_notes);
+  // Fetch latest from DB to avoid overwriting concurrent client saves
+  const {data:fresh}=await sb.from('workouts').select('client_notes').eq('id',wk.id).single();
+  const cn=parseClientNotes(fresh?.client_notes??wk.client_notes);
   cn.v=2;cn.coach_ex=cn.coach_ex||{};
   cn.coach_ex[`${gi}_${ei}`]=ta.value;
   const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
@@ -1744,7 +1747,9 @@ async function saveCoachExNote(gi,ei){
 async function saveExNote(gi,ei,wid){
   const wk=(workoutsCache['__client__']||[]).find(w=>w.id===(wid||viewingWorkoutId));if(!wk)return;
   const ta=document.getElementById(`ex-note-${gi}-${ei}`);if(!ta)return;
-  const cn=parseClientNotes(wk.client_notes);
+  // Fetch latest from DB to avoid overwriting concurrent coach saves
+  const {data:fresh}=await sb.from('workouts').select('client_notes').eq('id',wk.id).single();
+  const cn=parseClientNotes(fresh?.client_notes??wk.client_notes);
   cn.v=2;cn.ex=cn.ex||{};
   cn.ex[`${gi}_${ei}`]=ta.value;
   const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
