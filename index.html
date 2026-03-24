@@ -382,7 +382,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.18);width:270px;
   display:flex;flex-direction:column;overflow:hidden}
 .ex-picker-search{padding:8px 10px;border:none;border-bottom:1px solid var(--border);
-  background:var(--bg3);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;color:var(--text)}
+  background:var(--bg3);font-family:'DM Sans',sans-serif;font-size:16px;outline:none;color:var(--text)}
 .ex-picker-search::placeholder{color:var(--muted)}
 .ex-picker-list{overflow-y:auto;max-height:260px}
 .ex-picker-group{padding:5px 10px 2px;font-size:10px;font-weight:700;text-transform:uppercase;
@@ -1442,7 +1442,7 @@ function cvOpen(wid){
         <div class="cex-name">${lbl}) ${esc(ex.name)}</div>
         ${ex.freeText?`<div style="font-size:12px;color:var(--muted2);white-space:pre-line;line-height:1.8;padding-bottom:6px">${esc(ex.freeText)}</div>`:''}
         <label style="font-size:9px;margin-top:4px">Your notes</label>
-        <textarea style="min-height:36px;font-size:11px" placeholder="How did it feel?"></textarea>
+        <textarea style="min-height:36px;font-size:16px" placeholder="How did it feel?"></textarea>
       </div>`;
     });
   });
