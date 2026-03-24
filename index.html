@@ -1054,7 +1054,7 @@ function buildWorkoutBlock(wk,ds){
     (g.exercises||[]).forEach((ex,ei)=>{
       const lbl=g.type==='superset'?`${esc(g.label)}${ei+1}`:esc(g.label);
       const lines=(ex.freeText||'').split('\n').filter(l=>l.trim());
-      const key=`g${gi}_${ei}`;
+      const key=`${gi}_${ei}`;
       const clientNote=cn.ex&&cn.ex[key];
       const coachNote=cn.coach_ex&&cn.coach_ex[key];
       gd.innerHTML+=`<div class="ex-line-preview"><b>${lbl}) ${esc(ex.name)}</b></div>
