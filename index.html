@@ -398,6 +398,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .ed-coach-note-display{font-size:11px;color:var(--orange);margin-top:4px;
   padding:3px 6px;background:rgba(255,165,0,.06);border-radius:4px;
   border-left:2px solid var(--orange);white-space:pre-wrap;line-height:1.5}
+.ed-client-note-display{color:var(--blue);background:rgba(37,99,235,.06);border-left-color:var(--blue)}
 
 @media(max-width:768px){
   /* Kill all horizontal overflow */
@@ -1335,19 +1336,28 @@ function _buildEditorContent(panel,existing){
         edAddExItem(ex.name,ex.freeText||'',true);
       });
     });
-    // Inject coach notes under each exercise after all are loaded
+    // Inject client + coach notes under each exercise after all are loaded
     const gcEl=document.getElementById('ed-groups');
     if(gcEl){
       const exItems=gcEl.querySelectorAll('.ed-ex-item');
       let idx=0;
       existing.groups.forEach((g,gi)=>{
         (g.exercises||[]).forEach((ex,ei)=>{
+          const clientNote=(cn.ex||{})[`${gi}_${ei}`];
           const coachNote=(cn.coach_ex||{})[`${gi}_${ei}`];
-          if(coachNote&&exItems[idx]){
-            const nd=document.createElement('div');
-            nd.className='ed-coach-note-display';
-            nd.textContent='📝 '+coachNote;
-            exItems[idx].appendChild(nd);
+          if((clientNote||coachNote)&&exItems[idx]){
+            if(clientNote){
+              const nd=document.createElement('div');
+              nd.className='ed-coach-note-display ed-client-note-display';
+              nd.textContent='👤 '+clientNote;
+              exItems[idx].appendChild(nd);
+            }
+            if(coachNote){
+              const nd=document.createElement('div');
+              nd.className='ed-coach-note-display';
+              nd.textContent='📝 '+coachNote;
+              exItems[idx].appendChild(nd);
+            }
           }
           idx++;
         });
