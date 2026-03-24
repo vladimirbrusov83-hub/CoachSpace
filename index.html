@@ -1697,8 +1697,12 @@ function cvOpen(wid){
 }
 
 async function saveCoachExNote(gi,ei){
-  const wk=(workoutsCache[selectedClientId]||[]).find(w=>w.id===editorWorkoutId);if(!wk)return;
-  const ta=document.getElementById(`coach-note-${gi}-${ei}`);if(!ta)return;
+  if(!selectedClientId){notify('Error: no client selected');return;}
+  if(!editorWorkoutId){notify('Error: no workout open');return;}
+  const wk=(workoutsCache[selectedClientId]||[]).find(w=>w.id===editorWorkoutId);
+  if(!wk){notify('Error: workout not found in cache');return;}
+  const ta=document.getElementById(`coach-note-${gi}-${ei}`);
+  if(!ta){notify('Error: textarea not found');return;}
   const btn=document.getElementById(`coach-note-btn-${gi}-${ei}`);
   const cn=parseClientNotes(wk.client_notes);
   cn.v=2;cn.coach_ex=cn.coach_ex||{};
