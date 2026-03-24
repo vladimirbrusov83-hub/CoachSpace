@@ -1706,7 +1706,6 @@ function cvOpen(wid){
         ${ex.freeText?`<div style="font-size:12px;color:var(--muted2);white-space:pre-line;line-height:1.8;padding-bottom:6px">${esc(ex.freeText)}</div>`:''}
         <label style="font-size:9px;margin-top:4px">Your notes</label>
         <textarea id="ex-note-${gi}-${ei}" style="min-height:36px;font-size:16px" placeholder="How did it feel?">${saved}</textarea>
-        <button id="ex-note-btn-${gi}-${ei}" class="btn btn-sm" style="margin-top:6px;width:100%" onclick="saveExNote(${gi},${ei})">Save</button>
       </div>`;
     });
   });
@@ -1715,6 +1714,13 @@ function cvOpen(wid){
     <textarea id="cv-note" style="min-height:50px"></textarea></div>`;
   document.getElementById('cv-detail-content').innerHTML=html;
   document.getElementById('cv-note').value=cn.overall||'';
+  // Auto-save each exercise note on blur
+  (wk.groups||[]).forEach((g,gi)=>{
+    (g.exercises||[]).forEach((ex,ei)=>{
+      const ta=document.getElementById(`ex-note-${gi}-${ei}`);
+      if(ta)ta.addEventListener('blur',()=>saveExNote(gi,ei));
+    });
+  });
 }
 
 async function saveCoachExNote(gi,ei){
@@ -1737,14 +1743,12 @@ async function saveCoachExNote(gi,ei){
 async function saveExNote(gi,ei){
   const wk=(workoutsCache['__client__']||[]).find(w=>w.id===viewingWorkoutId);if(!wk)return;
   const ta=document.getElementById(`ex-note-${gi}-${ei}`);if(!ta)return;
-  const btn=document.getElementById(`ex-note-btn-${gi}-${ei}`);
   const cn=parseClientNotes(wk.client_notes);
   cn.v=2;cn.ex=cn.ex||{};
   cn.ex[`${gi}_${ei}`]=ta.value;
   const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
-  if(error){notify('Error saving');return;}
+  if(error){notify('Error saving note');return;}
   wk.client_notes=JSON.stringify(cn);
-  if(btn){btn.textContent='Saved ✓';btn.disabled=true;setTimeout(()=>{btn.textContent='Save';btn.disabled=false;},1500);}
 }
 function cvBack(){
   document.getElementById('cv-week-list').style.display='block';
