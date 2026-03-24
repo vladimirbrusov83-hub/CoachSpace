@@ -780,13 +780,16 @@ async function initApp(){
   document.getElementById('top-name').textContent=name;
   show('app','flex');
   if(role==='coach'){
-    show('sidebar');show('coach-empty','flex');
     show('cal-nav-bar','flex');
-    hide('client-view');hide('cal-content');
+    hide('client-view');hide('cal-content');hide('coach-empty');
     await loadClients();
     renderClientList();
     const lastId=localStorage.getItem('lastClientId');
-    if(lastId&&clientsCache.find(c=>c.id===lastId))selectClient(lastId);
+    if(lastId&&clientsCache.find(c=>c.id===lastId)){
+      await selectClient(lastId);
+    } else {
+      show('sidebar');show('coach-empty','flex');
+    }
   } else {
     hide('sidebar');hide('cal-nav-bar');hide('cal-content');hide('coach-empty');
     show('client-view','flex');
