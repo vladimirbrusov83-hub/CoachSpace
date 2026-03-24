@@ -394,6 +394,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .ex-picker-item{padding:5px 12px;font-size:12px;cursor:pointer;transition:background .1s}
 .ex-picker-item:hover{background:var(--bg3)}
 .ex-picker-empty{padding:10px 12px;font-size:12px;color:var(--muted);font-style:italic}
+.coach-ex-notes-section{display:none}
 
 @media(max-width:768px){
   /* Kill all horizontal overflow */
@@ -443,6 +444,20 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   .mob-day-meta{font-size:11px;color:var(--muted2);margin-top:1px}
   .mob-day-status{font-size:14px;flex-shrink:0}
   .mob-empty{padding:32px 14px;text-align:center;color:var(--muted);font-size:13px}
+
+  /* Coach per-exercise notes — mobile only */
+  .coach-ex-notes-section{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+  .coach-ex-notes-section::before{content:'📝 Session Notes';display:block;
+    font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+    color:var(--muted);margin-bottom:10px}
+  .coach-ex-note-row{margin-bottom:12px}
+  .coach-ex-note-lbl{display:block;font-size:11px;font-weight:600;color:var(--orange);
+    margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+  .coach-ex-note-ta{display:block;width:100%;box-sizing:border-box;
+    background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+    padding:7px 9px;color:var(--text);font-family:'DM Sans',sans-serif;
+    resize:none;min-height:52px;outline:none}
+  .coach-ex-note-ta:focus{border-color:var(--orange)}
 
   /* Client view — fit screen */
   .cv-scroll{padding:12px 14px}
@@ -1314,6 +1329,23 @@ function _buildEditorContent(panel,existing){
         edAddExItem(ex.name,ex.freeText||'',true);
       });
     });
+    // Mobile-only: coach notes per exercise
+    const cn=parseClientNotes(existing?.client_notes);
+    const LETTERS='ABCDEFGHIJKLMNOP';
+    const ns=document.createElement('div');ns.className='coach-ex-notes-section';
+    let idx=0;
+    existing.groups.forEach((g,gi)=>{
+      (g.exercises||[]).forEach((ex,ei)=>{
+        const letter=LETTERS[idx]||'?';
+        const saved=(cn.coach_ex||{})[`${gi}_${ei}`]||'';
+        const row=document.createElement('div');row.className='coach-ex-note-row';
+        row.innerHTML=`<label class="coach-ex-note-lbl">${letter}) ${esc(ex.name)}</label>
+          <textarea id="coach-note-${gi}-${ei}" class="coach-ex-note-ta" placeholder="Your notes…" style="font-size:16px">${esc(saved)}</textarea>
+          <button id="coach-note-btn-${gi}-${ei}" class="btn btn-sm" style="width:100%;margin-top:4px" onclick="saveCoachExNote(${gi},${ei})">Save note</button>`;
+        ns.appendChild(row);idx++;
+      });
+    });
+    panel.appendChild(ns);
   } else {
     edAddExItem('','',true);
   }
@@ -1639,6 +1671,19 @@ function cvOpen(wid){
     <textarea id="cv-note" style="min-height:50px"></textarea></div>`;
   document.getElementById('cv-detail-content').innerHTML=html;
   document.getElementById('cv-note').value=cn.overall||'';
+}
+
+async function saveCoachExNote(gi,ei){
+  const wk=(workoutsCache[selectedClientId]||[]).find(w=>w.id===editorWorkoutId);if(!wk)return;
+  const ta=document.getElementById(`coach-note-${gi}-${ei}`);if(!ta)return;
+  const btn=document.getElementById(`coach-note-btn-${gi}-${ei}`);
+  const cn=parseClientNotes(wk.client_notes);
+  cn.v=2;cn.coach_ex=cn.coach_ex||{};
+  cn.coach_ex[`${gi}_${ei}`]=ta.value;
+  const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
+  if(error){notify('Error saving');return;}
+  wk.client_notes=JSON.stringify(cn);
+  if(btn){btn.textContent='Saved ✓';btn.disabled=true;setTimeout(()=>{btn.textContent='Save note';btn.disabled=false;},1500);}
 }
 
 async function saveExNote(gi,ei){
