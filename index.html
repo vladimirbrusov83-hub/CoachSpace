@@ -396,15 +396,20 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .ex-picker-empty{padding:10px 12px;font-size:12px;color:var(--muted);font-style:italic}
 
 @media(max-width:768px){
+  /* Kill all horizontal overflow at root level */
+  body,#app{max-width:100vw;overflow-x:hidden}
+  .app-body{position:relative;overflow:hidden;max-width:100vw}
+  .content-area{max-width:100vw;overflow-x:hidden;box-sizing:border-box}
+
   /* Topbar fits screen */
-  .topbar{overflow:hidden;width:100%;box-sizing:border-box}
+  .topbar{width:100%;max-width:100vw;box-sizing:border-box;overflow:hidden}
   .topbar-center{display:none}
   #top-name{display:none}
   .user-chip{gap:4px}
+  #vol-topbar{display:none!important}
 
   /* Sidebar → full screen client list */
-  .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border)}
-  .app-body{position:relative;overflow:hidden}
+  .sidebar{width:100%;max-width:100vw;box-sizing:border-box;border-right:none}
 
   /* Hide desktop calendar on mobile */
   .cal-day-headers{display:none}
