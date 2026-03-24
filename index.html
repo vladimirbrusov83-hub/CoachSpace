@@ -446,7 +446,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   .mob-empty{padding:32px 14px;text-align:center;color:var(--muted);font-size:13px}
 
   /* Coach per-exercise notes — mobile only */
-  .coach-ex-notes-section{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+  .coach-ex-notes-section{display:block;margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
   .coach-ex-notes-section::before{content:'📝 Session Notes';display:block;
     font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
     color:var(--muted);margin-bottom:10px}
@@ -482,9 +482,11 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
     width:100%;max-width:100%;box-sizing:border-box
   }
   #mob-editor-overlay .ed-footer{
-    position:sticky;bottom:0;background:var(--bg2);
-    border-top:1px solid var(--border);padding:10px 14px
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--bg2);border-top:1px solid var(--border);
+    padding:10px 14px;z-index:10
   }
+  #mob-editor-overlay .cell-editor{padding-bottom:70px}
   .mob-editor-back{display:flex;align-items:center;gap:8px;
     padding:10px 14px;border-bottom:1px solid var(--border);
     background:var(--bg2);flex-shrink:0}
