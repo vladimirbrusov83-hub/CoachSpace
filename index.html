@@ -431,6 +431,26 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   .mob-day-meta{font-size:11px;color:var(--muted2);margin-top:1px}
   .mob-day-status{font-size:14px;flex-shrink:0}
   .mob-empty{padding:32px 14px;text-align:center;color:var(--muted);font-size:13px}
+
+  /* Mobile editor overlay */
+  #mob-editor-overlay{
+    position:fixed;inset:0;z-index:100;
+    background:var(--bg);display:flex;flex-direction:column;overflow:hidden
+  }
+  #mob-editor-overlay .cell-editor{
+    flex:1;overflow-y:auto;padding:14px 16px 40px;
+    border:none;box-shadow:none;position:static;width:100%;max-width:100%
+  }
+  #mob-editor-overlay .ed-footer{
+    position:sticky;bottom:0;background:var(--bg2);
+    border-top:1px solid var(--border);padding:10px 14px
+  }
+  .mob-editor-back{display:flex;align-items:center;gap:8px;
+    padding:10px 14px;border-bottom:1px solid var(--border);
+    background:var(--bg2);flex-shrink:0}
+  .mob-editor-back button{background:none;border:none;color:var(--blue);
+    font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:0}
+  .mob-editor-back span{font-size:13px;font-weight:600;color:var(--text)}
 }
 </style>
 </head>
@@ -575,6 +595,8 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
       </div>
     </div>
   </div>
+  <!-- Mobile fullscreen editor overlay -->
+  <div id="mob-editor-overlay" style="display:none"></div>
 </div>
 
 <script>
@@ -1210,6 +1232,21 @@ function openEditor(ds,workoutId,cellEl){
   editorDate=ds;editorWorkoutId=workoutId;edGroupCounter=0;
   const wks=workoutsCache[selectedClientId]||[];
   const existing=workoutId?wks.find(w=>w.id===workoutId):null;
+  // On mobile (no cellEl), use fullscreen overlay
+  if(!cellEl){
+    const ov=document.getElementById('mob-editor-overlay');
+    const wk=existing;
+    const title=wk?.title||'Workout';
+    const hdr=document.createElement('div');hdr.className='mob-editor-back';
+    hdr.innerHTML=`<button onclick="closeEditor()">← Back</button><span>${esc(title)}</span>`;
+    const panel=document.createElement('div');
+    panel.className='cell-editor';panel.id='inline-editor';
+    ov.innerHTML='';ov.appendChild(hdr);ov.appendChild(panel);
+    ov.style.display='flex';
+    // build editor inside panel (reuse shared logic below)
+    _buildEditorContent(panel,existing);
+    return;
+  }
   cellEl.classList.add('editing');
   const addBtn=cellEl.querySelector('.day-add-btn');
   if(addBtn)addBtn.style.display='none';
@@ -1218,6 +1255,14 @@ function openEditor(ds,workoutId,cellEl){
   const ti=document.createElement('input');ti.type='text';ti.className='ed-title-input';
   ti.id='ed-title';ti.placeholder='Workout name…';ti.value=existing?.title||'';
   panel.appendChild(ti);
+  _buildEditorContent(panel,existing);
+  cellEl.appendChild(panel);
+  requestAnimationFrame(()=>cellEl.scrollIntoView({behavior:'smooth',block:'nearest'}));
+  if(document.getElementById('vol-tb-panel')?.style.display!=='none')renderVolTopbar();
+  ti.focus();
+}
+
+function _buildEditorContent(panel,existing){
   const na=document.createElement('textarea');na.className='ed-notes-input';na.id='ed-notes';
   na.placeholder='Notes…';na.value=existing?.notes||'';
   autoResize(na);na.addEventListener('input',()=>autoResize(na));
@@ -1237,7 +1282,6 @@ function openEditor(ds,workoutId,cellEl){
     <button class="btn btn-ghost btn-sm" onclick="closeEditor()">✕</button>
     ${existing?`<button class="btn btn-sm" style="margin-left:auto;color:var(--danger);background:transparent;border:none;cursor:pointer;font-size:11px" onclick="editorDeleteWorkout()">Delete</button>`:''}`;
   panel.appendChild(footer);
-  cellEl.appendChild(panel);
   if(existing?.groups&&existing.groups.length){
     existing.groups.forEach((g,gi)=>{
       g.exercises.forEach((ex,ei)=>{
@@ -1248,9 +1292,6 @@ function openEditor(ds,workoutId,cellEl){
   } else {
     edAddExItem('','',true);
   }
-  requestAnimationFrame(()=>cellEl.scrollIntoView({behavior:'smooth',block:'nearest'}));
-  if(document.getElementById('vol-tb-panel')?.style.display!=='none')renderVolTopbar();
-  ti.focus();
 }
 function closeEditor(){
   closeExPicker();
@@ -1264,6 +1305,8 @@ function closeEditor(){
     }
     panel.remove();
   }
+  const ov=document.getElementById('mob-editor-overlay');
+  if(ov)ov.style.display='none';
   editorDate=null;editorWorkoutId=null;
 }
 
@@ -1468,6 +1511,7 @@ async function edSave(){
     workoutsCache[selectedClientId].push(data);
   }
   const sd=editorDate;closeEditor();refreshDay(sd);renderClientList();
+  if(isMobile())buildMobileCoachList();
   if(document.getElementById('vol-tb-panel')?.style.display!=='none')renderVolTopbar();
   notify('Saved ✓');
 }
