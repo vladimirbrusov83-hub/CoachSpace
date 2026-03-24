@@ -224,7 +224,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 
 /* ── DAY CELL ── */
 .day-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);
-  min-height:120px;position:relative;overflow:hidden;transition:min-height .15s}
+  min-height:120px;position:relative;overflow:visible;transition:min-height .15s}
 .day-cell.editing{overflow:visible;z-index:30}
 .day-cell[data-col="7"]{border-right:none}
 .day-cell.paste-mode{cursor:copy}
@@ -395,6 +395,9 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .ex-picker-item:hover{background:var(--bg3)}
 .ex-picker-empty{padding:10px 12px;font-size:12px;color:var(--muted);font-style:italic}
 .coach-ex-notes-section{display:none}
+.preview-note{font-size:11px;margin-top:3px;padding:2px 6px;border-radius:4px;border-left:2px solid;white-space:pre-wrap;line-height:1.4;word-break:break-word}
+.preview-note-client{color:var(--blue);background:rgba(37,99,235,.07);border-left-color:var(--blue)}
+.preview-note-coach{color:var(--orange);background:rgba(255,165,0,.07);border-left-color:var(--orange)}
 .ed-coach-note-display{font-size:11px;color:var(--orange);margin-top:4px;
   padding:3px 6px;background:rgba(255,165,0,.06);border-radius:4px;
   border-left:2px solid var(--orange);white-space:pre-wrap;line-height:1.5}
@@ -1044,14 +1047,20 @@ function buildWorkoutBlock(wk,ds){
   }
   block.appendChild(hdr);
   const exWrap=document.createElement('div');exWrap.className='wb-exercises';
-  (wk.groups||[]).forEach(g=>{
+  const cn=parseClientNotes(wk.client_notes);
+  (wk.groups||[]).forEach((g,gi)=>{
     const gd=document.createElement('div');gd.className='ex-group-preview';
     if(g.type==='superset')gd.innerHTML=`<span class="ss-tag">⚡ ${esc(g.label)}</span>`;
-    (g.exercises||[]).forEach((ex,i)=>{
-      const lbl=g.type==='superset'?`${esc(g.label)}${i+1}`:esc(g.label);
-      const lines=(ex.freeText||'').split('\n').filter(l=>l.trim()).slice(0,3);
+    (g.exercises||[]).forEach((ex,ei)=>{
+      const lbl=g.type==='superset'?`${esc(g.label)}${ei+1}`:esc(g.label);
+      const lines=(ex.freeText||'').split('\n').filter(l=>l.trim());
+      const key=`g${gi}_${ei}`;
+      const clientNote=cn.ex&&cn.ex[key];
+      const coachNote=cn.coach_ex&&cn.coach_ex[key];
       gd.innerHTML+=`<div class="ex-line-preview"><b>${lbl}) ${esc(ex.name)}</b></div>
-        ${lines.map(l=>`<div class="ex-free-preview">${esc(l)}</div>`).join('')}`;
+        ${lines.map(l=>`<div class="ex-free-preview">${esc(l)}</div>`).join('')}
+        ${clientNote?`<div class="preview-note preview-note-client">👤 ${esc(clientNote)}</div>`:''}
+        ${coachNote?`<div class="preview-note preview-note-coach">📝 ${esc(coachNote)}</div>`:''}`;
     });
     exWrap.appendChild(gd);
   });
