@@ -1730,7 +1730,6 @@ async function saveCoachExNote(gi,ei){
   const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
   if(error){notify('Error saving');return;}
   wk.client_notes=JSON.stringify(cn);
-  console.log('[saveCoachExNote] saved',wk.id,'coach_ex:',cn.coach_ex);
   if(btn){btn.textContent='Saved ✓';btn.disabled=true;setTimeout(()=>{btn.textContent='Save note';btn.disabled=false;},1500);}
   refreshDay(wk.date);
 }
