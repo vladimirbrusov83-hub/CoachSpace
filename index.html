@@ -1677,6 +1677,7 @@ function renderClientWeek(){
 }
 function parseClientNotes(raw){
   if(!raw)return{overall:'',ex:{}};
+  if(typeof raw==='object')return(raw.v===2)?raw:{overall:'',ex:{}};
   try{const p=JSON.parse(raw);if(p&&p.v===2)return p;}catch{}
   return{overall:raw,ex:{}};
 }
