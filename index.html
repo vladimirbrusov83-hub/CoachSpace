@@ -1342,6 +1342,7 @@ function _buildEditorContent(panel,existing){
   panel.appendChild(footer);
   if(existing?.groups&&existing.groups.length){
     const cn=parseClientNotes(existing?.client_notes);
+    console.log('[editor] client_notes raw:',existing?.client_notes,'parsed:',cn);
     existing.groups.forEach((g,gi)=>{
       g.exercises.forEach((ex,ei)=>{
         if(gi>0||ei>0)edAddDivider(g.type==='superset'&&ei>0);
