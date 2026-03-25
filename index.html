@@ -397,10 +397,10 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .preview-note{font-size:11px;margin-top:3px;padding:2px 6px;border-radius:4px;border-left:2px solid;white-space:pre-wrap;line-height:1.4;word-break:break-word}
 .preview-note-client{color:var(--blue);background:rgba(37,99,235,.07);border-left-color:var(--blue)}
 .preview-note-coach{color:var(--orange);background:rgba(255,165,0,.07);border-left-color:var(--orange)}
-.ed-coach-note-display{font-size:11px;color:var(--orange);margin-top:4px;
-  padding:3px 6px;background:rgba(255,165,0,.06);border-radius:4px;
-  border-left:2px solid var(--orange);white-space:pre-wrap;line-height:1.5}
-.ed-client-note-display{color:var(--blue);background:rgba(37,99,235,.06);border-left-color:var(--blue)}
+.ed-note-display{font-size:11px;margin-top:4px;padding:3px 6px;border-radius:4px;
+  border-left:2px solid;white-space:pre-wrap;line-height:1.5}
+.ed-note-coach{color:var(--orange);background:rgba(255,165,0,.06);border-left-color:var(--orange)}
+.ed-note-client{color:var(--blue);background:rgba(37,99,235,.06);border-left-color:var(--blue)}
 
 @media(max-width:768px){
   /* Kill all horizontal overflow */
@@ -1342,63 +1342,47 @@ function _buildEditorContent(panel,existing){
   panel.appendChild(footer);
   if(existing?.groups&&existing.groups.length){
     const cn=parseClientNotes(existing?.client_notes);
-    console.log('[editor] client_notes raw:',existing?.client_notes,'parsed:',cn);
+    const gcEl=document.getElementById('ed-groups');
     existing.groups.forEach((g,gi)=>{
-      g.exercises.forEach((ex,ei)=>{
+      (g.exercises||[]).forEach((ex,ei)=>{
         if(gi>0||ei>0)edAddDivider(g.type==='superset'&&ei>0);
         edAddExItem(ex.name,ex.freeText||'',true);
-      });
-    });
-    // Inject client + coach notes under each exercise after all are loaded
-    const gcEl=document.getElementById('ed-groups');
-    if(gcEl){
-      const exItems=gcEl.querySelectorAll('.ed-ex-item');
-      let idx=0;
-      existing.groups.forEach((g,gi)=>{
-        (g.exercises||[]).forEach((ex,ei)=>{
-          const clientNote=(cn.ex||{})[`${gi}_${ei}`];
-          const coachNote=(cn.coach_ex||{})[`${gi}_${ei}`];
-          if((clientNote||coachNote)&&exItems[idx]){
+        // Inject notes into the item we just added
+        if(gcEl){
+          const items=gcEl.querySelectorAll('.ed-ex-item');
+          const item=items[items.length-1];
+          if(item){
+            const clientNote=(cn.ex||{})[`${gi}_${ei}`];
+            const coachNote=(cn.coach_ex||{})[`${gi}_${ei}`];
             if(clientNote){
               const nd=document.createElement('div');
-              nd.className='ed-coach-note-display ed-client-note-display';
+              nd.className='ed-note-display ed-note-client';
               nd.textContent='👤 '+clientNote;
-              exItems[idx].appendChild(nd);
+              item.appendChild(nd);
             }
             if(coachNote){
               const nd=document.createElement('div');
-              nd.className='ed-coach-note-display';
+              nd.className='ed-note-display ed-note-coach';
               nd.textContent='📝 '+coachNote;
-              exItems[idx].appendChild(nd);
+              item.appendChild(nd);
+            }
+            // Mobile-only: coach note textarea, auto-saves on blur
+            if(isMobile()){
+              const wrap=document.createElement('div');wrap.className='coach-ex-inline-wrap';
+              const ta=document.createElement('textarea');
+              ta.id=`coach-note-${gi}-${ei}`;
+              ta.className='coach-ex-note-ta';
+              ta.placeholder='📝 Coach note…';
+              ta.style.fontSize='16px';
+              ta.value=coachNote||'';
+              ta.addEventListener('blur',()=>saveCoachExNote(gi,ei));
+              wrap.appendChild(ta);
+              item.appendChild(wrap);
             }
           }
-          idx++;
-        });
+        }
       });
-    }
-    // Mobile-only: coach note textarea inline under each exercise, auto-saves on blur
-    if(isMobile()&&gcEl){
-      const exItemsM=gcEl.querySelectorAll('.ed-ex-item');
-      let idxM=0;
-      existing.groups.forEach((g,gi)=>{
-        (g.exercises||[]).forEach((ex,ei)=>{
-          if(exItemsM[idxM]){
-            const saved=(cn.coach_ex||{})[`${gi}_${ei}`]||'';
-            const wrap=document.createElement('div');wrap.className='coach-ex-inline-wrap';
-            const ta=document.createElement('textarea');
-            ta.id=`coach-note-${gi}-${ei}`;
-            ta.className='coach-ex-note-ta';
-            ta.placeholder='📝 Coach note…';
-            ta.style.fontSize='16px';
-            ta.value=saved;
-            ta.addEventListener('blur',()=>saveCoachExNote(gi,ei));
-            wrap.appendChild(ta);
-            exItemsM[idxM].appendChild(wrap);
-          }
-          idxM++;
-        });
-      });
-    }
+    });
   } else {
     edAddExItem('','',true);
   }
