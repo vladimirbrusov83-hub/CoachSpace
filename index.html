@@ -1281,11 +1281,16 @@ function renderVolTopbar(){
 
 //  IN-CELL EDITOR
 // ══════════════════════════════════
-function openEditor(ds,workoutId,cellEl){
+async function openEditor(ds,workoutId,cellEl){
   closeEditor();
   editorDate=ds;editorWorkoutId=workoutId;edGroupCounter=0;
   const wks=workoutsCache[selectedClientId]||[];
   const existing=workoutId?wks.find(w=>w.id===workoutId):null;
+  // Always fetch fresh client_notes so both client and coach notes are visible
+  if(existing){
+    const {data}=await sb.from('workouts').select('client_notes').eq('id',existing.id).single();
+    if(data)existing.client_notes=data.client_notes;
+  }
   // On mobile (no cellEl), use fullscreen overlay
   if(!cellEl){
     const ov=document.getElementById('mob-editor-overlay');
@@ -1297,7 +1302,6 @@ function openEditor(ds,workoutId,cellEl){
     panel.className='cell-editor';panel.id='inline-editor';
     ov.innerHTML='';ov.appendChild(hdr);ov.appendChild(panel);
     ov.style.display='flex';
-    // build editor inside panel (reuse shared logic below)
     _buildEditorContent(panel,existing);
     return;
   }
