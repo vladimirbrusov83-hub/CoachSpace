@@ -899,6 +899,8 @@ async function selectClient(id){
   if(!workoutsCache[id])await loadWorkoutsForClient(id);
   if(isMobile()){
     hide('sidebar');
+    show('mob-back-bar','flex');
+    show('mob-coach-list','flex');
     const client=clientsCache.find(c=>c.id===id);
     document.getElementById('mob-client-name-label').textContent=client?.name||'';
     buildMobileCoachList();
@@ -909,6 +911,8 @@ async function selectClient(id){
 }
 
 function mobBackToClients(){
+  hide('mob-back-bar');
+  hide('mob-coach-list');
   hide('cal-content');
   show('sidebar');
   selectedClientId=null;
