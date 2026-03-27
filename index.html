@@ -825,6 +825,7 @@ async function initApp(){
   show('app','flex');
   if(role==='coach'){
     show('cal-nav-bar','flex');
+    show('sidebar');
     hide('client-view');hide('cal-content');hide('coach-empty');
     await loadClients();
     renderClientList();
@@ -832,7 +833,7 @@ async function initApp(){
     if(lastId&&clientsCache.find(c=>c.id===lastId)){
       await selectClient(lastId);
     } else {
-      show('sidebar');show('coach-empty','flex');
+      show('coach-empty','flex');
     }
   } else {
     hide('sidebar');hide('cal-nav-bar');hide('cal-content');hide('coach-empty');
