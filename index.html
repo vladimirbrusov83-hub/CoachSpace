@@ -431,15 +431,15 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   /* Mobile: client workout list overlay */
   #mob-client-overlay{position:fixed;inset:0;z-index:90;
     background:var(--bg);display:flex;flex-direction:column;
-    overflow:hidden;padding-top:48px}
+    overflow:hidden;padding-top:calc(48px + env(safe-area-inset-top))}
   #mob-coach-list{display:flex;flex-direction:column;flex:1;overflow-y:auto;padding:4px 0 40px}
 
   /* Mobile workout day rows */
   .mob-month-hdr{font-size:9px;font-weight:700;text-transform:uppercase;
     letter-spacing:.8px;color:var(--muted);padding:12px 14px 4px;position:sticky;top:0;
     background:var(--bg);z-index:1}
-  .mob-day-row{display:flex;align-items:center;gap:10px;padding:10px 14px;
-    border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;active:background var(--bg3)}
+  .mob-day-row{display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:44px;
+    border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
   .mob-day-row:active{background:var(--bg3)}
   .mob-day-date{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
     color:var(--muted2);width:52px;flex-shrink:0;line-height:1.3}
@@ -485,15 +485,17 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   #mob-editor-overlay .ed-footer{
     position:fixed;bottom:0;left:0;right:0;
     background:var(--bg2);border-top:1px solid var(--border);
-    padding:10px 14px;z-index:10
+    padding:10px 14px max(14px, env(safe-area-inset-bottom));z-index:10
   }
-  #mob-editor-overlay .cell-editor{padding-bottom:70px}
+  #mob-editor-overlay .cell-editor{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
   .mob-editor-back{display:flex;align-items:center;gap:8px;
-    padding:10px 14px;border-bottom:1px solid var(--border);
-    background:var(--bg2);flex-shrink:0}
+    padding:0 14px;border-bottom:1px solid var(--border);
+    background:var(--bg2);flex-shrink:0;min-height:44px}
   .mob-editor-back button{background:none;border:none;color:var(--blue);
-    font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:0}
+    font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+    padding:12px 14px 12px 0;min-height:44px}
   .mob-editor-back span{font-size:13px;font-weight:600;color:var(--text)}
+  .ed-drag-handle{display:none}
 
   /* Touch targets — all interactive controls ≥ 44px */
   .btn{min-height:44px;padding:10px 16px;font-size:14px}
@@ -503,6 +505,17 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   .today-btn{min-height:44px;padding:10px 14px;font-size:14px}
   .back-btn{padding:12px 0;min-height:44px}
   .mob-back-btn{min-height:44px;padding:8px 14px}
+  /* Topbar back button — proper touch target */
+  #mob-topbar-back{min-height:44px;min-width:44px;padding:0 12px;
+    display:flex;align-items:center}
+  /* Client list touch targets */
+  .client-item{min-height:44px;padding:10px 13px}
+  .ci-del{min-height:44px;min-width:36px;padding:10px 8px;
+    display:flex;align-items:center;justify-content:center}
+  /* Add client toggle */
+  .add-client-toggle{min-height:44px;padding:10px 0;width:100%}
+  /* Sidebar footer safe area */
+  .sb-footer{padding-bottom:max(10px, env(safe-area-inset-bottom))}
 
   /* Client view — week card full width */
   .week-card{max-width:100%;width:100%}
@@ -512,9 +525,6 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 
   /* Exercise delete — always visible on mobile (no hover on touch) */
   .ed-ex-del{color:var(--muted)}
-
-  /* Drag handle — show dimly so users know it exists */
-  .ed-drag-handle{opacity:0.4}
 
   /* Delete client button — always visible on touch */
   .ci-del{display:block}
@@ -1350,7 +1360,7 @@ async function openEditor(ds,workoutId,cellEl){
     const wk=existing;
     const title=wk?.title||'Workout';
     const hdr=document.createElement('div');hdr.className='mob-editor-back';
-    hdr.innerHTML=`<button onclick="closeEditor()">← Back</button><span>${esc(title)}</span>`;
+    hdr.innerHTML=`<button onclick="closeEditor()">← Back</button><input type="text" id="ed-title" class="ed-title-input" style="flex:1;font-size:16px;background:transparent;border:none;outline:none;padding:0;color:var(--text);font-weight:600;font-family:'Syne',sans-serif" placeholder="Workout name…" value="${esc(title)}"><span></span>`;
     const panel=document.createElement('div');
     panel.className='cell-editor';panel.id='inline-editor';
     ov.innerHTML='';ov.appendChild(hdr);ov.appendChild(panel);
