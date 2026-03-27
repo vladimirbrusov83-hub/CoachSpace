@@ -717,7 +717,7 @@ function weekLabel(mon){
 let currentUser=null, currentRole='client', selectedClientId=null;
 let clientsCache=[], workoutsCache={};
 let copyState=null;
-let editorDate=null, editorWorkoutId=null, edGroupCounter=0;
+let editorDate=null, editorWorkoutId=null;
 let viewingWorkoutId=null;
 let undoTimer=null, undoData=null;
 let cvWeekOffset=0;
@@ -1329,7 +1329,9 @@ function renderVolTopbar(){
 // ══════════════════════════════════
 async function openEditor(ds,workoutId,cellEl){
   closeEditor();
-  editorDate=ds;editorWorkoutId=workoutId;edGroupCounter=0;
+  // Close volume panel if open — it has z-index:500 which overlays the cell-editor (z-index:30 stacking context)
+  const vp=document.getElementById('vol-tb-panel');if(vp)vp.style.display='none';
+  editorDate=ds;editorWorkoutId=workoutId;
   const wks=workoutsCache[selectedClientId]||[];
   const existing=workoutId?wks.find(w=>w.id===workoutId):null;
   // Always fetch fresh client_notes so both client and coach notes are visible
