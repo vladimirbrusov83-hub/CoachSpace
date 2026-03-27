@@ -590,7 +590,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 <div id="app">
   <div class="safe-area-top"></div>
   <div class="topbar">
-    <div class="topbar-logo">
+    <div class="topbar-logo" onclick="goHome()" style="cursor:pointer">
       <div class="topbar-logo-mark">B</div>
       <div class="topbar-logo-text">
         <span class="topbar-logo-name">Brusov</span>
@@ -916,11 +916,20 @@ async function selectClient(id){
   }
 }
 
-function mobBackToClients(){
+function goHome(){
+  if(currentRole!=='coach')return;
+  closeEditor();
+  cancelCopy();
+  hide('mob-editor-overlay');
   hide('mob-client-overlay');
+  hide('cal-content');
   show('sidebar');
+  show('coach-empty','flex');
   selectedClientId=null;
   renderClientList();
+}
+function mobBackToClients(){
+  goHome();
 }
 
 function buildMobileCoachList(){
