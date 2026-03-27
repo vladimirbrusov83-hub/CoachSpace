@@ -297,14 +297,14 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   color:var(--muted2);min-width:22px;flex-shrink:0;transition:color .15s}
 .ed-ex-item.is-superset .ed-ex-lbl{color:var(--blue)}
 .ed-ex-name-inp{flex:1;background:transparent;border:none;outline:none;
-  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text);padding:1px 0}
+  font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;color:var(--text);padding:1px 0}
 .ed-ex-name-inp::placeholder{color:var(--muted)}
 .ed-ex-del{background:transparent;border:none;color:transparent;
   font-size:13px;cursor:pointer;padding:0 2px;line-height:1;transition:color .1s;flex-shrink:0}
 .ed-ex-item:hover .ed-ex-del{color:var(--muted)}
 .ed-ex-del:hover{color:var(--danger)!important}
 .ed-ex-free-inp{display:block;width:100%;background:transparent;border:none;resize:none;
-  font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted2);
+  font-family:'DM Sans',sans-serif;font-size:16px;color:var(--muted2);
   padding:1px 0 4px 26px;outline:none;line-height:1.6;overflow:hidden;min-height:22px}
 .ed-ex-free-inp::placeholder{color:var(--muted)}
 .ed-ex-free-inp:focus{color:var(--text)}
@@ -322,7 +322,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .ed-footer{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
 
 /* ── UNDO BAR ── */
-.undo-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+.undo-bar{position:fixed;bottom:max(20px,calc(env(safe-area-inset-bottom) + 12px));left:50%;transform:translateX(-50%);
   background:#111;color:#fff;border-radius:8px;padding:9px 16px;
   display:flex;align-items:center;gap:12px;font-size:12px;z-index:9999;
   animation:slideUp .2s ease;box-shadow:0 4px 20px rgba(0,0,0,.2)}
@@ -368,7 +368,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .back-btn{display:inline-flex;align-items:center;gap:5px;color:var(--muted);
   font-size:12px;cursor:pointer;margin-bottom:14px;transition:color .1s}
 .back-btn:hover{color:var(--text)}
-.notif{position:fixed;bottom:20px;right:16px;background:#111;border:1px solid #333;
+.notif{position:fixed;bottom:max(20px,calc(env(safe-area-inset-bottom) + 12px));right:16px;background:#111;border:1px solid #333;
   border-radius:7px;padding:9px 14px;font-size:12px;color:#fff;z-index:9998;
   animation:slideUp .2s ease;pointer-events:none}
 @keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -494,6 +494,45 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   .mob-editor-back button{background:none;border:none;color:var(--blue);
     font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:0}
   .mob-editor-back span{font-size:13px;font-weight:600;color:var(--text)}
+
+  /* Touch targets — all interactive controls ≥ 44px */
+  .btn{min-height:44px;padding:10px 16px;font-size:14px}
+  .btn-sm{min-height:40px;padding:8px 14px;font-size:13px}
+  .btn-xs{min-height:36px;padding:7px 12px;font-size:12px}
+  .cv-week-nav-btn{min-height:44px;min-width:44px;padding:10px 14px;font-size:18px}
+  .today-btn{min-height:44px;padding:10px 14px;font-size:14px}
+  .back-btn{padding:12px 0;min-height:44px}
+  .mob-back-btn{min-height:44px;padding:8px 14px}
+
+  /* Client view — week card full width */
+  .week-card{max-width:100%;width:100%}
+
+  /* Mark as Done CTA — full width, prominent */
+  #cv-detail .btn-accent{width:100%;min-height:52px;font-size:15px}
+
+  /* Exercise delete — always visible on mobile (no hover on touch) */
+  .ed-ex-del{color:var(--muted)}
+
+  /* Drag handle — show dimly so users know it exists */
+  .ed-drag-handle{opacity:0.4}
+
+  /* Delete client button — always visible on touch */
+  .ci-del{display:block}
+
+  /* Exercise picker → bottom sheet on mobile */
+  .ex-picker{
+    position:fixed;left:12px!important;right:12px!important;
+    width:auto;bottom:0;top:auto!important;
+    border-radius:12px 12px 0 0;
+    max-height:55vh;
+  }
+  .ex-picker-list{max-height:calc(55vh - 52px)}
+
+  /* Small phone (320px) safety */
+  @media(max-width:375px){
+    .topbar{padding:0 10px;gap:6px}
+    .topbar-logo-name{font-size:12px}
+  }
 }
 </style>
 </head>
