@@ -35,7 +35,7 @@ textarea{resize:vertical;min-height:52px}
 .btn-ghost{background:transparent;color:var(--muted2);border:1px solid var(--border)}
 .btn-ghost:hover{color:var(--text);border-color:var(--muted2)}
 .btn-sm{padding:4px 10px;font-size:11px}
-.btn-xs{padding:3px 8px;font-size:10px}
+.btn-xs{padding:3px 8px;font-size:10px;min-height:44px}
 
 /* ── LOADING ── */
 #loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;
@@ -78,7 +78,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 #login-screen #login-btn:disabled{background:#5a0f1c;cursor:not-allowed;opacity:.7;transform:none}
 .login-toggle{text-align:center;margin-top:20px;font-size:12px;color:#44445a;font-weight:300}
 .login-toggle a{color:#cc1f35;cursor:pointer;font-weight:500;text-decoration:none}
-.pw-rule{font-size:12px;color:rgba(255,255,255,.3);padding:2px 0;transition:color .15s}
+.pw-rule{font-size:12px;color:rgba(255,255,255,.55);padding:2px 0;transition:color .15s}
 .pw-rule.ok{color:#4ade80}
 .login-toggle a:hover{text-decoration:underline}
 /* desktop brand panel */
@@ -534,7 +534,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   /* Exercise picker → bottom sheet on mobile */
   .ex-picker{
     position:fixed;left:12px!important;right:12px!important;
-    width:auto;bottom:0;top:auto!important;
+    width:auto;bottom:env(safe-area-inset-bottom,0px);top:auto!important;
     border-radius:12px 12px 0 0;
     max-height:55vh;
   }
@@ -760,23 +760,24 @@ const MONTH_NAMES=['January','February','March','April','May','June','July','Aug
 //  BOOT — check session
 // ══════════════════════════════════
 async function boot(){
-  const {data:{session}}=await sb.auth.getSession();
-  hide('loading-screen');
-  if(session){
-    currentUser=session.user;
-    await initApp();
-  } else {
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    hide('loading-screen');
+    if(session){currentUser=session.user;await initApp();}
+    else{show('login-screen','flex');}
+  }catch(e){
+    hide('loading-screen');
     show('login-screen','flex');
+    showErr('Could not connect. Check your internet connection.');
   }
 }
+sb.auth.onAuthStateChange((event,session)=>{
+  if((event==='SIGNED_OUT'||!session)&&currentUser){doLogout();}
+});
 
 // ══════════════════════════════════
 //  LOGIN / SIGNUP
 // ══════════════════════════════════
-function setRole(r){
-  currentRole=r;
-  document.querySelectorAll('.role-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&r==='coach')||(i===1&&r==='client')));
-}
 function toggleSignup(){
   isSignup=!isSignup;
   document.getElementById('formHeading').textContent=isSignup?'Create Account':'Sign In';
@@ -787,6 +788,7 @@ function toggleSignup(){
   document.getElementById('login-btn').textContent=isSignup?'Create Account':'Enter CoachSpace';
   document.getElementById('login-err').style.display='none';
   document.getElementById('pw-hint').style.display=isSignup?'block':'none';
+  document.getElementById('login-password').setAttribute('autocomplete',isSignup?'new-password':'current-password');
   document.getElementById('login-password').value='';
   checkPwRules();
 }
@@ -838,6 +840,9 @@ async function doLogout(){
   hide('app');show('login-screen','flex');
   document.getElementById('login-btn').disabled=false;
   document.getElementById('login-btn').textContent='Enter CoachSpace';
+  document.getElementById('login-email').value='';
+  document.getElementById('login-password').value='';
+  if(isSignup)toggleSignup();
 }
 
 // ══════════════════════════════════
@@ -866,6 +871,7 @@ async function initApp(){
     }
   } else {
     hide('sidebar');hide('cal-nav-bar');hide('cal-content');hide('coach-empty');
+    hide('mob-client-overlay');hide('mob-topbar-back');
     show('client-view','flex');
     cvWeekOffset=0;
     await loadClientWorkouts();
@@ -936,7 +942,7 @@ async function selectClient(id){
     hide('sidebar');
     hide('cal-content');
     const client=clientsCache.find(c=>c.id===id);
-    show('mob-topbar-back');
+    show('mob-topbar-back','flex');
     buildMobileCoachList();
     show('mob-client-overlay','flex');
   } else {
