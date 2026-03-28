@@ -78,6 +78,8 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 #login-screen #login-btn:disabled{background:#5a0f1c;cursor:not-allowed;opacity:.7;transform:none}
 .login-toggle{text-align:center;margin-top:20px;font-size:12px;color:#44445a;font-weight:300}
 .login-toggle a{color:#cc1f35;cursor:pointer;font-weight:500;text-decoration:none}
+.pw-rule{font-size:12px;color:rgba(255,255,255,.3);padding:2px 0;transition:color .15s}
+.pw-rule.ok{color:#4ade80}
 .login-toggle a:hover{text-decoration:underline}
 /* desktop brand panel */
 .lp-brand{display:none}
@@ -582,7 +584,13 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
         <div class="lp-form-sub" id="formSub">Enter your credentials to access CoachSpace</div>
         <div class="login-err" id="login-err"></div>
         <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" inputmode="email"></div>
-        <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
+        <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" oninput="checkPwRules()"></div>
+        <div id="pw-hint" style="display:none;margin:-6px 0 14px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:8px">Password requirements</div>
+          <div id="pw-rule-len"  class="pw-rule">✗ At least 8 characters</div>
+          <div id="pw-rule-let"  class="pw-rule">✗ At least one letter</div>
+          <div id="pw-rule-num"  class="pw-rule">✗ At least one number</div>
+        </div>
         <button id="login-btn" onclick="doLogin()">Enter CoachSpace</button>
         <div class="login-toggle" id="login-toggle">
           No account? <a onclick="toggleSignup()">Sign up free</a>
@@ -778,6 +786,17 @@ function toggleSignup(){
     :'No account? <a onclick="toggleSignup()">Sign up free</a>';
   document.getElementById('login-btn').textContent=isSignup?'Create Account':'Enter CoachSpace';
   document.getElementById('login-err').style.display='none';
+  document.getElementById('pw-hint').style.display=isSignup?'block':'none';
+  document.getElementById('login-password').value='';
+  checkPwRules();
+}
+function checkPwRules(){
+  if(!isSignup)return;
+  const v=document.getElementById('login-password').value;
+  const set=(id,ok)=>{const el=document.getElementById(id);el.classList.toggle('ok',ok);el.textContent=(ok?'✓ ':'✗ ')+el.textContent.slice(2);};
+  set('pw-rule-len',v.length>=8);
+  set('pw-rule-let',/[a-zA-Z]/.test(v));
+  set('pw-rule-num',/[0-9]/.test(v));
 }
 async function doLogin(){
   const email=document.getElementById('login-email').value.trim();
@@ -786,6 +805,11 @@ async function doLogin(){
   const btn=document.getElementById('login-btn');
   errEl.style.display='none';
   if(!email||!password){showErr('Please fill in all fields');return;}
+  if(isSignup){
+    if(password.length<8){showErr('Password must be at least 8 characters');return;}
+    if(!/[a-zA-Z]/.test(password)){showErr('Password must contain at least one letter');return;}
+    if(!/[0-9]/.test(password)){showErr('Password must contain at least one number');return;}
+  }
   btn.disabled=true;btn.textContent='Loading…';
   if(isSignup){
     const {error}=await sb.auth.signUp({
