@@ -1063,6 +1063,7 @@ function buildCalGrid(){
   let yr=now.getFullYear(),mo=now.getMonth()-MONTHS_BEFORE;
   while(mo<0){mo+=12;yr--;}
   const total=MONTHS_BEFORE+1+MONTHS_AFTER;
+  let prevEnd=null;
   for(let m=0;m<total;m++){
     const lbl=document.createElement('div');
     lbl.className='month-row';lbl.id=`month-${yr}-${mo}`;
@@ -1075,20 +1076,30 @@ function buildCalGrid(){
     let col=1,cur=new Date(start);
     while(cur<=end){
       const ds=DS(cur),isToday=ds===TODAY,isOther=cur.getMonth()!==mo;
-      const cell=document.createElement('div');
-      cell.className='day-cell'+(isToday?' today':'')+(isOther?' other-month':'');
-      cell.id='day-'+ds;cell.dataset.date=ds;cell.dataset.col=col;
-      const nr=document.createElement('div');nr.className='day-num-row';
-      const dn=document.createElement('span');dn.className='day-num';dn.textContent=cur.getDate();
-      nr.appendChild(dn);
-      const ab=document.createElement('button');ab.className='day-add-btn';ab.textContent='+';
-      ab.onclick=e=>{e.stopPropagation();openEditor(ds,null,cell);};
-      nr.appendChild(ab);
-      cell.appendChild(nr);
-      grid.appendChild(cell);
+      // If this leading other-month day was already rendered by the previous month,
+      // insert an invisible spacer to keep column alignment without duplicating the cell.
+      if(prevEnd && cur<=prevEnd && cur<first){
+        const spacer=document.createElement('div');
+        spacer.className='day-cell other-month';
+        spacer.style.cssText='visibility:hidden;pointer-events:none';
+        grid.appendChild(spacer);
+      } else {
+        const cell=document.createElement('div');
+        cell.className='day-cell'+(isToday?' today':'')+(isOther?' other-month':'');
+        cell.id='day-'+ds;cell.dataset.date=ds;cell.dataset.col=col;
+        const nr=document.createElement('div');nr.className='day-num-row';
+        const dn=document.createElement('span');dn.className='day-num';dn.textContent=cur.getDate();
+        nr.appendChild(dn);
+        const ab=document.createElement('button');ab.className='day-add-btn';ab.textContent='+';
+        ab.onclick=e=>{e.stopPropagation();openEditor(ds,null,cell);};
+        nr.appendChild(ab);
+        cell.appendChild(nr);
+        grid.appendChild(cell);
+      }
       col=col===7?1:col+1;
       cur.setDate(cur.getDate()+1);
     }
+    prevEnd=new Date(end);
     mo++;if(mo>11){mo=0;yr++;}
   }
   calGridBuilt=true;
