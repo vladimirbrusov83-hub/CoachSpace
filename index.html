@@ -217,7 +217,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .cal-dh{text-align:center;font-size:10px;font-weight:700;color:var(--muted);
   text-transform:uppercase;letter-spacing:.6px;padding:6px 0;border-right:1px solid var(--border)}
 .cal-dh:last-child{border-right:none}
-.month-row{grid-column:1/-1;padding:7px 10px 5px;
+.month-row-unused{grid-column:1/-1;padding:7px 10px 5px;
   font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--muted2);
   border-bottom:1px solid var(--border);background:var(--bg3);
   letter-spacing:.5px;text-transform:uppercase}
@@ -1060,47 +1060,28 @@ function buildCalendar(){
 function buildCalGrid(){
   const grid=document.getElementById('cal-grid');grid.innerHTML='';
   const now=new Date();
-  let yr=now.getFullYear(),mo=now.getMonth()-MONTHS_BEFORE;
-  while(mo<0){mo+=12;yr--;}
-  const total=MONTHS_BEFORE+1+MONTHS_AFTER;
-  let prevEnd=null;
-  for(let m=0;m<total;m++){
-    const lbl=document.createElement('div');
-    lbl.className='month-row';lbl.id=`month-${yr}-${mo}`;
-    lbl.dataset.year=yr;lbl.dataset.month=mo;
-    lbl.textContent=MONTH_NAMES[mo]+' '+yr;
-    grid.appendChild(lbl);
-    const first=new Date(yr,mo,1),last=new Date(yr,mo+1,0);
-    const start=mondayOf(first);
-    let end=new Date(last);const dow=end.getDay();if(dow!==0)end.setDate(end.getDate()+(7-dow));
-    let col=1,cur=new Date(start);
-    while(cur<=end){
-      const ds=DS(cur),isToday=ds===TODAY,isOther=cur.getMonth()!==mo;
-      // If this leading other-month day was already rendered by the previous month,
-      // insert an invisible spacer to keep column alignment without duplicating the cell.
-      if(prevEnd && cur<=prevEnd && cur<first){
-        const spacer=document.createElement('div');
-        spacer.className='day-cell other-month';
-        spacer.style.cssText='visibility:hidden;pointer-events:none';
-        grid.appendChild(spacer);
-      } else {
-        const cell=document.createElement('div');
-        cell.className='day-cell'+(isToday?' today':'')+(isOther?' other-month':'');
-        cell.id='day-'+ds;cell.dataset.date=ds;cell.dataset.col=col;
-        const nr=document.createElement('div');nr.className='day-num-row';
-        const dn=document.createElement('span');dn.className='day-num';dn.textContent=cur.getDate();
-        nr.appendChild(dn);
-        const ab=document.createElement('button');ab.className='day-add-btn';ab.textContent='+';
-        ab.onclick=e=>{e.stopPropagation();openEditor(ds,null,cell);};
-        nr.appendChild(ab);
-        cell.appendChild(nr);
-        grid.appendChild(cell);
-      }
-      col=col===7?1:col+1;
-      cur.setDate(cur.getDate()+1);
-    }
-    prevEnd=new Date(end);
-    mo++;if(mo>11){mo=0;yr++;}
+  let startYr=now.getFullYear(),startMo=now.getMonth()-MONTHS_BEFORE;
+  while(startMo<0){startMo+=12;startYr--;}
+  let endYr=now.getFullYear(),endMo=now.getMonth()+MONTHS_AFTER;
+  while(endMo>11){endMo-=12;endYr++;}
+  // Single continuous stream — no month dividers, no duplicate rows
+  const cur=mondayOf(new Date(startYr,startMo,1));
+  const lastDay=new Date(endYr,endMo+1,0);
+  const end=new Date(lastDay);const edow=end.getDay();if(edow!==0)end.setDate(end.getDate()+(7-edow));
+  while(cur<=end){
+    const ds=DS(cur),isToday=ds===TODAY;
+    const cell=document.createElement('div');
+    cell.className='day-cell'+(isToday?' today':'');
+    cell.id='day-'+ds;cell.dataset.date=ds;
+    const nr=document.createElement('div');nr.className='day-num-row';
+    const dn=document.createElement('span');dn.className='day-num';dn.textContent=cur.getDate();
+    nr.appendChild(dn);
+    const ab=document.createElement('button');ab.className='day-add-btn';ab.textContent='+';
+    ab.onclick=(d=>e=>{e.stopPropagation();openEditor(d,null,document.getElementById('day-'+d));})(ds);
+    nr.appendChild(ab);
+    cell.appendChild(nr);
+    grid.appendChild(cell);
+    cur.setDate(cur.getDate()+1);
   }
   calGridBuilt=true;
 }
@@ -1171,19 +1152,31 @@ function buildWorkoutBlock(wk,ds){
 }
 function updateMonthLabel(){
   const scroll=document.getElementById('cal-scroll');
-  const top=scroll.scrollTop;let label='';
-  for(const r of document.querySelectorAll('.month-row')){
-    if(r.offsetTop-scroll.offsetTop<=top+10)label=r.textContent;else break;
+  const scrollTop=scroll.scrollTop+scroll.offsetTop;
+  let label='';
+  for(const cell of document.querySelectorAll('#cal-grid .day-cell')){
+    if(cell.offsetTop<=scrollTop+10){
+      const ds=cell.dataset.date;
+      if(ds){const d=new Date(ds+'T12:00:00');label=MONTH_NAMES[d.getMonth()]+' '+d.getFullYear();}
+    } else break;
   }
   if(label)document.getElementById('cal-month-label').textContent=label;
 }
 function scrollMonths(dir){
   const scroll=document.getElementById('cal-scroll');
-  const rows=[...document.querySelectorAll('.month-row')];
-  const top=scroll.scrollTop;let ci=0;
-  for(let i=0;i<rows.length;i++){if(rows[i].offsetTop-scroll.offsetTop<=top+10)ci=i;else break;}
-  const ti=Math.max(0,Math.min(rows.length-1,ci+dir));
-  scroll.scrollTo({top:rows[ti].offsetTop-scroll.offsetTop,behavior:'smooth'});
+  const scrollTop=scroll.scrollTop+scroll.offsetTop;
+  // Find current visible month
+  let curDate=null;
+  for(const cell of document.querySelectorAll('#cal-grid .day-cell')){
+    if(cell.offsetTop<=scrollTop+10&&cell.dataset.date)curDate=new Date(cell.dataset.date+'T12:00:00');
+    else break;
+  }
+  if(!curDate)return;
+  // Target: first day of next/prev month
+  const target=new Date(curDate.getFullYear(),curDate.getMonth()+dir,1);
+  const targetDs=DS(target);
+  const el=document.getElementById('day-'+targetDs);
+  if(el)scroll.scrollTo({top:el.offsetTop-scroll.offsetTop,behavior:'smooth'});
 }
 function scrollToToday(){
   const el=document.getElementById('day-'+TODAY);
