@@ -1090,7 +1090,7 @@ function renderCalGrid(){
   document.querySelectorAll('#cal-grid .day-cell').forEach(cell=>{
     const ds=cell.dataset.date;
     cell.classList.toggle('paste-mode',!!copyState);
-    cell.onclick=copyState?()=>pasteWorkout(ds):null;
+    cell.onclick=copyState?()=>pasteWorkout(ds):()=>openEditor(ds,null,cell);
     const ab=cell.querySelector('.day-add-btn');
     if(ab)ab.style.visibility=copyState?'hidden':'';
     cell.querySelectorAll('.workout-block').forEach(b=>b.remove());
