@@ -395,6 +395,53 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .ex-picker-item{padding:5px 12px;font-size:12px;cursor:pointer;transition:background .1s}
 .ex-picker-item:hover{background:var(--bg3)}
 .ex-picker-empty{padding:10px 12px;font-size:12px;color:var(--muted);font-style:italic}
+/* ── HISTORY DRAWER ── */
+#history-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+#history-backdrop.open{opacity:1;pointer-events:all}
+#history-drawer{position:fixed;top:0;right:0;bottom:0;width:min(340px,100vw);background:var(--bg2);
+  z-index:301;display:flex;flex-direction:column;transform:translateX(100%);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-4px 0 24px rgba(0,0,0,.12)}
+#history-drawer.open{transform:translateX(0)}
+.hist-header{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.hist-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.hist-close{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;color:var(--muted2);transition:all .13s;flex-shrink:0}
+.hist-close:hover{background:var(--bg4);color:var(--text)}
+.hist-scroll{flex:1;overflow-y:auto;padding:0 0 40px}
+.hist-month-hdr{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--muted);padding:14px 16px 5px;position:sticky;top:0;background:var(--bg2);z-index:1}
+.hist-item{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.hist-item:active{background:var(--bg3)}
+.hist-item-head{display:flex;align-items:center;gap:10px;padding:11px 16px}
+.hist-item-date{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+  color:var(--muted2);width:44px;flex-shrink:0;line-height:1.3}
+.hist-item-info{flex:1;min-width:0}
+.hist-item-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-item-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.hist-item-chevron{font-size:13px;color:var(--muted);transition:transform .18s;flex-shrink:0}
+.hist-item.expanded .hist-item-chevron{transform:rotate(90deg)}
+.hist-item-body{display:none;padding:0 16px 12px;border-top:1px solid var(--bg3)}
+.hist-item.expanded .hist-item-body{display:block}
+.hist-ex-row{font-size:12px;color:var(--muted2);padding:3px 0;line-height:1.5}
+.hist-ex-row strong{color:var(--text);font-weight:500}
+.hist-note-block{margin-top:8px;background:var(--bg3);border-left:2px solid var(--border);
+  border-radius:4px;padding:7px 10px;font-size:11px;color:var(--muted2);white-space:pre-line;line-height:1.6}
+.hist-note-block .hist-note-label{font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;color:var(--muted);margin-bottom:3px}
+.hist-empty{padding:48px 20px;text-align:center;color:var(--muted);font-size:13px}
+.hist-month-tabs{display:flex;gap:6px;padding:10px 12px;overflow-x:auto;flex-shrink:0;
+  border-bottom:1px solid var(--border);background:var(--bg2);
+  scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.hist-month-tabs::-webkit-scrollbar{display:none}
+.hist-tab{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;
+  font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;flex-shrink:0;
+  border:1px solid var(--border);background:var(--bg3);color:var(--muted2);transition:all .13s}
+.hist-tab:hover{border-color:var(--muted2);color:var(--text)}
+.hist-tab.active{background:#111;color:#fff;border-color:#111}
+.hist-tab-count{font-size:10px;opacity:.7}
+
 .preview-note{font-size:11px;margin-top:3px;padding:2px 6px;border-radius:4px;border-left:2px solid;white-space:pre-wrap;line-height:1.4;word-break:break-word}
 .preview-note-client{color:var(--blue);background:rgba(37,99,235,.07);border-left-color:var(--blue)}
 .preview-note-coach{color:var(--orange);background:rgba(255,165,0,.07);border-left-color:var(--orange)}
@@ -676,6 +723,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
         <button class="today-btn" onclick="cvGoToday()">Today</button>
         <div class="cv-week-label" id="cv-week-label">—</div>
         <button class="cv-week-nav-btn" onclick="cvShiftWeek(1)">›</button>
+        <button class="btn btn-ghost btn-sm" onclick="openHistory()" style="margin-left:4px;white-space:nowrap">History</button>
       </div>
       <div class="cv-scroll" id="cv-scroll">
         <div id="cv-week-list"><div id="cv-list"></div></div>
@@ -695,6 +743,17 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   </div>
   <!-- Mobile fullscreen editor overlay -->
   <div id="mob-editor-overlay" style="display:none"></div>
+</div>
+
+<!-- HISTORY DRAWER -->
+<div id="history-backdrop" onclick="closeHistory()"></div>
+<div id="history-drawer">
+  <div class="hist-header">
+    <div class="hist-title">Workout History</div>
+    <div class="hist-close" onclick="closeHistory()">✕</div>
+  </div>
+  <div class="hist-month-tabs" id="history-tabs"></div>
+  <div class="hist-scroll" id="history-scroll"></div>
 </div>
 
 <script>
@@ -1861,6 +1920,90 @@ async function markDone(){
   if(error){notify('Error saving');return;}
   wk.done=true;wk.client_notes=JSON.stringify(cn);
   notify('Workout completed! 🎉');cvBack();renderClientWeek();
+}
+
+// ══════════════════════════════════
+//  WORKOUT HISTORY
+// ══════════════════════════════════
+let histActiveMonth=null;
+function openHistory(){
+  const done=(workoutsCache['__client__']||[]).filter(w=>w.done);
+  const months=Object.keys(
+    done.reduce((acc,w)=>{acc[w.date.slice(0,7)]=true;return acc;},{})
+  ).sort((a,b)=>b.localeCompare(a));
+  histActiveMonth=months[0]||null;
+  renderHistoryTabs(months,done);
+  renderHistoryList(done);
+  document.getElementById('history-backdrop').classList.add('open');
+  document.getElementById('history-drawer').classList.add('open');
+}
+function closeHistory(){
+  document.getElementById('history-backdrop').classList.remove('open');
+  document.getElementById('history-drawer').classList.remove('open');
+}
+function renderHistoryTabs(months,done){
+  const tabs=document.getElementById('history-tabs');
+  if(!months.length){tabs.innerHTML='';return;}
+  const counts=done.reduce((acc,w)=>{const k=w.date.slice(0,7);acc[k]=(acc[k]||0)+1;return acc;},{});
+  tabs.innerHTML=months.map(key=>{
+    const [yr,mo]=key.split('-');
+    const label=new Date(+yr,+mo-1,1).toLocaleString('en-US',{month:'short',year:'2-digit'});
+    const active=key===histActiveMonth?'active':'';
+    return `<div class="hist-tab ${active}" onclick="selectHistMonth('${key}')">${label}<span class="hist-tab-count">${counts[key]}</span></div>`;
+  }).join('');
+  // scroll active tab into view
+  const activeEl=tabs.querySelector('.hist-tab.active');
+  if(activeEl)activeEl.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+}
+function selectHistMonth(key){
+  histActiveMonth=key;
+  const done=(workoutsCache['__client__']||[]).filter(w=>w.done);
+  const months=Object.keys(
+    done.reduce((acc,w)=>{acc[w.date.slice(0,7)]=true;return acc;},{})
+  ).sort((a,b)=>b.localeCompare(a));
+  renderHistoryTabs(months,done);
+  renderHistoryList(done);
+}
+function renderHistoryList(done){
+  const scroll=document.getElementById('history-scroll');
+  if(!done.length){
+    scroll.innerHTML=`<div class="hist-empty">No completed workouts yet.<br>Mark your first workout as done!</div>`;
+    return;
+  }
+  const month=histActiveMonth;
+  const workouts=done.filter(w=>w.date.slice(0,7)===month)
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  if(!workouts.length){scroll.innerHTML=`<div class="hist-empty">No workouts for this month.</div>`;return;}
+  let html='';
+  workouts.forEach(w=>{
+    const d=new Date(w.date+'T12:00');
+    const dayStr=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    const exAll=(w.groups||[]).flatMap(g=>g.exercises||[]);
+    const cn=parseClientNotes(w.client_notes);
+    const exRows=exAll.map(ex=>{
+      const name=esc(ex.name||'');
+      const sets=ex.sets&&ex.sets.length?`${ex.sets.length} set${ex.sets.length!==1?'s':''}`:'';
+      return `<div class="hist-ex-row"><strong>${name}</strong>${sets?' · '+sets:''}</div>`;
+    }).join('');
+    const coachNote=w.notes?`<div class="hist-note-block"><div class="hist-note-label">Coach notes</div>${esc(w.notes)}</div>`:'';
+    const clientNote=cn.overall?`<div class="hist-note-block" style="border-left-color:var(--blue)"><div class="hist-note-label" style="color:var(--blue)">Your notes</div>${esc(cn.overall)}</div>`:'';
+    html+=`<div class="hist-item" onclick="toggleHistItem(this)">
+      <div class="hist-item-head">
+        <div class="hist-item-date">${dayStr}</div>
+        <div class="hist-item-info">
+          <div class="hist-item-title">${esc(w.title||'Workout')}</div>
+          <div class="hist-item-meta">${exAll.length} exercise${exAll.length!==1?'s':''} · Done ✓</div>
+        </div>
+        <span class="hist-item-chevron">›</span>
+      </div>
+      <div class="hist-item-body">${exRows}${coachNote}${clientNote}</div>
+    </div>`;
+  });
+  scroll.innerHTML=html;
+  scroll.scrollTop=0;
+}
+function toggleHistItem(el){
+  el.classList.toggle('expanded');
 }
 
 // ══════════════════════════════════
