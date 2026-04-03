@@ -1980,11 +1980,14 @@ function renderHistoryList(done){
     const dayStr=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
     const exAll=(w.groups||[]).flatMap(g=>g.exercises||[]);
     const cn=parseClientNotes(w.client_notes);
-    const exRows=exAll.map(ex=>{
-      const name=esc(ex.name||'');
-      const sets=ex.sets&&ex.sets.length?`${ex.sets.length} set${ex.sets.length!==1?'s':''}`:'';
-      return `<div class="hist-ex-row"><strong>${name}</strong>${sets?' · '+sets:''}</div>`;
-    }).join('');
+    const exRows=(w.groups||[]).flatMap((g,gi)=>(g.exercises||[]).map((ex,ei)=>{
+      const note=esc((cn.ex||{})[`${gi}_${ei}`]||'');
+      return `<div class="hist-ex-row">
+        <strong>${esc(ex.name||'')}</strong>
+        ${ex.freeText?`<div style="font-size:11px;color:var(--muted2);white-space:pre-line;line-height:1.7;margin-top:1px">${esc(ex.freeText)}</div>`:''}
+        ${note?`<div style="font-size:11px;color:var(--blue);background:rgba(37,99,235,.07);border-left:2px solid var(--blue);border-radius:3px;padding:3px 7px;margin-top:3px;white-space:pre-line;line-height:1.5">${note}</div>`:''}
+      </div>`;
+    })).join('');
     const coachNote=w.notes?`<div class="hist-note-block"><div class="hist-note-label">Coach notes</div>${esc(w.notes)}</div>`:'';
     const clientNote=cn.overall?`<div class="hist-note-block" style="border-left-color:var(--blue)"><div class="hist-note-label" style="color:var(--blue)">Your notes</div>${esc(cn.overall)}</div>`:'';
     html+=`<div class="hist-item" onclick="toggleHistItem(this)">
