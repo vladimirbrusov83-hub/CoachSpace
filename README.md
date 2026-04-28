@@ -27,6 +27,30 @@ A single-file coaching platform where coaches program workouts for clients and c
 
 ---
 
+## Auth flows
+
+### Sign up
+New users register with email + password. Role defaults to `client`. All new accounts are auto-confirmed — no email verification step required.
+
+Password rules (enforced client-side + server-side minimum):
+- Minimum 8 characters (enforced by Supabase server)
+- At least one letter
+- At least one number
+
+### Sign in
+Email + password via Supabase `signInWithPassword`.
+
+### Forgot password
+A "Forgot password?" link on the login screen sends a reset email via `sb.auth.resetPasswordForEmail()`. The link in the email points to `https://coach-space.vercel.app`. When the user clicks it, the app detects the `PASSWORD_RECOVERY` event in `onAuthStateChange` and shows a "Set New Password" screen. After setting the new password the user is automatically signed in.
+
+### Change password (in-app)
+Logged-in users can change their password via the **Password** button in the top-right toolbar. Opens a modal with the same password rules enforced.
+
+### Role assignment
+Role is set once at signup in `user_metadata.role` and never changes. Signing up via the public form always assigns `role: 'client'`. The coach account must be created with `role: 'coach'` set manually (see below).
+
+---
+
 ## Database schema
 
 Two tables in Supabase:
@@ -45,33 +69,46 @@ Two tables in Supabase:
 |---|---|---|
 | `id` | uuid (PK) | auto |
 | `client_id` | uuid | references clients.id |
-| `date` | date | YYYY-MM-DD |
+| `coach_id` | uuid | references auth.users.id |
+| `date` | text | YYYY-MM-DD |
 | `title` | text | workout name |
 | `notes` | text | optional session notes |
 | `groups` | jsonb | exercise groups (see below) |
 | `done` | boolean | client marks complete |
+| `client_notes` | jsonb | v2 format (see below) |
 | `created_at` | timestamptz | auto |
 
 #### `groups` JSON structure
 ```json
 [
   {
+    "label": "A",
+    "type": "single",
     "exercises": [
-      {
-        "name": "Bench Press",
-        "free": "4x8 @ 80kg",
-        "superset": false
-      },
-      {
-        "name": "Cable Fly",
-        "free": "3x15",
-        "superset": true
-      }
+      { "name": "Bench Press", "freeText": "4x8 @ 80kg" }
+    ]
+  },
+  {
+    "label": "B",
+    "type": "superset",
+    "exercises": [
+      { "name": "Cable Fly", "freeText": "3x15" },
+      { "name": "Push-up", "freeText": "3x20" }
     ]
   }
 ]
 ```
-`superset: true` on an exercise means it's grouped with the one above it (shown with a blue "SS" tag).
+
+#### `client_notes` v2 JSON structure
+```json
+{
+  "v": 2,
+  "overall": "Felt good today",
+  "ex": { "0_0": "Left shoulder tight" },
+  "coach_ex": { "0_0": "Watch form on descent" }
+}
+```
+Keys like `"0_0"` are `groupIndex_exerciseIndex`.
 
 ---
 
@@ -110,8 +147,8 @@ CREATE POLICY "client_read_own" ON workouts
     )
   );
 
--- Clients can mark workouts done
-CREATE POLICY "client_mark_done" ON workouts
+-- Clients can mark workouts done and add notes
+CREATE POLICY "client_update_own" ON workouts
   FOR UPDATE USING (
     client_id IN (
       SELECT id FROM clients WHERE email = auth.email()
@@ -128,17 +165,18 @@ CREATE POLICY "client_mark_done" ON workouts
 1. Go to [supabase.com](https://supabase.com) → New project
 2. Create the two tables above (run the SQL in the Supabase SQL editor)
 3. Enable RLS and apply the policies above
-4. Go to **Project Settings → API** and copy:
+4. Go to **Authentication → Providers → Email** and turn off **"Confirm email"** so clients can log in immediately
+5. Go to **Authentication → URL Configuration** and set **Site URL** to your production domain
+6. Go to **Project Settings → API** and copy:
    - **Project URL** (e.g. `https://xxxx.supabase.co`)
-   - **Anon/Public key** (safe-to-expose publishable key)
+   - **Anon/Public key**
 
 ### 2. Update credentials in `index.html`
-Find these two lines near the top of the `<script>` block (~line 763):
+Find these two lines near the top of the `<script>` block:
 ```js
 const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
 const SUPABASE_KEY = 'YOUR_ANON_KEY';
 ```
-Replace with your own values.
 
 ### 3. Deploy to Vercel
 1. Push the repo to GitHub
@@ -156,7 +194,7 @@ Role is stored in Supabase Auth `user_metadata` at signup:
 await sb.auth.signUp({
   email,
   password,
-  options: { data: { role: 'coach', name: 'Vladimir' } }
+  options: { data: { role: 'client', name: 'John' } }
 })
 ```
 
@@ -164,15 +202,15 @@ At login, `initApp()` reads `currentUser.user_metadata.role` and renders either:
 - **Coach UI** — sidebar with client list + monthly calendar
 - **Client UI** — weekly workout list
 
-To create a coach account: sign up and ensure `role: 'coach'` is in the metadata. There is no admin panel — if needed, update `raw_user_meta_data` directly in the Supabase dashboard under **Authentication → Users**.
+To create the coach account: sign up normally, then go to **Supabase Dashboard → Authentication → Users**, find the account, and edit `raw_user_meta_data` to set `"role": "coach"`. There is no in-app admin panel.
 
 ---
 
 ## Coach workflow
 
-1. Sign up with role `coach`
+1. Create account and set `role: 'coach'` in Supabase dashboard
 2. Add a client (name + email) via the sidebar
-3. The client signs up separately at the same URL — their email must match exactly what the coach entered
+3. The client signs up at the same URL — their email must match what the coach entered
 4. Click any calendar day → opens in-cell editor to add a workout
 5. Add exercises by name (autocomplete from 120+ built-in exercises), enter free-text sets/reps
 6. Copy a workout block and paste it to other days
@@ -182,11 +220,13 @@ To create a coach account: sign up and ensure `role: 'coach'` is in the metadata
 
 ## Client workflow
 
-1. Sign up with role `client` (default if no role set)
+1. Sign up at the app URL (role defaults to `client`)
 2. See weekly list of workouts assigned by coach
 3. Tap a workout to view exercises
-4. Tap "Mark as Done" — sets `done: true` in the database
-5. Navigate forward/back by week; view full history via the History button
+4. Add per-exercise notes or an overall session note
+5. Tap "Mark as Done" — sets `done: true` in the database
+6. Navigate forward/back by week; view full history via the History button
+7. Change password anytime via the **Password** button in the top toolbar
 
 ---
 
@@ -198,14 +238,6 @@ CoachSpace/
 ```
 
 No `package.json`, no dependencies to install, no build step.
-
----
-
-## Password rules (enforced at signup)
-
-- Minimum 8 characters
-- At least one letter
-- At least one number
 
 ---
 
