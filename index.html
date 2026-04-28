@@ -76,6 +76,9 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 #login-screen #login-btn:hover{background:#d92a40}
 #login-screen #login-btn:active{transform:scale(.985)}
 #login-screen #login-btn:disabled{background:#5a0f1c;cursor:not-allowed;opacity:.7;transform:none}
+#forgot-btn,#reset-btn{width:100%;background:#cc1f35;color:#fff;border:none;border-radius:8px;padding:16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;min-height:52px;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s}
+#forgot-btn:hover,#reset-btn:hover{background:#d92a40}
+#forgot-btn:disabled,#reset-btn:disabled{background:#5a0f1c;cursor:not-allowed;opacity:.7}
 .login-toggle{text-align:center;margin-top:20px;font-size:12px;color:#44445a;font-weight:300}
 .login-toggle a{color:#cc1f35;cursor:pointer;font-weight:500;text-decoration:none}
 .pw-rule{font-size:12px;color:rgba(255,255,255,.55);padding:2px 0;transition:color .15s}
@@ -656,7 +659,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 </div>
 
 <!-- PASSWORD RECOVERY SCREEN -->
-<div id="reset-screen" style="display:none;position:fixed;inset:0;background:#0b0b1a;z-index:9999;display:none;align-items:center;justify-content:center">
+<div id="reset-screen" style="display:none;position:fixed;inset:0;background:#0b0b1a;z-index:9999;align-items:center;justify-content:center">
   <div style="width:100%;max-width:400px;padding:0 24px">
     <div style="font-size:22px;font-weight:700;color:#e4e4f0;margin-bottom:6px;font-family:'Syne',sans-serif">Set New Password</div>
     <div style="font-size:14px;color:rgba(255,255,255,.45);margin-bottom:24px">Choose a new password for your account.</div>
@@ -880,7 +883,14 @@ sb.auth.onAuthStateChange((event,session)=>{
     hide('loading-screen');hide('login-screen');hide('app');
     show('reset-screen','flex');
   } else if((event==='SIGNED_OUT'||!session)&&currentUser){
-    doLogout();
+    // Reset state and UI without calling sb.auth.signOut() again (already signed out)
+    currentUser=null;currentRole='client';clientsCache=[];workoutsCache={};selectedClientId=null;copyState=null;calGridBuilt=false;
+    hide('app');show('login-screen','flex');
+    document.getElementById('login-btn').disabled=false;
+    document.getElementById('login-btn').textContent='Enter CoachSpace';
+    document.getElementById('login-email').value='';
+    document.getElementById('login-password').value='';
+    if(isSignup)toggleSignup();
   }
 });
 
@@ -945,7 +955,7 @@ function showErr(msg){
 }
 async function doLogout(){
   await sb.auth.signOut();
-  currentUser=null;clientsCache=[];workoutsCache={};selectedClientId=null;copyState=null;calGridBuilt=false;
+  currentUser=null;currentRole='client';clientsCache=[];workoutsCache={};selectedClientId=null;copyState=null;calGridBuilt=false;
   hide('app');show('login-screen','flex');
   document.getElementById('login-btn').disabled=false;
   document.getElementById('login-btn').textContent='Enter CoachSpace';
