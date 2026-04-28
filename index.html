@@ -641,9 +641,54 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
         <div class="login-toggle" id="login-toggle">
           No account? <a onclick="toggleSignup()">Sign up free</a>
         </div>
+        <div id="forgot-link" style="margin-top:10px;text-align:center;font-size:13px;color:rgba(255,255,255,.4)">
+          <a onclick="toggleForgot()" style="cursor:pointer;color:rgba(255,255,255,.4);text-decoration:underline">Forgot password?</a>
+        </div>
+        <div id="forgot-form" style="display:none;margin-top:14px">
+          <div class="field"><label>Email</label><input type="email" id="forgot-email" placeholder="you@example.com" autocomplete="email" inputmode="email"></div>
+          <button id="forgot-btn" onclick="doForgotPassword()" style="width:100%;margin-top:4px">Send Reset Link</button>
+          <div style="margin-top:10px;text-align:center;font-size:13px"><a onclick="toggleForgot()" style="cursor:pointer;color:rgba(255,255,255,.4);text-decoration:underline">Back to sign in</a></div>
+        </div>
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- PASSWORD RECOVERY SCREEN -->
+<div id="reset-screen" style="display:none;position:fixed;inset:0;background:#0b0b1a;z-index:9999;display:none;align-items:center;justify-content:center">
+  <div style="width:100%;max-width:400px;padding:0 24px">
+    <div style="font-size:22px;font-weight:700;color:#e4e4f0;margin-bottom:6px;font-family:'Syne',sans-serif">Set New Password</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.45);margin-bottom:24px">Choose a new password for your account.</div>
+    <div class="login-err" id="reset-err"></div>
+    <div class="field"><label>New Password</label><input type="password" id="reset-password" placeholder="••••••••" autocomplete="new-password" oninput="checkResetRules()"></div>
+    <div id="reset-pw-hint" style="margin:-6px 0 14px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:8px">Password requirements</div>
+      <div id="reset-rule-len" class="pw-rule">✗ At least 8 characters</div>
+      <div id="reset-rule-let" class="pw-rule">✗ At least one letter</div>
+      <div id="reset-rule-num" class="pw-rule">✗ At least one number</div>
+    </div>
+    <button id="reset-btn" onclick="doSetNewPassword()">Set New Password</button>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div id="change-pw-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;align-items:center;justify-content:center">
+  <div style="background:#13131f;border:1px solid rgba(255,255,255,.08);border-radius:16px;width:100%;max-width:380px;margin:0 16px;padding:28px 24px">
+    <div style="font-size:18px;font-weight:700;color:#e4e4f0;margin-bottom:4px;font-family:'Syne',sans-serif">Change Password</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:20px">Enter your new password below.</div>
+    <div class="login-err" id="change-pw-err"></div>
+    <div class="field"><label>New Password</label><input type="password" id="change-pw-input" placeholder="••••••••" autocomplete="new-password" oninput="checkChangePwRules()"></div>
+    <div id="change-pw-hint" style="margin:-6px 0 14px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:8px">Password requirements</div>
+      <div id="cpw-rule-len" class="pw-rule">✗ At least 8 characters</div>
+      <div id="cpw-rule-let" class="pw-rule">✗ At least one letter</div>
+      <div id="cpw-rule-num" class="pw-rule">✗ At least one number</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="hideChangePassword()">Cancel</button>
+      <button id="change-pw-btn" onclick="doChangePassword()" style="flex:2">Update Password</button>
+    </div>
   </div>
 </div>
 
@@ -677,6 +722,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
     </div>
     <div class="topbar-right">
       <div class="user-chip"><div class="avatar" id="top-avatar">?</div><span id="top-name"></span></div>
+      <button class="btn btn-ghost btn-sm" onclick="showChangePassword()">Password</button>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>
     </div>
   </div>
@@ -830,7 +876,12 @@ async function boot(){
   }
 }
 sb.auth.onAuthStateChange((event,session)=>{
-  if((event==='SIGNED_OUT'||!session)&&currentUser){doLogout();}
+  if(event==='PASSWORD_RECOVERY'){
+    hide('loading-screen');hide('login-screen');hide('app');
+    show('reset-screen','flex');
+  } else if((event==='SIGNED_OUT'||!session)&&currentUser){
+    doLogout();
+  }
 });
 
 // ══════════════════════════════════
@@ -901,6 +952,95 @@ async function doLogout(){
   document.getElementById('login-email').value='';
   document.getElementById('login-password').value='';
   if(isSignup)toggleSignup();
+}
+
+// ══════════════════════════════════
+//  FORGOT / RESET PASSWORD
+// ══════════════════════════════════
+function toggleForgot(){
+  const ff=document.getElementById('forgot-form');
+  const fl=document.getElementById('forgot-link');
+  const isOpen=ff.style.display==='block';
+  ff.style.display=isOpen?'none':'block';
+  fl.style.display=isOpen?'block':'none';
+  document.getElementById('login-email').closest('.field').style.display=isOpen?'':'none';
+  document.getElementById('login-password').closest('.field').style.display=isOpen?'':'none';
+  document.getElementById('pw-hint').style.display='none';
+  document.getElementById('login-btn').style.display=isOpen?'':'none';
+  document.getElementById('login-toggle').style.display=isOpen?'':'none';
+  document.getElementById('login-err').style.display='none';
+  if(!isOpen)document.getElementById('forgot-email').focus();
+}
+async function doForgotPassword(){
+  const email=document.getElementById('forgot-email').value.trim();
+  if(!email){document.getElementById('login-err').textContent='Enter your email';document.getElementById('login-err').style.display='block';return;}
+  const btn=document.getElementById('forgot-btn');
+  btn.disabled=true;btn.textContent='Sending…';
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:'https://coach-space.vercel.app'});
+  btn.disabled=false;btn.textContent='Send Reset Link';
+  if(error){document.getElementById('login-err').textContent=error.message;document.getElementById('login-err').style.display='block';return;}
+  notify('Reset link sent! Check your email.');
+  toggleForgot();
+}
+function checkResetRules(){
+  const v=document.getElementById('reset-password').value;
+  const set=(id,ok)=>{const el=document.getElementById(id);el.classList.toggle('ok',ok);el.textContent=(ok?'✓ ':'✗ ')+el.textContent.slice(2);};
+  set('reset-rule-len',v.length>=8);
+  set('reset-rule-let',/[a-zA-Z]/.test(v));
+  set('reset-rule-num',/[0-9]/.test(v));
+}
+async function doSetNewPassword(){
+  const password=document.getElementById('reset-password').value;
+  const errEl=document.getElementById('reset-err');
+  errEl.style.display='none';
+  if(password.length<8){errEl.textContent='Password must be at least 8 characters';errEl.style.display='block';return;}
+  if(!/[a-zA-Z]/.test(password)){errEl.textContent='Password must contain at least one letter';errEl.style.display='block';return;}
+  if(!/[0-9]/.test(password)){errEl.textContent='Password must contain at least one number';errEl.style.display='block';return;}
+  const btn=document.getElementById('reset-btn');
+  btn.disabled=true;btn.textContent='Updating…';
+  const {error}=await sb.auth.updateUser({password});
+  btn.disabled=false;btn.textContent='Set New Password';
+  if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
+  notify('Password updated! Signing you in…');
+  hide('reset-screen');
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){currentUser=session.user;await initApp();}
+  else{show('login-screen','flex');}
+}
+// ══════════════════════════════════
+//  CHANGE PASSWORD (in-app)
+// ══════════════════════════════════
+function showChangePassword(){
+  document.getElementById('change-pw-input').value='';
+  document.getElementById('change-pw-err').style.display='none';
+  checkChangePwRules();
+  document.getElementById('change-pw-modal').style.display='flex';
+  document.getElementById('change-pw-input').focus();
+}
+function hideChangePassword(){
+  document.getElementById('change-pw-modal').style.display='none';
+}
+function checkChangePwRules(){
+  const v=document.getElementById('change-pw-input').value;
+  const set=(id,ok)=>{const el=document.getElementById(id);el.classList.toggle('ok',ok);el.textContent=(ok?'✓ ':'✗ ')+el.textContent.slice(2);};
+  set('cpw-rule-len',v.length>=8);
+  set('cpw-rule-let',/[a-zA-Z]/.test(v));
+  set('cpw-rule-num',/[0-9]/.test(v));
+}
+async function doChangePassword(){
+  const password=document.getElementById('change-pw-input').value;
+  const errEl=document.getElementById('change-pw-err');
+  errEl.style.display='none';
+  if(password.length<8){errEl.textContent='Password must be at least 8 characters';errEl.style.display='block';return;}
+  if(!/[a-zA-Z]/.test(password)){errEl.textContent='Password must contain at least one letter';errEl.style.display='block';return;}
+  if(!/[0-9]/.test(password)){errEl.textContent='Password must contain at least one number';errEl.style.display='block';return;}
+  const btn=document.getElementById('change-pw-btn');
+  btn.disabled=true;btn.textContent='Updating…';
+  const {error}=await sb.auth.updateUser({password});
+  btn.disabled=false;btn.textContent='Update Password';
+  if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
+  hideChangePassword();
+  notify('✓ Password updated');
 }
 
 // ══════════════════════════════════
