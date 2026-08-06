@@ -1151,8 +1151,8 @@ async function selectClient(id){
     hide('cal-content');
     const client=clientsCache.find(c=>c.id===id);
     show('mob-topbar-back','flex');
-    buildMobileCoachList();
     show('mob-client-overlay','flex');
+    buildMobileCoachList(true);
   } else {
     buildCalendar();
     if(currentRole==='coach')show('vol-topbar','inline-block');
@@ -1176,8 +1176,9 @@ function mobBackToClients(){
   goHome();
 }
 
-function buildMobileCoachList(){
+function buildMobileCoachList(scrollToEnd){
   const el=document.getElementById('mob-coach-list');
+  const prevScroll=el.scrollTop;
   const wks=(workoutsCache[selectedClientId]||[])
     .filter(w=>w.date)
     .sort((a,b)=>a.date.localeCompare(b.date));
@@ -1206,12 +1207,10 @@ function buildMobileCoachList(){
     </div>`;
   });
   el.innerHTML=html;
-  // Scroll to today or first upcoming workout
   requestAnimationFrame(()=>{
-    const rows=el.querySelectorAll('.mob-day-row');
-    const wksSorted=wks;
-    const idx=wksSorted.findIndex(w=>w.date>=TODAY);
-    if(idx>0&&rows[idx])rows[idx].scrollIntoView({block:'start'});
+    // Opening a client jumps to the end of the list (latest week); rebuilds keep position
+    if(scrollToEnd)el.scrollTop=el.scrollHeight;
+    else el.scrollTop=prevScroll;
   });
 }
 async function addClient(){
