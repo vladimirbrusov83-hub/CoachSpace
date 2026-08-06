@@ -522,7 +522,8 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   #mob-editor-overlay{
     position:fixed;inset:0;z-index:100;
     background:var(--bg);display:flex;flex-direction:column;
-    overflow:hidden;width:100vw;box-sizing:border-box
+    overflow:hidden;width:100vw;box-sizing:border-box;
+    padding-top:calc(48px + env(safe-area-inset-top))
   }
   #mob-editor-overlay .cell-editor{
     flex:1;overflow-y:auto;padding:14px 16px 40px;
@@ -699,7 +700,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 <div id="app">
   <div class="safe-area-top"></div>
   <div class="topbar">
-    <button id="mob-topbar-back" style="display:none" onclick="goHome()">← Clients</button>
+    <button id="mob-topbar-back" style="display:none" onclick="mobTopbarBack()">← Clients</button>
     <div class="topbar-logo" onclick="goHome()" style="cursor:pointer">
       <div class="topbar-logo-mark">B</div>
       <div class="topbar-logo-text">
@@ -1159,6 +1160,17 @@ async function selectClient(id){
   }
 }
 
+// Mobile topbar back: from the workout editor go back to the day list,
+// from the day list go back to the client list.
+function mobTopbarBack(){
+  const ov=document.getElementById('mob-editor-overlay');
+  if(ov&&ov.style.display!=='none'){closeEditor();return;}
+  goHome();
+}
+function setMobBackLabel(inEditor){
+  const b=document.getElementById('mob-topbar-back');
+  if(b)b.textContent=inEditor?'← Back':'← Clients';
+}
 function goHome(){
   if(currentRole!=='coach')return;
   closeEditor();
@@ -1604,11 +1616,12 @@ async function openEditor(ds,workoutId,cellEl){
     const wk=existing;
     const title=wk?.title||'Workout';
     const hdr=document.createElement('div');hdr.className='mob-editor-back';
-    hdr.innerHTML=`<button onclick="closeEditor()">← Back</button><input type="text" id="ed-title" class="ed-title-input" style="flex:1;font-size:16px;background:transparent;border:none;outline:none;padding:0;color:var(--text);font-weight:600;font-family:'Syne',sans-serif" placeholder="Workout name…" value="${esc(title)}"><span></span>`;
+    hdr.innerHTML=`<input type="text" id="ed-title" class="ed-title-input" style="flex:1;font-size:16px;background:transparent;border:none;outline:none;padding:0;color:var(--text);font-weight:600;font-family:'Syne',sans-serif" placeholder="Workout name…" value="${esc(title)}"><span></span>`;
     const panel=document.createElement('div');
     panel.className='cell-editor';panel.id='inline-editor';
     ov.innerHTML='';ov.appendChild(hdr);ov.appendChild(panel);
     ov.style.display='flex';
+    setMobBackLabel(true);
     _buildEditorContent(panel,existing);
     return;
   }
@@ -1708,6 +1721,7 @@ function closeEditor(){
   }
   const ov=document.getElementById('mob-editor-overlay');
   if(ov)ov.style.display='none';
+  setMobBackLabel(false);
   editorDate=null;editorWorkoutId=null;
 }
 
