@@ -1758,7 +1758,7 @@ function openExPicker(anchorBtn){
   search.addEventListener('input',()=>renderList(search.value));
   search.addEventListener('keydown',e=>{
     if(e.key==='Enter'){const v=search.value.trim();if(v){edAddExItem(v);closeExPicker();}}
-    if(e.key==='Escape')closeExPicker();
+    if(e.key==='Escape'){e.stopPropagation();closeExPicker();}
   });
   renderList('');
   const rect=anchorBtn.getBoundingClientRect();
@@ -1808,7 +1808,7 @@ function attachExAc(inp){
     if(e.key==='ArrowDown'){e.preventDefault();acIdx=Math.min(acIdx+1,items.length-1);}
     else if(e.key==='ArrowUp'){e.preventDefault();acIdx=Math.max(acIdx-1,0);}
     else if(e.key==='Enter'&&acIdx>=0){e.preventDefault();inp.value=items[acIdx].textContent;closeAc();return;}
-    else if(e.key==='Escape'){closeAc();return;}
+    else if(e.key==='Escape'){e.stopPropagation();closeAc();return;}
     items.forEach((it,i)=>it.classList.toggle('active',i===acIdx));
     if(acIdx>=0)items[acIdx].scrollIntoView({block:'nearest'});
   });
@@ -2188,7 +2188,19 @@ function notify(msg){
   document.body.appendChild(el);setTimeout(()=>el.remove(),2600);
 }
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeEditor();cancelCopy();}
+  if(e.key==='Escape'){
+    // picker / autocomplete handle their own Escape — don't touch the editor
+    if(document.getElementById('ex-picker')||document.querySelector('.ex-ac'))return;
+    const panel=document.getElementById('inline-editor');
+    if(panel){
+      // Escape saves and leaves edit mode; an untouched new workout just closes
+      const hasEx=[...panel.querySelectorAll('.ed-ex-name-inp')].some(i=>i.value.trim());
+      if(!editorWorkoutId&&!hasEx)closeEditor();
+      else edSave();
+      return;
+    }
+    cancelCopy();
+  }
   if(e.key==='Enter'){
     const ls=document.getElementById('login-screen');
     if(ls.style.display!=='none')doLogin();
