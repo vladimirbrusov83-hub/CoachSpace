@@ -2187,18 +2187,26 @@ function notify(msg){
   const el=document.createElement('div');el.className='notif';el.textContent=msg;
   document.body.appendChild(el);setTimeout(()=>el.remove(),2600);
 }
+// Save and leave edit mode. Returns false if the editor isn't open.
+function editorSaveAndExit(){
+  const panel=document.getElementById('inline-editor');
+  if(!panel)return false;
+  // an untouched new workout just closes — edSave() refuses to save an empty one
+  const hasEx=[...panel.querySelectorAll('.ed-ex-name-inp')].some(i=>i.value.trim());
+  if(!editorWorkoutId&&!hasEx)closeEditor();
+  else edSave();
+  return true;
+}
 document.addEventListener('keydown',e=>{
+  // ⌘/Ctrl+Enter — save and exit. Safari eats plain Escape to leave full screen.
+  if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)&&document.getElementById('inline-editor')){
+    e.preventDefault();editorSaveAndExit();return;
+  }
   if(e.key==='Escape'){
     // picker / autocomplete handle their own Escape — don't touch the editor
     if(document.getElementById('ex-picker')||document.querySelector('.ex-ac'))return;
-    const panel=document.getElementById('inline-editor');
-    if(panel){
-      // Escape saves and leaves edit mode; an untouched new workout just closes
-      const hasEx=[...panel.querySelectorAll('.ed-ex-name-inp')].some(i=>i.value.trim());
-      if(!editorWorkoutId&&!hasEx)closeEditor();
-      else edSave();
-      return;
-    }
+    // keep the browser from acting on Escape too (stop loading, close find bar…)
+    if(editorSaveAndExit()){e.preventDefault();return;}
     cancelCopy();
   }
   if(e.key==='Enter'){
