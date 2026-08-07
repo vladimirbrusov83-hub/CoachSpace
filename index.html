@@ -2037,6 +2037,9 @@ function cvOpen(wid){
       if(ta)ta.addEventListener('blur',()=>saveExNote(gi,ei,capturedWid));
     });
   });
+  // Auto-save overall note on blur too, so it isn't lost if client never marks done
+  const on=document.getElementById('cv-note');
+  if(on)on.addEventListener('blur',()=>saveOverallNote(capturedWid));
 }
 
 async function saveCoachExNote(gi,ei){
@@ -2060,6 +2063,10 @@ async function saveCoachExNote(gi,ei){
 async function saveExNote(gi,ei,wid){
   const wk=(workoutsCache['__client__']||[]).find(w=>w.id===(wid||viewingWorkoutId));if(!wk)return;
   const ta=document.getElementById(`ex-note-${gi}-${ei}`);if(!ta)return;
+  // Update cache immediately so History opened right after blur already has the note
+  const cnNow=parseClientNotes(wk.client_notes);
+  cnNow.v=2;cnNow.ex=cnNow.ex||{};cnNow.ex[`${gi}_${ei}`]=ta.value;
+  wk.client_notes=JSON.stringify(cnNow);
   // Fetch latest from DB to avoid overwriting concurrent coach saves
   const {data:fresh}=await sb.from('workouts').select('client_notes').eq('id',wk.id).single();
   const cn=parseClientNotes(fresh?.client_notes??wk.client_notes);
@@ -2074,6 +2081,22 @@ function cvBack(){
   document.getElementById('cv-detail').style.display='none';
   viewingWorkoutId=null;
 }
+async function saveOverallNote(wid){
+  const wk=(workoutsCache['__client__']||[]).find(w=>w.id===(wid||viewingWorkoutId));if(!wk)return;
+  const ta=document.getElementById('cv-note');if(!ta)return;
+  const cnNow=parseClientNotes(wk.client_notes);
+  if((cnNow.overall||'')===ta.value)return; // nothing changed
+  // Update cache immediately so History opened right after blur already has the note
+  cnNow.v=2;cnNow.overall=ta.value;wk.client_notes=JSON.stringify(cnNow);
+  // Fetch latest from DB to avoid overwriting concurrent coach saves
+  const {data:fresh}=await sb.from('workouts').select('client_notes').eq('id',wk.id).single();
+  const cn=parseClientNotes(fresh?.client_notes??wk.client_notes);
+  cn.v=2;cn.overall=ta.value;
+  const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
+  if(error){notify('Error saving note');return;}
+  wk.client_notes=JSON.stringify(cn);
+}
+
 async function markDone(){
   const wk=(workoutsCache['__client__']||[]).find(w=>w.id===viewingWorkoutId);if(!wk)return;
   const n=document.getElementById('cv-note');
@@ -2089,8 +2112,17 @@ async function markDone(){
 //  WORKOUT HISTORY
 // ══════════════════════════════════
 let histActiveMonth=null;
+// A workout belongs in history if it's marked done OR the client wrote any note on it
+function hasClientNotes(w){
+  const cn=parseClientNotes(w.client_notes);
+  if((cn.overall||'').trim())return true;
+  return Object.values(cn.ex||{}).some(v=>(v||'').trim());
+}
+function histWorkouts(){
+  return (workoutsCache['__client__']||[]).filter(w=>w.done||hasClientNotes(w));
+}
 function openHistory(){
-  const done=(workoutsCache['__client__']||[]).filter(w=>w.done);
+  const done=histWorkouts();
   const months=Object.keys(
     done.reduce((acc,w)=>{acc[w.date.slice(0,7)]=true;return acc;},{})
   ).sort((a,b)=>b.localeCompare(a));
@@ -2120,7 +2152,7 @@ function renderHistoryTabs(months,done){
 }
 function selectHistMonth(key){
   histActiveMonth=key;
-  const done=(workoutsCache['__client__']||[]).filter(w=>w.done);
+  const done=histWorkouts();
   const months=Object.keys(
     done.reduce((acc,w)=>{acc[w.date.slice(0,7)]=true;return acc;},{})
   ).sort((a,b)=>b.localeCompare(a));
@@ -2130,7 +2162,7 @@ function selectHistMonth(key){
 function renderHistoryList(done){
   const scroll=document.getElementById('history-scroll');
   if(!done.length){
-    scroll.innerHTML=`<div class="hist-empty">No completed workouts yet.<br>Mark your first workout as done!</div>`;
+    scroll.innerHTML=`<div class="hist-empty">Nothing here yet.<br>Add a note or mark a workout done.</div>`;
     return;
   }
   const month=histActiveMonth;
@@ -2158,7 +2190,7 @@ function renderHistoryList(done){
         <div class="hist-item-date">${dayStr}</div>
         <div class="hist-item-info">
           <div class="hist-item-title">${esc(w.title||'Workout')}</div>
-          <div class="hist-item-meta">${exAll.length} exercise${exAll.length!==1?'s':''} · Done ✓</div>
+          <div class="hist-item-meta">${exAll.length} exercise${exAll.length!==1?'s':''} · ${w.done?'Done ✓':'Notes saved'}</div>
         </div>
         <span class="hist-item-chevron">›</span>
       </div>
