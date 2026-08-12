@@ -245,7 +245,8 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 
 /* ── WORKOUT BLOCK ── */
 .workout-block{margin:0 4px 3px;background:var(--bg3);border:1px solid var(--border);
-  border-radius:5px;overflow:hidden;transition:border-color .1s}
+  border-radius:5px;overflow:hidden;transition:border-color .1s;cursor:pointer}
+.workout-block:hover{border-color:var(--muted2)}
 .workout-block.is-done{background:#f0fdf4;border-color:#bbf7d0}
 .workout-block.is-copy-src{border-color:var(--blue)}
 .wb-header{display:flex;align-items:center;gap:5px;padding:4px 6px;
@@ -1322,12 +1323,12 @@ function buildWorkoutBlock(wk,ds){
   const block=document.createElement('div');
   block.className='workout-block'+(wk.done?' is-done':'')+(copyState&&copyState.workoutId===wk.id?' is-copy-src':'');
   block.id='wb-'+wk.id;
-  const exCount=(wk.groups||[]).reduce((s,g)=>s+(g.exercises||[]).length,0);
-  const hdr=document.createElement('div');hdr.className='wb-header';
-  hdr.onclick=e=>{e.stopPropagation();
+  block.onclick=e=>{e.stopPropagation();
     if(copyState)pasteWorkout(ds);
     else openEditor(ds,wk.id,document.getElementById('day-'+ds));
   };
+  const exCount=(wk.groups||[]).reduce((s,g)=>s+(g.exercises||[]).length,0);
+  const hdr=document.createElement('div');hdr.className='wb-header';
   hdr.innerHTML=`<span class="wb-status">${wk.done?'✓':'○'}</span>
     <span class="wb-title">${esc(wk.title||'Workout')}</span>
     <span class="wb-ex-count">${esc(String(exCount))}ex</span>`;
