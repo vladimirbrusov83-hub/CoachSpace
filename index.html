@@ -298,6 +298,8 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   opacity:0;transition:opacity .1s;user-select:none;flex-shrink:0}
 .ed-ex-item:hover .ed-drag-handle{opacity:1}
 .ed-drag-handle:active{cursor:grabbing}
+.ed-drag-handle.locked{cursor:not-allowed;opacity:.3}
+.ed-ex-item:hover .ed-drag-handle.locked{opacity:.3}
 .ed-ex-lbl{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
   color:var(--muted2);min-width:22px;flex-shrink:0;transition:color .15s}
 .ed-ex-item.is-superset .ed-ex-lbl{color:var(--blue)}
@@ -1823,6 +1825,28 @@ function edAddDivider(isSuper=false){
   div.innerHTML=`<button class="ed-ss-btn${isSuper?' active':''}" onclick="edToggleSuperset(this)">⚡ Superset</button>`;
   gc.appendChild(div);
 }
+// Flat DOM (item, divider, item, …) → [{item, linkPrev}] where linkPrev means
+// "supersetted with the item above me". Dividers are rebuilt from this list so a
+// reorder can never leave a superset flag attached to the wrong pair.
+function edGetStructure(){
+  const gc=document.getElementById('ed-groups');if(!gc)return [];
+  const out=[];let pendingSuper=false;
+  [...gc.children].forEach(k=>{
+    if(k.classList.contains('ed-ex-item')){out.push({item:k,linkPrev:out.length?pendingSuper:false});pendingSuper=false;}
+    else if(k.classList.contains('ed-divider'))pendingSuper=k.dataset.super==='1';
+  });
+  return out;
+}
+function edRebuild(list){
+  const gc=document.getElementById('ed-groups');if(!gc)return;
+  [...gc.querySelectorAll('.ed-divider')].forEach(d=>d.remove());
+  if(list.length)list[0].linkPrev=false;
+  list.forEach((e,i)=>{
+    if(i>0)edAddDivider(e.linkPrev);
+    gc.appendChild(e.item);
+  });
+  edReIndex();
+}
 function edToggleSuperset(btn){
   const div=btn.closest('.ed-divider');
   const now=div.dataset.super!=='1';div.dataset.super=now?'1':'0';
@@ -1852,13 +1876,25 @@ function edAddExItem(name='',freeText='',skipDivider=false){
   item.addEventListener('dragleave',()=>item.classList.remove('drag-over'));
   item.addEventListener('drop',e=>{
     e.preventDefault();item.classList.remove('drag-over');
-    if(edDragSrc&&edDragSrc!==item){
-      const kids=[...gc.children];
-      const si=kids.indexOf(edDragSrc),ti=kids.indexOf(item);
-      if(si<ti)item.insertAdjacentElement('afterend',edDragSrc);
-      else item.insertAdjacentElement('beforebegin',edDragSrc);
-      edReIndex();
+    if(!edDragSrc||edDragSrc===item)return;
+    const list=edGetStructure();
+    const si=list.findIndex(x=>x.item===edDragSrc);
+    if(si<0)return;
+    // Only a standalone exercise can move — one inside a superset must be unlinked first
+    if(list[si].linkPrev||(list[si+1]&&list[si+1].linkPrev)){
+      notify('Turn off the superset before moving this exercise');return;
     }
+    const [moved]=list.splice(si,1);moved.linkPrev=false;
+    const ti=list.findIndex(x=>x.item===item);
+    if(ti<0)return;
+    if(si<=ti){ // moving down — land after the target's whole group
+      let end=ti;while(list[end+1]&&list[end+1].linkPrev)end++;
+      list.splice(end+1,0,moved);
+    } else {   // moving up — land before the target's whole group
+      let start=ti;while(list[start]&&list[start].linkPrev)start--;
+      list.splice(start,0,moved);
+    }
+    edRebuild(list);
   });
   gc.appendChild(item);edReIndex();
 }
@@ -1866,10 +1902,13 @@ let edDragSrc=null;
 function autoResize(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';}
 function edDelEx(btn){
   const item=btn.closest('.ed-ex-item');
-  const gc=document.getElementById('ed-groups');
-  const kids=[...gc.children];const idx=kids.indexOf(item);
-  if(idx>0&&kids[idx-1].classList.contains('ed-divider'))kids[idx-1].remove();
-  item.remove();edReIndex();
+  const list=edGetStructure();
+  const idx=list.findIndex(x=>x.item===item);
+  if(idx<0){item.remove();return;}
+  // Successor keeps its superset link only if it was linked through the deleted one
+  if(list[idx+1])list[idx+1].linkPrev=list[idx].linkPrev&&list[idx+1].linkPrev;
+  list.splice(idx,1);item.remove();
+  edRebuild(list);
 }
 function edReIndex(){
   const gc=document.getElementById('ed-groups');if(!gc)return;
@@ -1882,10 +1921,15 @@ function edReIndex(){
   if(cur.length)groups.push(cur);
   groups.forEach((grp,gi)=>{
     const L=LETTERS[gi]||'?';
+    const linked=grp.length>1;
     grp.forEach((item,ei)=>{
-      item.classList.toggle('is-superset',grp.length>1);
+      item.classList.toggle('is-superset',linked);
+      item.draggable=!linked;
+      const h=item.querySelector('.ed-drag-handle');
+      if(h){h.classList.toggle('locked',linked);
+        h.title=linked?'Turn off the superset to move this exercise':'Drag to reorder';}
       const lbl=item.querySelector('.ed-ex-lbl');
-      if(lbl)lbl.textContent=grp.length>1?`${L}${ei+1})`:`${L})`;
+      if(lbl)lbl.textContent=linked?`${L}${ei+1})`:`${L})`;
     });
   });
 }
