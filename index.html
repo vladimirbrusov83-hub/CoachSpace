@@ -1856,9 +1856,8 @@ function edAddExItem(name='',freeText='',skipDivider=false){
   const gc=document.getElementById('ed-groups');
   if(!skipDivider&&gc.querySelector('.ed-ex-item'))edAddDivider(false);
   const item=document.createElement('div');item.className='ed-ex-item';
-  item.draggable=true;
   item.innerHTML=`<div class="ed-ex-header">
-    <span class="ed-drag-handle" title="Drag to reorder">⠿</span>
+    <span class="ed-drag-handle" draggable="true" title="Drag to reorder">⠿</span>
     <span class="ed-ex-lbl">A)</span>
     <input type="text" class="ed-ex-name-inp" placeholder="Exercise name" value="${esc(name)}">
     <button class="ed-ex-del" onclick="edDelEx(this)">✕</button>
@@ -1870,7 +1869,7 @@ function edAddExItem(name='',freeText='',skipDivider=false){
   ta.value=freeText;
   ta.addEventListener('input',()=>autoResize(ta));
   setTimeout(()=>autoResize(ta),0);
-  item.addEventListener('dragstart',e=>{e.dataTransfer.effectAllowed='move';item.style.opacity='.4';edDragSrc=item;});
+  item.addEventListener('dragstart',e=>{e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setDragImage(item,0,0);}catch(_){}item.style.opacity='.4';edDragSrc=item;});
   item.addEventListener('dragend',()=>{item.style.opacity='';document.querySelectorAll('.ed-ex-item').forEach(i=>i.classList.remove('drag-over'));});
   item.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';item.classList.add('drag-over');});
   item.addEventListener('dragleave',()=>item.classList.remove('drag-over'));
@@ -1924,9 +1923,8 @@ function edReIndex(){
     const linked=grp.length>1;
     grp.forEach((item,ei)=>{
       item.classList.toggle('is-superset',linked);
-      item.draggable=!linked;
       const h=item.querySelector('.ed-drag-handle');
-      if(h){h.classList.toggle('locked',linked);
+      if(h){h.draggable=!linked;h.classList.toggle('locked',linked);
         h.title=linked?'Turn off the superset to move this exercise':'Drag to reorder';}
       const lbl=item.querySelector('.ed-ex-lbl');
       if(lbl)lbl.textContent=linked?`${L}${ei+1})`:`${L})`;
