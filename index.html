@@ -1869,13 +1869,18 @@ function edAddExItem(name='',freeText='',skipDivider=false){
   ta.value=freeText;
   ta.addEventListener('input',()=>autoResize(ta));
   setTimeout(()=>autoResize(ta),0);
-  item.addEventListener('dragstart',e=>{e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setDragImage(item,0,0);}catch(_){}item.style.opacity='.4';edDragSrc=item;});
-  item.addEventListener('dragend',()=>{item.style.opacity='';document.querySelectorAll('.ed-ex-item').forEach(i=>i.classList.remove('drag-over'));});
-  item.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';item.classList.add('drag-over');});
+  item.addEventListener('dragstart',e=>{
+    // Only the ⠿ handle starts a reorder — a dragged text selection must not
+    if(!e.target.classList||!e.target.classList.contains('ed-drag-handle')){edDragSrc=null;return;}
+    e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setDragImage(item,0,0);}catch(_){}
+    item.style.opacity='.4';edDragSrc=item;});
+  item.addEventListener('dragend',()=>{item.style.opacity='';edDragSrc=null;document.querySelectorAll('.ed-ex-item').forEach(i=>i.classList.remove('drag-over'));});
+  item.addEventListener('dragover',e=>{if(!edDragSrc)return;e.preventDefault();e.dataTransfer.dropEffect='move';item.classList.add('drag-over');});
   item.addEventListener('dragleave',()=>item.classList.remove('drag-over'));
   item.addEventListener('drop',e=>{
+    if(!edDragSrc)return;
     e.preventDefault();item.classList.remove('drag-over');
-    if(!edDragSrc||edDragSrc===item)return;
+    if(edDragSrc===item)return;
     const list=edGetStructure();
     const si=list.findIndex(x=>x.item===edDragSrc);
     if(si<0)return;
