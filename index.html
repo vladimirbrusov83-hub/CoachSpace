@@ -369,16 +369,19 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   color:transparent;transition:background .12s,border-color .12s}
 .set-row.set-done .set-box{background:var(--green);border-color:var(--green);color:#fff}
 .set-txt{font-size:13px;color:var(--muted2);line-height:1.4;min-width:0;overflow-wrap:anywhere}
-.wt-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:9px;
+.wt-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;
   background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  padding:8px 12px;margin-bottom:10px;max-width:520px;min-height:48px}
-.wt-bar .wt-start{width:100%;min-height:44px;font-weight:600}
-.wt-dot{flex:0 0 9px;width:9px;height:9px;border-radius:50%;background:var(--green);
+  padding:6px 10px;margin:0 0 10px auto;width:50%;min-width:196px;max-width:260px;min-height:46px}
+.wt-bar .wt-start{width:100%;min-height:40px;font-weight:600;font-size:13px;padding:0 8px}
+.wt-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--green);
   animation:wtpulse 1.6s ease-in-out infinite}
 .wt-dot.wt-off{background:var(--muted2);animation:none}
 @keyframes wtpulse{0%,100%{opacity:1}50%{opacity:.25}}
-.wt-time{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
-.wt-lbl{font-size:11px;color:var(--muted2)}
+.wt-time{flex:1;font-family:'Syne',sans-serif;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.wt-btn{flex:0 0 34px;width:34px;height:34px;padding:0;display:flex;align-items:center;
+  justify-content:center;font-size:13px;line-height:1;background:var(--bg3);color:var(--muted2);
+  border:1px solid var(--border);border-radius:7px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.wt-btn:active{background:var(--border)}
 .wt-dur{font-size:12px;color:var(--muted2);margin-bottom:10px}
 .set-row.set-done .set-txt{color:var(--muted2);opacity:.55;text-decoration:line-through}
 
@@ -2192,17 +2195,39 @@ async function saveOverallNote(wid){
 const WTIMER_MAX=9000; // 2h30m, then it stops on its own
 let wtimerInt=null;
 function wtKey(wid){return 'wtimer_'+wid;}
+// Stored as {s:startMs, p:stoppedMs|0}. Older builds wrote a bare number.
+function wtLoad(wid){
+  const raw=localStorage.getItem(wtKey(wid));
+  if(!raw)return null;
+  if(/^\d+$/.test(raw))return{s:+raw,p:0};
+  try{const o=JSON.parse(raw);return o&&o.s?o:null;}catch{return null;}
+}
+function wtSave(wid,o){localStorage.setItem(wtKey(wid),JSON.stringify(o));}
 function fmtDur(s){
   const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60,p=n=>String(n).padStart(2,'0');
   return h?`${h}:${p(m)}:${p(x)}`:`${m}:${p(x)}`;
 }
 function wtElapsed(wid){
-  const st=+localStorage.getItem(wtKey(wid))||0;
-  if(!st)return null;
-  return Math.max(0,Math.min(Math.floor((Date.now()-st)/1000),WTIMER_MAX));
+  const o=wtLoad(wid);
+  if(!o)return null;
+  const end=o.p||Date.now();
+  return Math.max(0,Math.min(Math.floor((end-o.s)/1000),WTIMER_MAX));
+}
+function wtRunning(wid){
+  const o=wtLoad(wid);
+  return !!o&&!o.p&&wtElapsed(wid)<WTIMER_MAX;
 }
 function wtStop(){if(wtimerInt){clearInterval(wtimerInt);wtimerInt=null;}}
-function wtStart(wid){localStorage.setItem(wtKey(wid),Date.now());wtRender(wid);}
+function wtStart(wid){wtSave(wid,{s:Date.now(),p:0});wtRender(wid);}
+function wtHalt(wid){
+  const o=wtLoad(wid);if(!o||o.p)return;
+  wtSave(wid,{s:o.s,p:Math.min(Date.now(),o.s+WTIMER_MAX*1000)});
+  wtRender(wid);
+}
+function wtRestart(wid){
+  if(!confirm('Restart the timer back to 0:00?'))return;
+  wtStart(wid);
+}
 function wtRender(wid){
   const bar=document.getElementById('wtimer');
   wtStop();
@@ -2212,18 +2237,19 @@ function wtRender(wid){
     bar.innerHTML=`<button class="btn btn-ghost wt-start" onclick="wtStart('${wid}')">▶ Start workout</button>`;
     return;
   }
-  const capped=el>=WTIMER_MAX;
-  bar.innerHTML=`<span class="wt-dot${capped?' wt-off':''}"></span>
+  const running=wtRunning(wid);
+  bar.innerHTML=`<span class="wt-dot${running?'':' wt-off'}"></span>
     <span class="wt-time" id="wt-time">${fmtDur(el)}</span>
-    <span class="wt-lbl">${capped?'Max time — stopped':'Workout running'}</span>`;
-  if(!capped)wtimerInt=setInterval(()=>wtTick(wid),1000);
+    ${running?`<button class="wt-btn" title="Stop" onclick="wtHalt('${wid}')">■</button>`:''}
+    <button class="wt-btn" title="Restart" onclick="wtRestart('${wid}')">↻</button>`;
+  if(running)wtimerInt=setInterval(()=>wtTick(wid),1000);
 }
 function wtTick(wid){
   const t=document.getElementById('wt-time');
   const el=wtElapsed(wid);
   if(!t||el===null){wtStop();return;}
   t.textContent=fmtDur(el);
-  if(el>=WTIMER_MAX){wtRender(wid);notify('Timer stopped at 2:30:00');}
+  if(el>=WTIMER_MAX){wtHalt(wid);notify('Timer stopped at 2:30:00');}
 }
 
 // ── Per-set checkmarks (client, phone) ──
