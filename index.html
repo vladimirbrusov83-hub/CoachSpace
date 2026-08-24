@@ -361,6 +361,15 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .client-ex-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
   padding:12px 14px;margin-bottom:8px;max-width:520px}
 .cex-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:6px}
+.set-row{display:flex;align-items:center;gap:10px;min-height:44px;padding:2px 4px;
+  border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.set-row:active{background:var(--bg3)}
+.set-box{flex:0 0 22px;width:22px;height:22px;border:2px solid var(--border);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
+  color:transparent;transition:background .12s,border-color .12s}
+.set-row.set-done .set-box{background:var(--green);border-color:var(--green);color:#fff}
+.set-txt{font-size:13px;color:var(--muted2);line-height:1.4;min-width:0;overflow-wrap:anywhere}
+.set-row.set-done .set-txt{color:var(--muted2);opacity:.55;text-decoration:line-through}
 
 /* ── MISC ── */
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -2064,9 +2073,15 @@ function cvOpen(wid){
     (g.exercises||[]).forEach((ex,ei)=>{
       const lbl=g.type==='superset'?`${esc(g.label)}${ei+1}`:esc(g.label);
       const saved=esc((cn.ex||{})[`${gi}_${ei}`]||'');
+      const setLines=(ex.freeText||'').split('\n').filter(l=>l.trim());
+      const setsDone=cn.sets||{};
       html+=`<div class="client-ex-card">
         <div class="cex-name">${lbl}) ${esc(ex.name)}</div>
-        ${ex.freeText?`<div style="font-size:12px;color:var(--muted2);white-space:pre-line;line-height:1.8;padding-bottom:6px">${esc(ex.freeText)}</div>`:''}
+        ${setLines.length?`<div style="padding-bottom:4px">${setLines.map((l,li)=>{
+          const on=setsDone[`${gi}_${ei}_${li}`]?' set-done':'';
+          return `<div class="set-row${on}" onclick="cvToggleSet(this,${gi},${ei},${li})">
+            <span class="set-box">✓</span><span class="set-txt">${esc(l)}</span></div>`;
+        }).join('')}</div>`:''}
         <label style="font-size:9px;margin-top:4px">Your notes</label>
         <textarea id="ex-note-${gi}-${ei}" style="min-height:36px;font-size:16px" placeholder="How did it feel?">${saved}</textarea>
       </div>`;
@@ -2120,11 +2135,14 @@ async function saveExNote(gi,ei,wid){
   const cn=parseClientNotes(fresh?.client_notes??wk.client_notes);
   cn.v=2;cn.ex=cn.ex||{};
   cn.ex[`${gi}_${ei}`]=ta.value;
+  // Keep set checkmarks the client just tapped — the DB copy may predate them
+  cn.sets=parseClientNotes(wk.client_notes).sets||cn.sets;
   const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
   if(error){notify('Error saving note');return;}
   wk.client_notes=JSON.stringify(cn);
 }
 function cvBack(){
+  flushSetSave();
   document.getElementById('cv-week-list').style.display='block';
   document.getElementById('cv-detail').style.display='none';
   viewingWorkoutId=null;
@@ -2140,13 +2158,41 @@ async function saveOverallNote(wid){
   const {data:fresh}=await sb.from('workouts').select('client_notes').eq('id',wk.id).single();
   const cn=parseClientNotes(fresh?.client_notes??wk.client_notes);
   cn.v=2;cn.overall=ta.value;
+  // Keep set checkmarks the client just tapped — the DB copy may predate them
+  cn.sets=parseClientNotes(wk.client_notes).sets||cn.sets;
   const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
   if(error){notify('Error saving note');return;}
   wk.client_notes=JSON.stringify(cn);
 }
 
+// ── Per-set checkmarks (client, phone) ──
+// Taps land fast, so toggle the DOM + local cache instantly and debounce ONE
+// DB write built from the cache. Never re-fetch per tap — that loses checks.
+let setSaveTimer=null,setSavePending=null;
+function cvToggleSet(el,gi,ei,li){
+  const wk=(workoutsCache['__client__']||[]).find(w=>w.id===viewingWorkoutId);if(!wk)return;
+  const cn=parseClientNotes(wk.client_notes);
+  cn.v=2;cn.sets=cn.sets||{};
+  const key=`${gi}_${ei}_${li}`;
+  if(cn.sets[key]){delete cn.sets[key];el.classList.remove('set-done');}
+  else{cn.sets[key]=true;el.classList.add('set-done');}
+  wk.client_notes=JSON.stringify(cn);
+  setSavePending=wk.id;
+  clearTimeout(setSaveTimer);
+  setSaveTimer=setTimeout(flushSetSave,700);
+}
+async function flushSetSave(){
+  clearTimeout(setSaveTimer);setSaveTimer=null;
+  const wid=setSavePending;if(!wid)return;
+  setSavePending=null;
+  const wk=(workoutsCache['__client__']||[]).find(w=>w.id===wid);if(!wk)return;
+  const {error}=await sb.from('workouts').update({client_notes:wk.client_notes}).eq('id',wid);
+  if(error)notify('Error saving sets');
+}
+
 async function markDone(){
   const wk=(workoutsCache['__client__']||[]).find(w=>w.id===viewingWorkoutId);if(!wk)return;
+  await flushSetSave();
   const n=document.getElementById('cv-note');
   const cn=parseClientNotes(wk.client_notes);
   cn.v=2;cn.overall=n?n.value:'';
