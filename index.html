@@ -369,6 +369,17 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   color:transparent;transition:background .12s,border-color .12s}
 .set-row.set-done .set-box{background:var(--green);border-color:var(--green);color:#fff}
 .set-txt{font-size:13px;color:var(--muted2);line-height:1.4;min-width:0;overflow-wrap:anywhere}
+.wt-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:9px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;margin-bottom:10px;max-width:520px;min-height:48px}
+.wt-bar .wt-start{width:100%;min-height:44px;font-weight:600}
+.wt-dot{flex:0 0 9px;width:9px;height:9px;border-radius:50%;background:var(--green);
+  animation:wtpulse 1.6s ease-in-out infinite}
+.wt-dot.wt-off{background:var(--muted2);animation:none}
+@keyframes wtpulse{0%,100%{opacity:1}50%{opacity:.25}}
+.wt-time{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.wt-lbl{font-size:11px;color:var(--muted2)}
+.wt-dur{font-size:12px;color:var(--muted2);margin-bottom:10px}
 .set-row.set-done .set-txt{color:var(--muted2);opacity:.55;text-decoration:line-through}
 
 /* ── MISC ── */
@@ -2057,6 +2068,7 @@ function parseClientNotes(raw){
 
 function cvOpen(wid){
   const wk=(workoutsCache['__client__']||[]).find(w=>w.id===wid);if(!wk)return;
+  wtStop(); // don't leak a tick into a workout we're navigating away from
   viewingWorkoutId=wid;
   document.getElementById('cv-week-list').style.display='none';
   document.getElementById('cv-detail').style.display='block';
@@ -2064,6 +2076,9 @@ function cvOpen(wid){
   const dayLabel=new Date(wk.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   let html=`<div class="page-title">${esc(wk.title||'Workout')}${wk.done?' <span class="tag">✓ Done</span>':''}</div>
     <div class="page-sub">${esc(dayLabel)}</div>`;
+  const showTimer=isMobile()&&!wk.done;
+  if(showTimer)html+=`<div class="wt-bar" id="wtimer"></div>`;
+  else if(wk.done&&cn.dur!=null)html+=`<div class="wt-dur">⏱ Took ${fmtDur(cn.dur)}</div>`;
   if(wk.notes)html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;
     padding:10px 13px;margin-bottom:13px;font-size:12px;color:var(--muted2);max-width:520px;white-space:pre-line">
     <strong style="display:block;margin-bottom:3px;font-size:9px;text-transform:uppercase;letter-spacing:.5px">Coach Notes</strong>${esc(wk.notes)}</div>`;
@@ -2091,6 +2106,7 @@ function cvOpen(wid){
     <label>Overall notes</label>
     <textarea id="cv-note" style="min-height:50px"></textarea></div>`;
   document.getElementById('cv-detail-content').innerHTML=html;
+  if(showTimer)wtRender(wid);
   document.getElementById('cv-note').value=cn.overall||'';
   // Auto-save each exercise note on blur — capture wid now so cvBack() nulling viewingWorkoutId doesn't break it
   const capturedWid=wid;
@@ -2135,13 +2151,16 @@ async function saveExNote(gi,ei,wid){
   const cn=parseClientNotes(fresh?.client_notes??wk.client_notes);
   cn.v=2;cn.ex=cn.ex||{};
   cn.ex[`${gi}_${ei}`]=ta.value;
-  // Keep set checkmarks the client just tapped — the DB copy may predate them
-  cn.sets=parseClientNotes(wk.client_notes).sets||cn.sets;
+  // Keep set checks / duration the client just recorded — the DB copy may predate them
+  const local=parseClientNotes(wk.client_notes);
+  cn.sets=local.sets||cn.sets;
+  cn.dur=local.dur??cn.dur;
   const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
   if(error){notify('Error saving note');return;}
   wk.client_notes=JSON.stringify(cn);
 }
 function cvBack(){
+  wtStop(); // start time stays in localStorage, so it resumes on reopen
   flushSetSave();
   document.getElementById('cv-week-list').style.display='block';
   document.getElementById('cv-detail').style.display='none';
@@ -2158,11 +2177,53 @@ async function saveOverallNote(wid){
   const {data:fresh}=await sb.from('workouts').select('client_notes').eq('id',wk.id).single();
   const cn=parseClientNotes(fresh?.client_notes??wk.client_notes);
   cn.v=2;cn.overall=ta.value;
-  // Keep set checkmarks the client just tapped — the DB copy may predate them
-  cn.sets=parseClientNotes(wk.client_notes).sets||cn.sets;
+  // Keep set checks / duration the client just recorded — the DB copy may predate them
+  const local=parseClientNotes(wk.client_notes);
+  cn.sets=local.sets||cn.sets;
+  cn.dur=local.dur??cn.dur;
   const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
   if(error){notify('Error saving note');return;}
   wk.client_notes=JSON.stringify(cn);
+}
+
+// ── Workout timer (client, phone only) ──
+// Elapsed is always recomputed from the stored start time, never accumulated —
+// phones suspend setInterval when the screen locks, which is most of a workout.
+const WTIMER_MAX=9000; // 2h30m, then it stops on its own
+let wtimerInt=null;
+function wtKey(wid){return 'wtimer_'+wid;}
+function fmtDur(s){
+  const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60,p=n=>String(n).padStart(2,'0');
+  return h?`${h}:${p(m)}:${p(x)}`:`${m}:${p(x)}`;
+}
+function wtElapsed(wid){
+  const st=+localStorage.getItem(wtKey(wid))||0;
+  if(!st)return null;
+  return Math.max(0,Math.min(Math.floor((Date.now()-st)/1000),WTIMER_MAX));
+}
+function wtStop(){if(wtimerInt){clearInterval(wtimerInt);wtimerInt=null;}}
+function wtStart(wid){localStorage.setItem(wtKey(wid),Date.now());wtRender(wid);}
+function wtRender(wid){
+  const bar=document.getElementById('wtimer');
+  wtStop();
+  if(!bar)return;
+  const el=wtElapsed(wid);
+  if(el===null){
+    bar.innerHTML=`<button class="btn btn-ghost wt-start" onclick="wtStart('${wid}')">▶ Start workout</button>`;
+    return;
+  }
+  const capped=el>=WTIMER_MAX;
+  bar.innerHTML=`<span class="wt-dot${capped?' wt-off':''}"></span>
+    <span class="wt-time" id="wt-time">${fmtDur(el)}</span>
+    <span class="wt-lbl">${capped?'Max time — stopped':'Workout running'}</span>`;
+  if(!capped)wtimerInt=setInterval(()=>wtTick(wid),1000);
+}
+function wtTick(wid){
+  const t=document.getElementById('wt-time');
+  const el=wtElapsed(wid);
+  if(!t||el===null){wtStop();return;}
+  t.textContent=fmtDur(el);
+  if(el>=WTIMER_MAX){wtRender(wid);notify('Timer stopped at 2:30:00');}
 }
 
 // ── Per-set checkmarks (client, phone) ──
@@ -2196,6 +2257,9 @@ async function markDone(){
   const n=document.getElementById('cv-note');
   const cn=parseClientNotes(wk.client_notes);
   cn.v=2;cn.overall=n?n.value:'';
+  const secs=wtElapsed(wk.id);
+  if(secs!=null)cn.dur=secs;
+  wtStop();localStorage.removeItem(wtKey(wk.id));
   const {error}=await sb.from('workouts').update({done:true,client_notes:JSON.stringify(cn)}).eq('id',wk.id);
   if(error){notify('Error saving');return;}
   wk.done=true;wk.client_notes=JSON.stringify(cn);
