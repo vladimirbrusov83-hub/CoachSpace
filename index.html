@@ -369,16 +369,16 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   color:transparent;transition:background .12s,border-color .12s}
 .set-row.set-done .set-box{background:var(--green);border-color:var(--green);color:#fff}
 .set-txt{font-size:13px;color:var(--muted2);line-height:1.4;min-width:0;overflow-wrap:anywhere}
-.wt-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;
+.wt-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;
   background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  padding:6px 10px;margin:0 0 10px auto;width:50%;min-width:196px;max-width:260px;min-height:46px}
+  padding:6px 8px;margin:0 0 10px auto;width:56%;min-width:208px;max-width:280px;min-height:46px}
 .wt-bar .wt-start{width:100%;min-height:40px;font-weight:600;font-size:13px;padding:0 8px}
 .wt-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--green);
   animation:wtpulse 1.6s ease-in-out infinite}
 .wt-dot.wt-off{background:var(--muted2);animation:none}
 @keyframes wtpulse{0%,100%{opacity:1}50%{opacity:.25}}
 .wt-time{flex:1;font-family:'Syne',sans-serif;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
-.wt-btn{flex:0 0 34px;width:34px;height:34px;padding:0;display:flex;align-items:center;
+.wt-btn{flex:0 0 32px;width:32px;height:32px;padding:0;display:flex;align-items:center;
   justify-content:center;font-size:13px;line-height:1;background:var(--bg3);color:var(--muted2);
   border:1px solid var(--border);border-radius:7px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .wt-btn:active{background:var(--border)}
@@ -2195,33 +2195,46 @@ async function saveOverallNote(wid){
 const WTIMER_MAX=9000; // 2h30m, then it stops on its own
 let wtimerInt=null;
 function wtKey(wid){return 'wtimer_'+wid;}
-// Stored as {s:startMs, p:stoppedMs|0}. Older builds wrote a bare number.
+// Stored as {a:bankedMs, s:runStartMs|0, st:1 if stopped}.
+// s>0 = running, s=0 = paused (or stopped, if st).
+// Migrates the two older shapes: a bare number, and {s,p}.
 function wtLoad(wid){
   const raw=localStorage.getItem(wtKey(wid));
   if(!raw)return null;
-  if(/^\d+$/.test(raw))return{s:+raw,p:0};
-  try{const o=JSON.parse(raw);return o&&o.s?o:null;}catch{return null;}
+  if(/^\d+$/.test(raw))return{a:0,s:+raw,st:0};
+  let o;try{o=JSON.parse(raw);}catch{return null;}
+  if(!o||typeof o!=='object')return null;
+  if(o.a!=null)return{a:+o.a||0,s:+o.s||0,st:o.st?1:0};
+  if(o.s)return o.p?{a:Math.max(0,o.p-o.s),s:0,st:1}:{a:0,s:+o.s,st:0};
+  return null;
 }
 function wtSave(wid,o){localStorage.setItem(wtKey(wid),JSON.stringify(o));}
 function fmtDur(s){
   const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60,p=n=>String(n).padStart(2,'0');
   return h?`${h}:${p(m)}:${p(x)}`:`${m}:${p(x)}`;
 }
+function wtMs(o){return Math.max(0,o.a+(o.s?Date.now()-o.s:0));}
 function wtElapsed(wid){
   const o=wtLoad(wid);
   if(!o)return null;
-  const end=o.p||Date.now();
-  return Math.max(0,Math.min(Math.floor((end-o.s)/1000),WTIMER_MAX));
+  return Math.min(Math.floor(wtMs(o)/1000),WTIMER_MAX);
 }
 function wtRunning(wid){
   const o=wtLoad(wid);
-  return !!o&&!o.p&&wtElapsed(wid)<WTIMER_MAX;
+  return !!o&&!!o.s&&!o.st&&wtElapsed(wid)<WTIMER_MAX;
 }
 function wtStop(){if(wtimerInt){clearInterval(wtimerInt);wtimerInt=null;}}
-function wtStart(wid){wtSave(wid,{s:Date.now(),p:0});wtRender(wid);}
-function wtHalt(wid){
-  const o=wtLoad(wid);if(!o||o.p)return;
-  wtSave(wid,{s:o.s,p:Math.min(Date.now(),o.s+WTIMER_MAX*1000)});
+function wtStart(wid){wtSave(wid,{a:0,s:Date.now(),st:0});wtRender(wid);}
+function wtBank(wid,stopped){
+  const o=wtLoad(wid);if(!o)return;
+  wtSave(wid,{a:Math.min(wtMs(o),WTIMER_MAX*1000),s:0,st:stopped?1:0});
+  wtRender(wid);
+}
+function wtPause(wid){wtBank(wid,0);}
+function wtHalt(wid){wtBank(wid,1);}
+function wtResume(wid){
+  const o=wtLoad(wid);if(!o||o.st)return;
+  wtSave(wid,{a:o.a,s:Date.now(),st:0});
   wtRender(wid);
 }
 function wtRestart(wid){
@@ -2237,10 +2250,12 @@ function wtRender(wid){
     bar.innerHTML=`<button class="btn btn-ghost wt-start" onclick="wtStart('${wid}')">▶ Start workout</button>`;
     return;
   }
-  const running=wtRunning(wid);
+  const running=wtRunning(wid),o=wtLoad(wid),stopped=!!o.st||el>=WTIMER_MAX;
   bar.innerHTML=`<span class="wt-dot${running?'':' wt-off'}"></span>
     <span class="wt-time" id="wt-time">${fmtDur(el)}</span>
-    ${running?`<button class="wt-btn" title="Stop" onclick="wtHalt('${wid}')">■</button>`:''}
+    ${running?`<button class="wt-btn" title="Pause" onclick="wtPause('${wid}')">❙❙</button>`:''}
+    ${(!running&&!stopped)?`<button class="wt-btn" title="Resume" onclick="wtResume('${wid}')">▶</button>`:''}
+    ${!stopped?`<button class="wt-btn" title="Stop" onclick="wtHalt('${wid}')">■</button>`:''}
     <button class="wt-btn" title="Restart" onclick="wtRestart('${wid}')">↻</button>`;
   if(running)wtimerInt=setInterval(()=>wtTick(wid),1000);
 }
