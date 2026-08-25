@@ -424,6 +424,40 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .ex-picker-item{padding:5px 12px;font-size:12px;cursor:pointer;transition:background .1s}
 .ex-picker-item:hover{background:var(--bg3)}
 .ex-picker-empty{padding:10px 12px;font-size:12px;color:var(--muted);font-style:italic}
+/* ── CLIENT MOBILE MENU (hamburger) ── */
+#cmenu-wrap{display:none;position:relative}
+#cmenu-btn{background:none;border:1px solid var(--border);border-radius:7px;
+  width:40px;height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;cursor:pointer;padding:0;flex-shrink:0}
+#cmenu-btn:active{background:var(--bg3)}
+#cmenu-btn span{display:block;width:16px;height:2px;border-radius:2px;background:var(--muted2)}
+#cmenu-panel{display:none;position:absolute;top:calc(100% + 8px);right:0;min-width:180px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 8px 28px rgba(0,0,0,.18);overflow:hidden;z-index:310}
+#cmenu-panel.open{display:block}
+.cmenu-item{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;
+  background:none;border:none;border-bottom:1px solid var(--border);
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text);
+  text-align:left;padding:0 14px;min-height:48px;cursor:pointer}
+.cmenu-item:last-child{border-bottom:none}
+.cmenu-item:active{background:var(--bg3)}
+.cmenu-ico{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+
+/* ── STATISTICS DRAWER ── */
+#stats-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+#stats-backdrop.open{opacity:1;pointer-events:all}
+#stats-drawer{position:fixed;top:0;right:0;bottom:0;width:min(340px,100vw);background:var(--bg2);
+  z-index:301;display:flex;flex-direction:column;transform:translateX(100%);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-4px 0 24px rgba(0,0,0,.12)}
+#stats-drawer.open{transform:translateX(0)}
+.stat-scroll{flex:1;overflow-y:auto;padding:14px 16px max(28px,env(safe-area-inset-bottom))}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;margin-bottom:10px}
+.stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+.stat-value{font-family:'Syne',sans-serif;font-size:30px;font-weight:700;color:var(--text);line-height:1.1;margin-top:5px}
+.stat-sub{font-size:11px;color:var(--muted2);margin-top:3px}
+.stat-foot{font-size:11px;color:var(--muted);line-height:1.6;margin-top:6px}
+
 /* ── HISTORY DRAWER ── */
 #history-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
 #history-backdrop.open{opacity:1;pointer-events:all}
@@ -616,6 +650,12 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   }
   .ex-picker-list{max-height:calc(55vh - 52px)}
 
+  /* Client mobile: collapse topbar actions + History into hamburger menu */
+  body.role-client #cmenu-wrap{display:block}
+  body.role-client .topbar-right .btn{display:none}
+  body.role-client .cv-topbar #cv-history-btn{display:none}
+  #cmenu-btn{min-height:44px;min-width:44px}
+
   /* Small phone (320px) safety */
   @media(max-width:375px){
     .topbar{padding:0 10px;gap:6px}
@@ -754,6 +794,15 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
       <div class="user-chip"><div class="avatar" id="top-avatar">?</div><span id="top-name"></span></div>
       <button class="btn btn-ghost btn-sm" onclick="showChangePassword()">Password</button>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>
+      <div id="cmenu-wrap">
+        <button id="cmenu-btn" onclick="event.stopPropagation();toggleClientMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
+        <div id="cmenu-panel">
+          <button class="cmenu-item" onclick="cmenuGo('stats')"><span class="cmenu-ico">📊</span>Statistics</button>
+          <button class="cmenu-item" onclick="cmenuGo('history')"><span class="cmenu-ico">🗂</span>History</button>
+          <button class="cmenu-item" onclick="cmenuGo('password')"><span class="cmenu-ico">🔒</span>Password</button>
+          <button class="cmenu-item" onclick="cmenuGo('logout')"><span class="cmenu-ico">↩</span>Sign out</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -799,7 +848,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
         <button class="today-btn" onclick="cvGoToday()">Today</button>
         <div class="cv-week-label" id="cv-week-label">—</div>
         <button class="cv-week-nav-btn" onclick="cvShiftWeek(1)">›</button>
-        <button class="btn btn-ghost btn-sm" onclick="openHistory()" style="margin-left:4px;white-space:nowrap">History</button>
+        <button id="cv-history-btn" class="btn btn-ghost btn-sm" onclick="openHistory()" style="margin-left:4px;white-space:nowrap">History</button>
       </div>
       <div class="cv-scroll" id="cv-scroll">
         <div id="cv-week-list"><div id="cv-list"></div></div>
@@ -830,6 +879,16 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   </div>
   <div class="hist-month-tabs" id="history-tabs"></div>
   <div class="hist-scroll" id="history-scroll"></div>
+</div>
+
+<!-- STATISTICS DRAWER -->
+<div id="stats-backdrop" onclick="closeStats()"></div>
+<div id="stats-drawer">
+  <div class="hist-header">
+    <div class="hist-title">Statistics</div>
+    <div class="hist-close" onclick="closeStats()">✕</div>
+  </div>
+  <div class="stat-scroll" id="stats-body"></div>
 </div>
 
 <script>
@@ -912,6 +971,7 @@ sb.auth.onAuthStateChange((event,session)=>{
   } else if((event==='SIGNED_OUT'||!session)&&currentUser){
     // Reset state and UI without calling sb.auth.signOut() again (already signed out)
     currentUser=null;currentRole='client';clientsCache=[];workoutsCache={};selectedClientId=null;copyState=null;calGridBuilt=false;
+    document.body.classList.remove('role-client');closeClientMenu();
     hide('app');show('login-screen','flex');
     document.getElementById('login-btn').disabled=false;
     document.getElementById('login-btn').textContent='Enter CoachSpace';
@@ -983,6 +1043,7 @@ function showErr(msg){
 async function doLogout(){
   await sb.auth.signOut();
   currentUser=null;currentRole='client';clientsCache=[];workoutsCache={};selectedClientId=null;copyState=null;calGridBuilt=false;
+    document.body.classList.remove('role-client');closeClientMenu();
   hide('app');show('login-screen','flex');
   document.getElementById('login-btn').disabled=false;
   document.getElementById('login-btn').textContent='Enter CoachSpace';
@@ -1092,6 +1153,7 @@ async function initApp(){
   document.getElementById('top-name').textContent=name;
   show('app','flex');
   if(role==='coach'){
+    document.body.classList.remove('role-client');
     show('cal-nav-bar','flex');
     show('sidebar');
     hide('client-view');hide('cal-content');hide('coach-empty');
@@ -1107,6 +1169,7 @@ async function initApp(){
   } else {
     hide('sidebar');hide('cal-nav-bar');hide('cal-content');hide('coach-empty');
     hide('mob-client-overlay');hide('mob-topbar-back');
+    document.body.classList.add('role-client');
     show('client-view','flex');
     cvWeekOffset=0;
     await loadClientWorkouts();
@@ -2305,6 +2368,74 @@ async function markDone(){
   if(error){notify('Error saving');return;}
   wk.done=true;wk.client_notes=JSON.stringify(cn);
   notify('Workout completed! 🎉');cvBack();renderClientWeek();
+}
+
+// ══════════════════════════════════
+//  CLIENT MOBILE MENU
+// ══════════════════════════════════
+function toggleClientMenu(){
+  const p=document.getElementById('cmenu-panel');
+  p.classList.toggle('open');
+}
+function closeClientMenu(){
+  const p=document.getElementById('cmenu-panel');
+  if(p)p.classList.remove('open');
+}
+document.addEventListener('click',e=>{
+  const w=document.getElementById('cmenu-wrap');
+  if(w&&!w.contains(e.target))closeClientMenu();
+});
+function cmenuGo(what){
+  closeClientMenu();
+  if(what==='stats')openStats();
+  else if(what==='history')openHistory();
+  else if(what==='password')showChangePassword();
+  else if(what==='logout')doLogout();
+}
+
+// ══════════════════════════════════
+//  STATISTICS
+// ══════════════════════════════════
+// A workout counts toward stats only if someone wrote a note on it —
+// the client (overall or per-exercise) or the coach (session or per-exercise).
+// Future-dated workouts never count, even if the coach pre-filled notes.
+function statCounts(w){
+  if(w.date>TODAY)return false;
+  if((w.notes||'').trim())return true;
+  const cn=parseClientNotes(w.client_notes);
+  if((cn.overall||'').trim())return true;
+  if(Object.values(cn.ex||{}).some(v=>(v||'').trim()))return true;
+  if(Object.values(cn.coach_ex||{}).some(v=>(v||'').trim()))return true;
+  return false;
+}
+function openStats(){
+  const all=(workoutsCache['__client__']||[]).filter(statCounts);
+  const monStr=DS(mondayOf(new Date()));
+  const mo=TODAY.slice(0,7), yr=TODAY.slice(0,4);
+  const week=all.filter(w=>w.date>=monStr&&w.date<=TODAY).length;
+  const month=all.filter(w=>w.date.slice(0,7)===mo).length;
+  const year=all.filter(w=>w.date.slice(0,4)===yr).length;
+  const total=all.length;
+  const monLabel=new Date(TODAY+'T12:00').toLocaleString('en-US',{month:'long'});
+  const rows=[
+    ['This week',week,weekLabel(mondayOf(new Date()))],
+    ['This month',month,monLabel+' '+yr],
+    ['This year',year,yr],
+    ['All time',total,'Since you started']
+  ];
+  document.getElementById('stats-body').innerHTML=
+    rows.map(([label,val,sub])=>`<div class="stat-card">
+      <div class="stat-label">${esc(label)}</div>
+      <div class="stat-value">${val}</div>
+      <div class="stat-sub">${esc(sub)}</div>
+    </div>`).join('')+
+    `<div class="stat-foot">Only workouts with a note — yours or your coach's — are counted.</div>`;
+  document.getElementById('stats-backdrop').classList.add('open');
+  document.getElementById('stats-drawer').classList.add('open');
+}
+function closeStats(){
+  document.getElementById('stats-backdrop').classList.remove('open');
+  document.getElementById('stats-drawer').classList.remove('open');
 }
 
 // ══════════════════════════════════
