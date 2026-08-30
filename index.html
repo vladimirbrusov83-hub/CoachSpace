@@ -525,6 +525,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .preview-note{font-size:11px;margin-top:3px;padding:2px 6px;border-radius:4px;border-left:2px solid;white-space:pre-wrap;line-height:1.4;word-break:break-word}
 .preview-note-client{color:var(--blue);background:rgba(37,99,235,.07);border-left-color:var(--blue)}
 .preview-note-coach{color:var(--orange);background:rgba(255,165,0,.07);border-left-color:var(--orange)}
+.wb-overall-note{margin:0 0 5px}
 .ed-note-display{font-size:11px;margin-top:4px;padding:3px 6px;border-radius:4px;
   border-left:2px solid;white-space:pre-wrap;line-height:1.5}
 .ed-note-coach{color:var(--orange);background:rgba(255,165,0,.06);border-left-color:var(--orange)}
@@ -1459,6 +1460,12 @@ function buildWorkoutBlock(wk,ds){
   block.appendChild(hdr);
   const exWrap=document.createElement('div');exWrap.className='wb-exercises';
   const cn=parseClientNotes(wk.client_notes);
+  if((cn.overall||'').trim()){
+    const on=document.createElement('div');
+    on.className='preview-note preview-note-client wb-overall-note';
+    on.textContent='\u{1F464} '+cn.overall;
+    exWrap.appendChild(on);
+  }
   (wk.groups||[]).forEach((g,gi)=>{
     const gd=document.createElement('div');gd.className='ex-group-preview';
     if(g.type==='superset')gd.innerHTML=`<span class="ss-tag">⚡ ${esc(g.label)}</span>`;
@@ -1753,6 +1760,14 @@ function _buildEditorContent(panel,existing){
   na.placeholder='Notes…';na.value=existing?.notes||'';
   autoResize(na);na.addEventListener('input',()=>autoResize(na));
   panel.appendChild(na);
+  const cnOverall=(parseClientNotes(existing?.client_notes).overall||'').trim();
+  if(cnOverall){
+    const on=document.createElement('div');
+    on.className='ed-note-display ed-note-client';
+    on.style.marginTop='6px';
+    on.textContent='\u{1F464} '+cnOverall;
+    panel.appendChild(on);
+  }
   const gc=document.createElement('div');gc.id='ed-groups';panel.appendChild(gc);
 
   const addRow=document.createElement('div');addRow.style.cssText='display:flex;align-items:center;gap:10px;';
