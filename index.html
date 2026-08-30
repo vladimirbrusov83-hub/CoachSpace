@@ -281,6 +281,23 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .day-cell[data-col="5"] .cell-editor,
 .day-cell[data-col="6"] .cell-editor,
 .day-cell[data-col="7"] .cell-editor{left:auto;right:0}
+
+/* ── PREVIOUS SESSIONS PANEL (desktop, inside editor) ── */
+.prev-panel{position:absolute;top:0;left:calc(100% + 8px);width:290px;
+  max-height:min(600px,70vh);overflow:auto;
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  box-shadow:0 8px 32px rgba(0,0,0,.14);padding:10px 12px 12px;z-index:99}
+.prev-panel.flip-left{left:auto;right:calc(100% + 8px)}
+.prev-panel-hd{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.prev-panel-sel{width:100%;background:var(--bg3);color:var(--text);
+  border:1px solid var(--border);border-radius:6px;padding:6px 8px;
+  font-family:'DM Sans',sans-serif;font-size:11px;margin-bottom:8px;outline:none;cursor:pointer}
+.prev-panel-empty{color:var(--muted);font-size:11px;padding:6px 0}
+.prev-panel-note{color:var(--muted2);font-size:10px;line-height:1.45;
+  padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--border);white-space:pre-wrap}
+.prev-panel .ex-free-preview{white-space:normal;overflow:visible;text-overflow:clip}
+.prev-panel .preview-note{font-size:10px}
 .ed-title-input{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
   background:transparent;border:none;color:var(--text);padding:0;width:100%;outline:none;
   margin-bottom:5px;display:block}
@@ -1725,6 +1742,7 @@ async function openEditor(ds,workoutId,cellEl){
   panel.appendChild(ti);
   cellEl.appendChild(panel);
   _buildEditorContent(panel,existing);
+  _buildPrevPanel(panel,existing);
   requestAnimationFrame(()=>cellEl.scrollIntoView({behavior:'smooth',block:'nearest'}));
   if(document.getElementById('vol-tb-panel')?.style.display!=='none')renderVolTopbar();
   ti.focus();
@@ -1795,6 +1813,83 @@ function _buildEditorContent(panel,existing){
     });
   } else {
     edAddExItem('','',true);
+  }
+}
+const PREV_PANEL_W=290;
+function _prevSessionList(){
+  const wks=workoutsCache[selectedClientId]||[];
+  return wks.filter(w=>w.date<editorDate&&w.id!==editorWorkoutId)
+            .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+}
+function _prevPickDefault(list,existing){
+  const t=(existing?.title||'').trim().toLowerCase();
+  if(t){const m=list.find(w=>(w.title||'').trim().toLowerCase()===t);if(m)return m.id;}
+  const dow=new Date(editorDate+'T12:00').getDay();
+  const d=list.find(w=>new Date(w.date+'T12:00').getDay()===dow);
+  return (d||list[0]).id;
+}
+function _prevRenderBody(wk){
+  if(!wk)return '<div class="prev-panel-empty">Nothing to show.</div>';
+  const cn=parseClientNotes(wk.client_notes);
+  let html='';
+  if(wk.notes)html+=`<div class="prev-panel-note">\u{1F4CB} ${esc(wk.notes)}</div>`;
+  if(cn.overall)html+=`<div class="prev-panel-note">\u{1F464} ${esc(cn.overall)}</div>`;
+  (wk.groups||[]).forEach((g,gi)=>{
+    let gh='';
+    if(g.type==='superset')gh+=`<span class="ss-tag">\u26A1 ${esc(g.label)}</span>`;
+    (g.exercises||[]).forEach((ex,ei)=>{
+      const lbl=g.type==='superset'?`${esc(g.label)}${ei+1}`:esc(g.label);
+      const lines=(ex.freeText||'').split('\n').filter(l=>l.trim());
+      const key=`${gi}_${ei}`;
+      const clientNote=cn.ex&&cn.ex[key];
+      const coachNote=cn.coach_ex&&cn.coach_ex[key];
+      gh+=`<div class="ex-line-preview"><b>${lbl}) ${esc(ex.name)}</b></div>
+        ${lines.map(l=>`<div class="ex-free-preview">${esc(l)}</div>`).join('')}
+        ${clientNote?`<div class="preview-note preview-note-client">\u{1F464} ${esc(clientNote)}</div>`:''}
+        ${coachNote?`<div class="preview-note preview-note-coach">\u{1F4DD} ${esc(coachNote)}</div>`:''}`;
+    });
+    html+=`<div class="ex-group-preview">${gh}</div>`;
+  });
+  return html||'<div class="prev-panel-empty">No exercises logged.</div>';
+}
+async function _prevLoad(id){
+  const body=document.getElementById('prev-panel-body');if(!body)return;
+  const wk=(workoutsCache[selectedClientId]||[]).find(w=>w.id===id);
+  if(!wk){body.innerHTML='<div class="prev-panel-empty">Nothing to show.</div>';return;}
+  body.innerHTML='<div class="prev-panel-empty">Loading\u2026</div>';
+  // client_notes in cache can be stale — they are the point of this panel
+  const {data}=await sb.from('workouts').select('client_notes').eq('id',id).single();
+  if(data)wk.client_notes=data.client_notes;
+  const sel=document.getElementById('prev-panel-sel');
+  if(!sel||sel.value!==id)return; // selection changed while loading
+  body.innerHTML=_prevRenderBody(wk);
+}
+function _buildPrevPanel(panel,existing){
+  const list=_prevSessionList();
+  const prev=document.createElement('div');
+  prev.className='prev-panel';prev.id='prev-panel';
+  prev.onclick=e=>e.stopPropagation();
+  if(!list.length){
+    prev.innerHTML='<div class="prev-panel-hd">Previous sessions</div>'+
+      '<div class="prev-panel-empty">No earlier sessions for this client.</div>';
+  }else{
+    const defId=_prevPickDefault(list,existing);
+    const lbl=w=>`${new Date(w.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})} \u2014 ${w.title||'Workout'}`;
+    prev.innerHTML=`<div class="prev-panel-hd">Previous sessions</div>
+      <select class="prev-panel-sel" id="prev-panel-sel">${list.map(w=>`<option value="${esc(w.id)}"${w.id===defId?' selected':''}>${esc(lbl(w))}</option>`).join('')}</select>
+      <div id="prev-panel-body"></div>`;
+  }
+  panel.appendChild(prev);
+  // .cal-scroll has overflow-x:hidden, so its edges are the real bounds
+  const sc=document.getElementById('cal-scroll');
+  const b=sc?sc.getBoundingClientRect():{left:0,right:window.innerWidth};
+  const r=panel.getBoundingClientRect();
+  const roomRight=b.right-(r.right+8), roomLeft=(r.left-8)-b.left;
+  if(roomRight<PREV_PANEL_W&&roomLeft>roomRight)prev.classList.add('flip-left');
+  if(list.length){
+    const sel=prev.querySelector('#prev-panel-sel');
+    sel.onchange=()=>_prevLoad(sel.value);
+    _prevLoad(sel.value);
   }
 }
 function closeEditor(){
