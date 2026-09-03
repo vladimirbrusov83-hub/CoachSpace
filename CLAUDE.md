@@ -112,7 +112,10 @@ calGridBuilt      // bool, prevents rebuilding DOM calendar
     .content-area
       .paste-banner        — visible in copy/move mode
       .cal-scroll → #cal-grid → .day-cell → .workout-block, .cell-editor
-    #client-view → .cv-topbar, #cv-week-list, #cv-detail
+    #client-view → .cv-topbar (week nav), .cv-scroll > .cv-inner
+      #cv-week-list → #cv-hero (greeting+progress), #cv-strip (Mon–Sun chips), #cv-list (cards)
+      #cv-detail → #cvd-head (sticky: back, title, sets progress, timer), #cv-detail-content
+      #cvd-foot — sticky bottom "Complete workout" / "Completed · Undo" bar
 #mob-client-overlay        — mobile coach client list
 #mob-editor-overlay        — mobile fullscreen editor
 #history-drawer            — completed workout history (client)

@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#08080f">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Brusov Coach">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://*.supabase.co wss://*.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'self';">
 <title>CoachSpace</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
@@ -356,51 +359,166 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .undo-btn:hover{background:rgba(255,255,255,.15)}
 
 /* ── CLIENT VIEW ── */
-#client-view{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.cv-topbar{display:flex;align-items:center;gap:8px;padding:10px 16px;
+#client-view{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;background:var(--bg)}
+.cv-topbar{display:flex;align-items:center;gap:6px;padding:8px 12px;
   border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
-.cv-week-nav-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
-  color:var(--text);padding:3px 10px;cursor:pointer;font-size:15px;line-height:1;transition:all .13s}
-.cv-week-nav-btn:hover{background:var(--bg4)}
-.cv-week-label{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex:1;text-align:center}
-.cv-scroll{flex:1;overflow-y:auto;padding:16px 18px}
-.week-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
-  padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:flex-start;
-  justify-content:space-between;transition:all .13s;max-width:480px}
-.week-card:hover{border-color:#111;transform:translateX(2px)}
-.week-card.is-done{background:#f0fdf4;border-color:#bbf7d0}
-.wc-title{font-size:15px;font-weight:700;margin-bottom:3px}
-.wc-meta{font-size:11px;color:var(--muted);margin-bottom:7px}
-.wc-preview{font-size:12px;color:var(--muted2);line-height:1.6}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
-.status-dot.done{background:var(--green)}
-.cv-detail{overflow-y:auto;padding:16px 18px}
-.client-ex-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  padding:12px 14px;margin-bottom:8px;max-width:520px}
-.cex-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:6px}
-.set-row{display:flex;align-items:center;gap:10px;min-height:44px;padding:2px 4px;
-  border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
-.set-row:active{background:var(--bg3)}
-.set-box{flex:0 0 22px;width:22px;height:22px;border:2px solid var(--border);border-radius:6px;
-  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
-  color:transparent;transition:background .12s,border-color .12s}
-.set-row.set-done .set-box{background:var(--green);border-color:var(--green);color:#fff}
-.set-txt{font-size:13px;color:var(--muted2);line-height:1.4;min-width:0;overflow-wrap:anywhere}
-.wt-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;
-  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  padding:6px 8px;margin:0 0 10px auto;width:56%;min-width:208px;max-width:280px;min-height:46px}
-.wt-bar .wt-start{width:100%;min-height:40px;font-weight:600;font-size:13px;padding:0 8px}
-.wt-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--green);
-  animation:wtpulse 1.6s ease-in-out infinite}
-.wt-dot.wt-off{background:var(--muted2);animation:none}
+.cv-nav{background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:20px;line-height:1;transition:background .13s;-webkit-tap-highlight-color:transparent;flex-shrink:0;padding:0 0 2px}
+.cv-nav:hover{background:var(--bg4)}.cv-nav:active{background:var(--bg5)}
+.cv-week-label{flex:1;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;
+  padding:2px 4px;min-height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  -webkit-tap-highlight-color:transparent;color:var(--text);border-radius:10px}
+.cv-week-label:active{background:var(--bg3)}
+.cv-week-range{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;line-height:1.1}
+.cv-week-cap{font-size:11px;font-weight:500;color:var(--muted2);line-height:1.1}
+.cv-week-cap.off{color:#cc1f35;font-weight:600}
+.cv-tb-actions{display:flex;gap:6px;flex-shrink:0;margin-left:6px}
+.cv-scroll{flex:1;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding:0 0 32px}
+#client-view.detail-open .cv-scroll{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+#client-view.detail-open .cv-topbar{display:none}
+.cv-inner{max-width:600px;margin:0 auto;padding:16px 16px 0}
+/* week hero */
+.cv-hero{margin-bottom:14px}
+.cv-hello{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.3px;line-height:1.15}
+.cv-hero-sub{font-size:13px;color:var(--muted2);margin-top:3px;line-height:1.45}
+.cv-prog{height:5px;background:var(--bg4);border-radius:10px;margin-top:10px;overflow:hidden}
+.cv-prog>i{display:block;height:100%;background:var(--green);border-radius:10px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+/* day strip */
+.cv-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:16px}
+.cv-day{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 7px;border-radius:12px;
+  background:var(--bg2);border:1px solid var(--border);cursor:default;-webkit-tap-highlight-color:transparent}
+.cv-day.has{cursor:pointer}.cv-day.has:active{background:var(--bg3)}
+.cv-day.today{border-color:#111;box-shadow:inset 0 0 0 1px #111}
+.cv-day-wd{font-size:10px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
+.cv-day.today .cv-day-wd{color:#cc1f35}
+.cv-day-n{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;line-height:1;color:var(--text)}
+.cv-day.past:not(.has) .cv-day-n{color:var(--muted)}
+.cv-day-dot{width:6px;height:6px;border-radius:50%;background:transparent;margin-top:2px}
+.cv-day.has .cv-day-dot{background:#111}
+.cv-day.done .cv-day-dot{background:var(--green)}
+/* workout cards */
+.week-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin-bottom:10px;
+  cursor:pointer;display:flex;gap:12px;align-items:stretch;transition:transform .12s,border-color .12s,box-shadow .12s;
+  -webkit-tap-highlight-color:transparent}
+.week-card:hover{border-color:#111}
+.week-card:active{transform:scale(.985)}
+.week-card.is-today{border-color:#111;box-shadow:0 4px 18px rgba(0,0,0,.07)}
+.week-card.is-done{background:#f3fbf5;border-color:#c6ecd0}
+.wc-date{flex:0 0 46px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;
+  background:var(--bg3);padding:6px 0;gap:2px}
+.week-card.is-done .wc-date{background:#dcf5e3}
+.wc-date-wd{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted2)}
+.wc-date-n{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;line-height:1;color:var(--text)}
+.wc-body{flex:1;min-width:0}
+.wc-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.wc-pill{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+  padding:2px 7px;border-radius:100px;background:#cc1f35;color:#fff}
+.wc-pill.done{background:var(--green)}
+.wc-meta{font-size:12px;color:var(--muted2);margin-top:3px}
+.wc-preview{font-size:12.5px;color:var(--muted2);line-height:1.5;margin-top:6px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.week-card.is-done .wc-preview{opacity:.7}
+.wc-state{flex:0 0 26px;align-self:center;display:flex;align-items:center;justify-content:center}
+.wc-check{width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.wc-chev{font-size:20px;color:var(--muted)}
+/* rest / empty week */
+.cv-rest{background:var(--bg2);border:1px dashed var(--border);border-radius:14px;padding:26px 18px;text-align:center}
+.cv-rest-ico{font-size:30px;margin-bottom:8px}
+.cv-rest-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px}
+.cv-rest-sub{font-size:12.5px;color:var(--muted2);line-height:1.5}
+.cv-rest-sub b{color:var(--text);font-weight:600}
+.cv-next{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:0 18px;border-radius:10px;background:#111;color:#fff;
+  font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;min-height:44px}
+.cv-next:active{background:#333}
+/* workout detail */
+.cvd-head{position:sticky;top:0;z-index:6;background:rgba(245,246,248,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  margin:0 -16px 12px;padding:8px 16px 10px;border-bottom:1px solid var(--border)}
+.cvd-row{display:flex;align-items:center;gap:10px}
+.cvd-back{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;
+  justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;color:var(--text);-webkit-tap-highlight-color:transparent;padding:0 0 2px}
+.cvd-back:active{background:var(--bg3)}
+.cvd-titles{flex:1;min-width:0}
+.cvd-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.cvd-sub{font-size:12px;color:var(--muted2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cvd-sub b{color:var(--text);font-weight:600}
+.cvd-prog{height:4px;background:var(--bg4);border-radius:10px;margin-top:10px;overflow:hidden}
+.cvd-prog>i{display:block;height:100%;background:var(--green);border-radius:10px;transition:width .3s}
+.wt-bar{display:flex;align-items:center;gap:6px;margin-top:10px}
+.wt-start{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:44px;border-radius:10px;
+  background:#111;color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.wt-start:active{background:#333}
+.wt-time{flex:1;font-family:'Syne',sans-serif;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:8px;padding-left:4px}
+.wt-time small{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--muted2);letter-spacing:.4px;text-transform:uppercase}
+.wt-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:wtpulse 1.6s ease-in-out infinite;flex-shrink:0}
+.wt-dot.wt-off{background:var(--muted);animation:none}
 @keyframes wtpulse{0%,100%{opacity:1}50%{opacity:.25}}
-.wt-time{flex:1;font-family:'Syne',sans-serif;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
-.wt-btn{flex:0 0 32px;width:32px;height:32px;padding:0;display:flex;align-items:center;
-  justify-content:center;font-size:13px;line-height:1;background:var(--bg3);color:var(--muted2);
-  border:1px solid var(--border);border-radius:7px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.wt-btn:active{background:var(--border)}
-.wt-dur{font-size:12px;color:var(--muted2);margin-bottom:10px}
-.set-row.set-done .set-txt{color:var(--muted2);opacity:.55;text-decoration:line-through}
+.wt-btn{width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;
+  background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.wt-btn:active{background:var(--bg4)}
+.cvd-done-banner{display:flex;align-items:center;gap:10px;background:#f3fbf5;border:1px solid #c6ecd0;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#166534}
+.cvd-done-banner b{font-family:'Syne',sans-serif;font-weight:700}
+.cvd-done-banner small{display:block;font-size:12px;color:#3f8a55;margin-top:1px}
+.cvd-done-ico{width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+.coach-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid #cc1f35;border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.coach-card-hd{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#cc1f35;margin-bottom:5px}
+.coach-card-av{width:18px;height:18px;border-radius:50%;background:#cc1f35;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif}
+.coach-card-tx{font-size:13.5px;color:var(--text);line-height:1.55;white-space:pre-line}
+.ss-hd{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.6px;margin:14px 2px 6px}
+.ss-hd::after{content:'';flex:1;height:1px;background:rgba(37,99,235,.25)}
+.client-ex-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:12px 14px 8px;margin-bottom:10px;transition:border-color .2s,background .2s}
+.client-ex-card.in-ss{border-left:3px solid var(--blue)}
+.client-ex-card.all-done{border-color:#c6ecd0;background:#fafdfb}
+.cex-hd{display:flex;align-items:flex-start;gap:9px;margin-bottom:6px}
+.cex-lbl{flex:0 0 auto;min-width:26px;height:26px;padding:0 7px;border-radius:8px;background:#111;color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.client-ex-card.in-ss .cex-lbl{background:var(--blue)}
+.client-ex-card.all-done .cex-lbl{background:var(--green)}
+.cex-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;line-height:1.25;flex:1;min-width:0;padding-top:3px;overflow-wrap:anywhere}
+.cex-cnt{font-size:11px;color:var(--muted);font-weight:600;padding-top:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cex-coach{font-size:12.5px;color:#9a3412;background:rgba(234,108,0,.08);border-left:2px solid var(--orange);border-radius:6px;padding:6px 9px;margin:2px 0 8px;line-height:1.5;white-space:pre-line}
+.cex-coach b{font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:1px;color:var(--orange)}
+.set-row{display:flex;align-items:center;gap:11px;min-height:44px;padding:2px 4px;border-radius:8px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.set-row:active{background:var(--bg3)}
+.set-box{flex:0 0 24px;width:24px;height:24px;border:2px solid var(--bg5);border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:transparent;transition:background .12s,border-color .12s}
+.set-row.set-done .set-box{background:var(--green);border-color:var(--green);color:#fff;animation:setpop .22s cubic-bezier(.3,1.6,.6,1)}
+@keyframes setpop{0%{transform:scale(.7)}100%{transform:scale(1)}}
+.set-txt{font-size:14px;color:var(--text);line-height:1.4;min-width:0;overflow-wrap:anywhere}
+.set-row.set-done .set-txt{color:var(--muted2);text-decoration:line-through;opacity:.6}
+.cex-note-wrap{margin-top:4px;border-top:1px solid var(--bg3);padding-top:4px}
+.cex-note-btn{background:none;border:none;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;
+  padding:0 2px;min-height:36px;display:inline-flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent}
+.cex-note-btn:active{color:var(--text)}
+.cex-note-wrap.open .cex-note-btn{display:none}
+.cex-note-lbl{display:none;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted2);margin-top:6px}
+.cex-note-wrap.open .cex-note-lbl{display:block}
+.cex-note-wrap textarea{display:none;min-height:44px;font-size:16px;border-radius:9px;background:var(--bg3);margin:4px 0 6px}
+.cex-note-wrap.open textarea{display:block}
+.cvd-overall{margin-top:8px}
+.cvd-overall-lbl{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:2px}
+.cvd-overall-sub{font-size:12px;color:var(--muted2);margin-bottom:8px}
+.cvd-overall textarea{min-height:76px;font-size:16px;border-radius:10px;background:var(--bg2)}
+.cvd-foot{position:absolute;left:0;right:0;bottom:0;z-index:7;background:rgba(245,246,248,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-top:1px solid var(--border);padding:10px 16px max(12px,env(safe-area-inset-bottom))}
+.cvd-foot-in{max-width:600px;margin:0 auto;display:flex;gap:8px;align-items:center}
+.cvd-cta{flex:1;min-height:52px;border-radius:12px;background:#111;color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s,transform .1s;-webkit-tap-highlight-color:transparent}
+.cvd-cta:active{transform:scale(.985);background:#333}
+.cvd-cta.is-done{background:#dcf5e3;color:#166534;cursor:default}
+.cvd-undo{min-height:52px;padding:0 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg2);color:var(--muted2);
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cvd-undo:active{background:var(--bg3)}
+.cv-splash{position:fixed;inset:0;z-index:9000;background:rgba(17,17,17,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;animation:fadein .2s ease;gap:6px}
+.cv-splash.out{animation:fadeout .25s ease forwards}
+.cv-splash-ck{width:84px;height:84px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;animation:setpop .45s cubic-bezier(.3,1.6,.6,1);margin-bottom:10px}
+.cv-splash-t{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.cv-splash-s{font-size:14px;color:rgba(255,255,255,.6)}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@keyframes fadeout{to{opacity:0}}
+@media(min-width:769px){.cv-topbar{justify-content:center;position:relative}.cv-week-label{flex:0 1 360px}.cv-tb-actions{position:absolute;right:16px;top:50%;transform:translateY(-50%)}}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-grid .stat-card{margin-bottom:0}
 
 /* ── MISC ── */
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -590,11 +708,10 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   .coach-ex-note-ta::placeholder{color:var(--orange);opacity:.5}
 
   /* Client view — fit screen */
-  .cv-scroll{padding:12px 14px}
-  .client-ex-card{max-width:100%;box-sizing:border-box}
-  #cv-detail-content *{max-width:100%;box-sizing:border-box}
-  #cv-detail-content [style*="max-width:520px"]{max-width:100%!important}
-  #cv-detail textarea{width:100%;box-sizing:border-box}
+  .cv-inner{padding:14px 14px 0}
+  .cvd-head{margin:0 -14px 12px;padding:8px 14px 10px}
+  .cvd-foot{padding-left:14px;padding-right:14px}
+  .cv-tb-actions{display:none}
 
   /* Mobile editor overlay */
   #mob-editor-overlay{
@@ -631,7 +748,6 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   .btn{min-height:44px;padding:10px 16px;font-size:14px}
   .btn-sm{min-height:40px;padding:8px 14px;font-size:13px}
   .btn-xs{min-height:36px;padding:7px 12px;font-size:12px}
-  .cv-week-nav-btn{min-height:44px;min-width:44px;padding:10px 14px;font-size:18px}
   .today-btn{min-height:44px;padding:10px 14px;font-size:14px}
   .back-btn{padding:12px 0;min-height:44px}
   .mob-back-btn{min-height:44px;padding:8px 14px}
@@ -646,12 +762,6 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   .add-client-toggle{min-height:44px;padding:10px 0;width:100%}
   /* Sidebar footer safe area */
   .sb-footer{padding-bottom:max(10px, env(safe-area-inset-bottom))}
-
-  /* Client view — week card full width */
-  .week-card{max-width:100%;width:100%}
-
-  /* Mark as Done CTA — full width, prominent */
-  #cv-detail .btn-accent{width:100%;min-height:52px;font-size:15px}
 
   /* Exercise delete — always visible on mobile (no hover on touch) */
   .ed-ex-del{color:var(--muted)}
@@ -672,7 +782,6 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   body.role-client .topbar-right{margin-left:auto}
   body.role-client #cmenu-wrap{display:block}
   body.role-client .topbar-right .btn{display:none}
-  body.role-client .cv-topbar #cv-history-btn{display:none}
   #cmenu-btn{min-height:44px;min-width:44px}
 
   /* Small phone (320px) safety */
@@ -863,22 +972,28 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 
     <div id="client-view" style="display:none">
       <div class="cv-topbar">
-        <button class="cv-week-nav-btn" onclick="cvShiftWeek(-1)">‹</button>
-        <button class="today-btn" onclick="cvGoToday()">Today</button>
-        <div class="cv-week-label" id="cv-week-label">—</div>
-        <button class="cv-week-nav-btn" onclick="cvShiftWeek(1)">›</button>
-        <button id="cv-history-btn" class="btn btn-ghost btn-sm" onclick="openHistory()" style="margin-left:4px;white-space:nowrap">History</button>
+        <button class="cv-nav" onclick="cvShiftWeek(-1)" aria-label="Previous week">‹</button>
+        <button class="cv-week-label" id="cv-week-label" onclick="cvGoToday()" title="Back to this week">—</button>
+        <button class="cv-nav" onclick="cvShiftWeek(1)" aria-label="Next week">›</button>
+        <div class="cv-tb-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openStats()">Stats</button>
+          <button class="btn btn-ghost btn-sm" onclick="openHistory()">History</button>
+        </div>
       </div>
       <div class="cv-scroll" id="cv-scroll">
-        <div id="cv-week-list"><div id="cv-list"></div></div>
-        <div id="cv-detail" style="display:none">
-          <div class="back-btn" onclick="cvBack()">← Back to week</div>
-          <div id="cv-detail-content"></div>
-          <div style="max-width:520px;margin-top:16px">
-            <button class="btn btn-accent" onclick="markDone()">Mark as Done ✓</button>
+        <div class="cv-inner">
+          <div id="cv-week-list">
+            <div class="cv-hero" id="cv-hero"></div>
+            <div class="cv-strip" id="cv-strip"></div>
+            <div id="cv-list"></div>
+          </div>
+          <div id="cv-detail" style="display:none">
+            <div class="cvd-head" id="cvd-head"></div>
+            <div id="cv-detail-content"></div>
           </div>
         </div>
       </div>
+      <div class="cvd-foot" id="cvd-foot" style="display:none"></div>
     </div>
   </div>
   <!-- Mobile: client workout list overlay (fixed, same pattern as editor overlay) -->
@@ -925,7 +1040,7 @@ function esc(s){
   if(s===null||s===undefined)return'';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
-const DS = d => d.toISOString().slice(0,10);
+const DS = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; // local date, not UTC
 const TODAY = DS(new Date());
 function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
 function mondayOf(d){const t=new Date(d);t.setHours(0,0,0,0);const dow=t.getDay();t.setDate(t.getDate()-(dow===0?6:dow-1));return t;}
@@ -2203,38 +2318,100 @@ function refreshDay(ds){
 // ══════════════════════════════════
 function cvShiftWeek(dir){cvWeekOffset+=dir;renderClientWeek();}
 function cvGoToday(){cvWeekOffset=0;renderClientWeek();}
+function cvFirstName(){
+  const m=(currentUser&&currentUser.user_metadata)||{};
+  const n=(m.name||(currentUser&&currentUser.email?currentUser.email.split('@')[0]:'')||'').trim();
+  return n.split(/\s+/)[0]||'';
+}
+function cvGreeting(){const h=new Date().getHours();return h<5?'Good night':h<12?'Good morning':h<17?'Good afternoon':'Good evening';}
+function fmtLong(ds){return new Date(ds+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});}
+function fmtDurWords(s){const m=Math.max(1,Math.round(s/60));if(m<60)return `${m} min`;const h=Math.floor(m/60);return `${h}h ${String(m%60).padStart(2,'0')}m`;}
+// Set lines = every non-empty line of an exercise's text. Counts how many are ticked.
+function cvSetStats(w){
+  const cn=parseClientNotes(w.client_notes);const done=cn.sets||{};let t=0,d=0;
+  (w.groups||[]).forEach((g,gi)=>(g.exercises||[]).forEach((ex,ei)=>{
+    (ex.freeText||'').split('\n').filter(l=>l.trim()).forEach((l,li)=>{t++;if(done[`${gi}_${ei}_${li}`])d++;});
+  }));
+  return{t,d};
+}
 function renderClientWeek(){
   const mon=mondayOf(addDays(new Date(),cvWeekOffset*7));
-  document.getElementById('cv-week-label').textContent=weekLabel(mon);
-  const weekSet=new Set(Array.from({length:7},(_,i)=>DS(addDays(mon,i))));
-  const wks=(workoutsCache['__client__']||[]).filter(w=>weekSet.has(w.date));
-  const list=document.getElementById('cv-list');list.innerHTML='';
+  const cap=cvWeekOffset===0?'This week':cvWeekOffset===1?'Next week':cvWeekOffset===-1?'Last week'
+    :(cvWeekOffset>0?`${cvWeekOffset} weeks ahead`:`${-cvWeekOffset} weeks ago`);
+  document.getElementById('cv-week-label').innerHTML=
+    `<span class="cv-week-range">${esc(weekLabel(mon))}</span>`+
+    `<span class="cv-week-cap${cvWeekOffset?' off':''}">${esc(cap)}${cvWeekOffset?' · tap for today':''}</span>`;
+  const days=Array.from({length:7},(_,i)=>DS(addDays(mon,i)));
+  const all=workoutsCache['__client__']||[];
+  const wks=all.filter(w=>days.includes(w.date)).sort((a,b)=>a.date.localeCompare(b.date));
   document.getElementById('cv-week-list').style.display='block';
   document.getElementById('cv-detail').style.display='none';
+  document.getElementById('client-view').classList.remove('detail-open');
+  hide('cvd-foot');
+
+  // Hero: greeting + one-line status + progress bar
+  const doneN=wks.filter(w=>w.done).length;
+  let title,sub;
+  if(cvWeekOffset===0){const fn=cvFirstName();title=cvGreeting()+(fn?', '+fn:'');}
+  else title=cap;
+  if(!wks.length)sub=cvWeekOffset<0?'No workouts were scheduled.':'Rest week — nothing scheduled.';
+  else if(doneN===wks.length)sub=wks.length===1?'Your workout is done. Great job.':`All ${wks.length} workouts done. Great week.`;
+  else if(cvWeekOffset===0){
+    const todayW=wks.find(w=>w.date===TODAY&&!w.done);
+    const next=wks.find(w=>w.date>TODAY&&!w.done);
+    if(todayW)sub=`Today: ${todayW.title||'Workout'} · ${doneN} of ${wks.length} done`;
+    else if(next)sub=`${doneN} of ${wks.length} done · next up ${new Date(next.date+'T12:00').toLocaleDateString('en-US',{weekday:'long'})}`;
+    else sub=`${doneN} of ${wks.length} done this week`;
+  } else sub=`${doneN} of ${wks.length} workout${wks.length>1?'s':''} done`;
+  document.getElementById('cv-hero').innerHTML=`<div class="cv-hello">${esc(title)}</div><div class="cv-hero-sub">${esc(sub)}</div>`+
+    (wks.length?`<div class="cv-prog"><i style="width:${Math.round(doneN/wks.length*100)}%"></i></div>`:'');
+
+  // Day strip Mon–Sun
+  document.getElementById('cv-strip').innerHTML=days.map(ds=>{
+    const d=new Date(ds+'T12:00');const w=wks.find(x=>x.date===ds);
+    const cls=['cv-day',w?'has':'',w&&w.done?'done':'',ds===TODAY?'today':'',ds<TODAY?'past':''].filter(Boolean).join(' ');
+    return `<div class="${cls}"${w?` onclick="cvOpen('${w.id}')"`:''}>
+      <span class="cv-day-wd">${d.toLocaleDateString('en-US',{weekday:'short'})}</span>
+      <span class="cv-day-n">${d.getDate()}</span><span class="cv-day-dot"></span></div>`;
+  }).join('');
+
+  const list=document.getElementById('cv-list');
   if(!wks.length){
-    list.innerHTML=`<div class="empty-state"><div class="empty-icon">🏖️</div>
-      <div class="empty-title">Rest week</div><div class="empty-sub">No workouts scheduled.</div></div>`;
+    const next=cvWeekOffset>=0?all.filter(w=>w.date>days[6]&&!w.done).sort((a,b)=>a.date.localeCompare(b.date))[0]:null;
+    list.innerHTML=`<div class="cv-rest"><div class="cv-rest-ico">${cvWeekOffset<0?'📭':'🛌'}</div>
+      <div class="cv-rest-title">${cvWeekOffset<0?'Nothing here':'Rest week'}</div>
+      <div class="cv-rest-sub">${next?`Your next workout is <b>${esc(next.title||'Workout')}</b> on ${esc(fmtLong(next.date))}.`
+        :(cvWeekOffset<0?'No workouts were scheduled this week.':'Recover well. Your coach will add the next block soon.')}</div>
+      ${next?`<button class="cv-next" onclick="cvJumpTo('${next.id}')">Go to workout ›</button>`:''}</div>`;
     return;
   }
-  wks.sort((a,b)=>a.date.localeCompare(b.date)).forEach(w=>{
-    const dayLabel=new Date(w.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
-    const exCount=(w.groups||[]).reduce((s,g)=>s+(g.exercises||[]).length,0);
+  list.innerHTML=wks.map(w=>{
+    const d=new Date(w.date+'T12:00');
     const allEx=(w.groups||[]).flatMap(g=>g.exercises||[]);
-    const preview=allEx.slice(0,5).map(ex=>esc(ex.name||'')).filter(Boolean);
-    const more=allEx.length>5?`<span style="color:var(--muted)">+${allEx.length-5} more</span>`:'';
-    const card=document.createElement('div');
-    card.className='week-card'+(w.done?' is-done':'');
-    card.innerHTML=`<div style="flex:1">
-        <div class="wc-title">${esc(w.title||'Workout')}</div>
-        <div class="wc-meta">${esc(dayLabel)} · ${exCount} exercise${exCount!==1?'s':''}</div>
-        ${preview.length?`<div class="wc-preview">${preview.join('<br>')}${more?'<br>'+more:''}</div>`:''}
+    const names=allEx.map(e=>e.name).filter(Boolean);
+    const cn=parseClientNotes(w.client_notes);
+    const st=cvSetStats(w);
+    const isToday=w.date===TODAY;
+    let meta=`${allEx.length} exercise${allEx.length!==1?'s':''}`;
+    if(w.done)meta=`Completed${cn.dur!=null?' · '+fmtDurWords(cn.dur):''}`;
+    else if(st.d)meta+=` · ${st.d}/${st.t} sets done`;
+    else if(w.date<TODAY)meta+=' · not completed';
+    return `<div class="week-card${w.done?' is-done':''}${isToday&&!w.done?' is-today':''}" onclick="cvOpen('${w.id}')">
+      <div class="wc-date"><span class="wc-date-wd">${d.toLocaleDateString('en-US',{weekday:'short'})}</span><span class="wc-date-n">${d.getDate()}</span></div>
+      <div class="wc-body">
+        <div class="wc-title">${esc(w.title||'Workout')}${isToday&&!w.done?'<span class="wc-pill">Today</span>':''}${w.done?'<span class="wc-pill done">Done</span>':''}</div>
+        <div class="wc-meta">${esc(meta)}</div>
+        ${names.length?`<div class="wc-preview">${names.map(esc).join(' · ')}</div>`:''}
       </div>
-      <div style="display:flex;align-items:center;gap:7px;margin-left:10px;flex-shrink:0">
-        <div class="status-dot${w.done?' done':''}"></div>
-        <span style="font-size:16px;color:var(--muted)">›</span>
-      </div>`;
-    card.onclick=()=>cvOpen(w.id);list.appendChild(card);
-  });
+      <div class="wc-state">${w.done?'<span class="wc-check">✓</span>':'<span class="wc-chev">›</span>'}</div>
+    </div>`;
+  }).join('');
+}
+function cvJumpTo(wid){
+  const w=(workoutsCache['__client__']||[]).find(x=>x.id===wid);if(!w)return;
+  const mon=mondayOf(new Date()),target=mondayOf(new Date(w.date+'T12:00'));
+  cvWeekOffset=Math.round((target-mon)/(7*864e5));
+  renderClientWeek();cvOpen(wid);
 }
 function parseClientNotes(raw){
   if(!raw)return{overall:'',ex:{}};
@@ -2249,42 +2426,45 @@ function cvOpen(wid){
   viewingWorkoutId=wid;
   document.getElementById('cv-week-list').style.display='none';
   document.getElementById('cv-detail').style.display='block';
+  document.getElementById('client-view').classList.add('detail-open');
+  document.getElementById('cv-scroll').scrollTop=0;
   const cn=parseClientNotes(wk.client_notes);
-  const dayLabel=new Date(wk.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  let html=`<div class="page-title">${esc(wk.title||'Workout')}${wk.done?' <span class="tag">✓ Done</span>':''}</div>
-    <div class="page-sub">${esc(dayLabel)}</div>`;
-  const showTimer=isMobile()&&!wk.done;
-  if(showTimer)html+=`<div class="wt-bar" id="wtimer"></div>`;
-  else if(wk.done&&cn.dur!=null)html+=`<div class="wt-dur">⏱ Took ${fmtDur(cn.dur)}</div>`;
-  if(wk.notes)html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;
-    padding:10px 13px;margin-bottom:13px;font-size:12px;color:var(--muted2);max-width:520px;white-space:pre-line">
-    <strong style="display:block;margin-bottom:3px;font-size:9px;text-transform:uppercase;letter-spacing:.5px">Coach Notes</strong>${esc(wk.notes)}</div>`;
+  cvRenderHead(wk);
+  let html='';
+  if(wk.done)html+=`<div class="cvd-done-banner"><span class="cvd-done-ico">✓</span>
+    <div><b>Completed</b>${cn.dur!=null?` · ${esc(fmtDurWords(cn.dur))}`:''}<small>Nice work. Your notes are saved for your coach.</small></div></div>`;
+  if(wk.notes)html+=`<div class="coach-card"><div class="coach-card-hd"><span class="coach-card-av">B</span>From your coach</div>
+    <div class="coach-card-tx">${esc(wk.notes)}</div></div>`;
   (wk.groups||[]).forEach((g,gi)=>{
-    if(g.type==='superset')html+=`<div style="font-size:10px;font-weight:700;color:var(--blue);
-      text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">⚡ Superset ${esc(g.label)}</div>`;
+    const ss=g.type==='superset';
+    if(ss)html+=`<div class="ss-hd">Superset ${esc(g.label)}</div>`;
     (g.exercises||[]).forEach((ex,ei)=>{
-      const lbl=g.type==='superset'?`${esc(g.label)}${ei+1}`:esc(g.label);
-      const saved=esc((cn.ex||{})[`${gi}_${ei}`]||'');
+      const lbl=ss?`${esc(g.label)}${ei+1}`:esc(g.label);
+      const key=`${gi}_${ei}`;
+      const saved=(cn.ex||{})[key]||'';
+      const coachEx=(cn.coach_ex||{})[key]||'';
       const setLines=(ex.freeText||'').split('\n').filter(l=>l.trim());
       const setsDone=cn.sets||{};
-      html+=`<div class="client-ex-card">
-        <div class="cex-name">${lbl}) ${esc(ex.name)}</div>
-        ${setLines.length?`<div style="padding-bottom:4px">${setLines.map((l,li)=>{
-          const on=setsDone[`${gi}_${ei}_${li}`]?' set-done':'';
-          return `<div class="set-row${on}" onclick="cvToggleSet(this,${gi},${ei},${li})">
-            <span class="set-box">✓</span><span class="set-txt">${esc(l)}</span></div>`;
-        }).join('')}</div>`:''}
-        <label style="font-size:9px;margin-top:4px">Your notes</label>
-        <textarea id="ex-note-${gi}-${ei}" style="min-height:36px;font-size:16px" placeholder="How did it feel?">${saved}</textarea>
-      </div>`;
+      const dn=setLines.filter((l,li)=>setsDone[`${gi}_${ei}_${li}`]).length;
+      html+=`<div class="client-ex-card${ss?' in-ss':''}${setLines.length&&dn===setLines.length?' all-done':''}" id="cex-${gi}-${ei}">
+        <div class="cex-hd"><span class="cex-lbl">${lbl}</span><div class="cex-name">${esc(ex.name)}</div>
+          ${setLines.length?`<span class="cex-cnt" id="cex-cnt-${gi}-${ei}">${dn}/${setLines.length}</span>`:''}</div>
+        ${coachEx.trim()?`<div class="cex-coach"><b>Coach</b>${esc(coachEx)}</div>`:''}
+        ${setLines.map((l,li)=>`<div class="set-row${setsDone[`${gi}_${ei}_${li}`]?' set-done':''}" onclick="cvToggleSet(this,${gi},${ei},${li})">
+          <span class="set-box">✓</span><span class="set-txt">${esc(l)}</span></div>`).join('')}
+        <div class="cex-note-wrap${saved.trim()?' open':''}" id="cex-note-wrap-${gi}-${ei}">
+          <button class="cex-note-btn" onclick="cvOpenNote(${gi},${ei})">✎ Add a note</button>
+          <div class="cex-note-lbl">Your note</div>
+          <textarea id="ex-note-${gi}-${ei}" placeholder="Weight used, how it felt, any pain…">${esc(saved)}</textarea>
+        </div></div>`;
     });
   });
-  html+=`<div style="max-width:520px;margin-top:4px">
-    <label>Overall notes</label>
-    <textarea id="cv-note" style="min-height:50px"></textarea></div>`;
+  html+=`<div class="cvd-overall"><div class="cvd-overall-lbl">Session notes</div>
+    <div class="cvd-overall-sub">Energy, sleep, anything your coach should know.</div>
+    <textarea id="cv-note" placeholder="Optional"></textarea></div>`;
   document.getElementById('cv-detail-content').innerHTML=html;
-  if(showTimer)wtRender(wid);
   document.getElementById('cv-note').value=cn.overall||'';
+  cvRenderFoot(wk);
   // Auto-save each exercise note on blur — capture wid now so cvBack() nulling viewingWorkoutId doesn't break it
   const capturedWid=wid;
   (wk.groups||[]).forEach((g,gi)=>{
@@ -2296,6 +2476,45 @@ function cvOpen(wid){
   // Auto-save overall note on blur too, so it isn't lost if client never marks done
   const on=document.getElementById('cv-note');
   if(on)on.addEventListener('blur',()=>saveOverallNote(capturedWid));
+}
+function cvOpenNote(gi,ei){
+  const w=document.getElementById(`cex-note-wrap-${gi}-${ei}`);if(!w)return;
+  w.classList.add('open');
+  const ta=document.getElementById(`ex-note-${gi}-${ei}`);if(ta)ta.focus();
+}
+function cvRenderHead(wk){
+  const st=cvSetStats(wk);
+  const showTimer=isMobile()&&!wk.done;
+  document.getElementById('cvd-head').innerHTML=`<div class="cvd-row">
+      <button class="cvd-back" onclick="cvBack()" aria-label="Back to week">‹</button>
+      <div class="cvd-titles"><div class="cvd-title">${esc(wk.title||'Workout')}</div>
+        <div class="cvd-sub">${esc(fmtLong(wk.date))}${st.t?` · <b id="cvd-sets">${st.d}/${st.t}</b> sets`:''}</div></div>
+    </div>
+    ${showTimer?'<div class="wt-bar" id="wtimer"></div>':''}
+    ${st.t?`<div class="cvd-prog"><i id="cvd-prog-i" style="width:${Math.round(st.d/st.t*100)}%"></i></div>`:''}`;
+  if(showTimer)wtRender(wk.id);
+}
+function cvUpdateProgress(wk,gi,ei){
+  const st=cvSetStats(wk);
+  const s=document.getElementById('cvd-sets');if(s)s.textContent=`${st.d}/${st.t}`;
+  const p=document.getElementById('cvd-prog-i');if(p)p.style.width=(st.t?Math.round(st.d/st.t*100):0)+'%';
+  const card=document.getElementById(`cex-${gi}-${ei}`);const cnt=document.getElementById(`cex-cnt-${gi}-${ei}`);
+  if(card){const rows=[...card.querySelectorAll('.set-row')],dn=rows.filter(r=>r.classList.contains('set-done')).length;
+    if(cnt)cnt.textContent=`${dn}/${rows.length}`;card.classList.toggle('all-done',rows.length>0&&dn===rows.length);}
+}
+function cvRenderFoot(wk){
+  const f=document.getElementById('cvd-foot');
+  f.innerHTML=`<div class="cvd-foot-in">${wk.done
+    ?`<div class="cvd-cta is-done">✓ Completed</div><button class="cvd-undo" onclick="markUndone()">Undo</button>`
+    :`<button class="cvd-cta" onclick="markDone()">Complete workout <span>✓</span></button>`}</div>`;
+  f.style.display='block';
+}
+function cvSplash(dur){
+  const el=document.createElement('div');el.className='cv-splash';
+  el.innerHTML=`<div class="cv-splash-ck">✓</div><div class="cv-splash-t">Workout complete</div>
+    <div class="cv-splash-s">${dur!=null?esc(fmtDurWords(dur)):'Nice work'}</div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.classList.add('out'),1150);setTimeout(()=>el.remove(),1450);
 }
 
 async function saveCoachExNote(gi,ei){
@@ -2339,9 +2558,8 @@ async function saveExNote(gi,ei,wid){
 function cvBack(){
   wtStop(); // start time stays in localStorage, so it resumes on reopen
   flushSetSave();
-  document.getElementById('cv-week-list').style.display='block';
-  document.getElementById('cv-detail').style.display='none';
   viewingWorkoutId=null;
+  renderClientWeek(); // re-render so set progress / done state on the cards is current
 }
 async function saveOverallNote(wid){
   const wk=(workoutsCache['__client__']||[]).find(w=>w.id===(wid||viewingWorkoutId));if(!wk)return;
@@ -2421,12 +2639,12 @@ function wtRender(wid){
   if(!bar)return;
   const el=wtElapsed(wid);
   if(el===null){
-    bar.innerHTML=`<button class="btn btn-ghost wt-start" onclick="wtStart('${wid}')">▶ Start workout</button>`;
+    bar.innerHTML=`<button class="wt-start" onclick="wtStart('${wid}')">▶ Start workout timer</button>`;
     return;
   }
   const running=wtRunning(wid),o=wtLoad(wid),stopped=!!o.st||el>=WTIMER_MAX;
-  bar.innerHTML=`<span class="wt-dot${running?'':' wt-off'}"></span>
-    <span class="wt-time" id="wt-time">${fmtDur(el)}</span>
+  bar.innerHTML=`<span class="wt-time"><span class="wt-dot${running?'':' wt-off'}"></span><span id="wt-time">${fmtDur(el)}</span>
+      <small>${running?'':stopped?'stopped':'paused'}</small></span>
     ${running?`<button class="wt-btn" title="Pause" onclick="wtPause('${wid}')">❙❙</button>`:''}
     ${(!running&&!stopped)?`<button class="wt-btn" title="Resume" onclick="wtResume('${wid}')">▶</button>`:''}
     ${!stopped?`<button class="wt-btn" title="Stop" onclick="wtHalt('${wid}')">■</button>`:''}
@@ -2453,6 +2671,7 @@ function cvToggleSet(el,gi,ei,li){
   if(cn.sets[key]){delete cn.sets[key];el.classList.remove('set-done');}
   else{cn.sets[key]=true;el.classList.add('set-done');}
   wk.client_notes=JSON.stringify(cn);
+  cvUpdateProgress(wk,gi,ei);
   setSavePending=wk.id;
   clearTimeout(setSaveTimer);
   setSaveTimer=setTimeout(flushSetSave,700);
@@ -2478,8 +2697,29 @@ async function markDone(){
   const {error}=await sb.from('workouts').update({done:true,client_notes:JSON.stringify(cn)}).eq('id',wk.id);
   if(error){notify('Error saving');return;}
   wk.done=true;wk.client_notes=JSON.stringify(cn);
-  notify('Workout completed! 🎉');cvBack();renderClientWeek();
+  cvSplash(cn.dur);cvBack();
 }
+async function markUndone(){
+  const wk=(workoutsCache['__client__']||[]).find(w=>w.id===viewingWorkoutId);if(!wk)return;
+  const {error}=await sb.from('workouts').update({done:false}).eq('id',wk.id);
+  if(error){notify('Error saving');return;}
+  wk.done=false;cvOpen(wk.id);notify('Marked as not completed');
+}
+// Refresh the client's plan when they come back to the app (coach may have edited it)
+document.addEventListener('visibilitychange',async()=>{
+  if(document.visibilityState!=='visible'||currentRole!=='client'||!currentUser)return;
+  await flushSetSave();
+  await loadClientWorkouts();
+  if(!viewingWorkoutId)renderClientWeek();
+});
+// Swipe left/right on the week list to change weeks
+(function(){
+  const el=document.getElementById('cv-scroll');let sx=0,sy=0,on=false;
+  el.addEventListener('touchstart',e=>{if(viewingWorkoutId)return;sx=e.touches[0].clientX;sy=e.touches[0].clientY;on=true;},{passive:true});
+  el.addEventListener('touchend',e=>{if(!on)return;on=false;
+    const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>70&&Math.abs(dy)<50)cvShiftWeek(dx<0?1:-1);},{passive:true});
+})();
 
 // ══════════════════════════════════
 //  CLIENT MOBILE MENU
@@ -2534,12 +2774,12 @@ function openStats(){
     ['This year',year,yr],
     ['All time',total,'Since you started']
   ];
-  document.getElementById('stats-body').innerHTML=
+  document.getElementById('stats-body').innerHTML='<div class="stat-grid">'+
     rows.map(([label,val,sub])=>`<div class="stat-card">
       <div class="stat-label">${esc(label)}</div>
       <div class="stat-value">${val}</div>
       <div class="stat-sub">${esc(sub)}</div>
-    </div>`).join('')+
+    </div>`).join('')+'</div>'+
     `<div class="stat-foot">Only workouts with a note — yours or your coach's — are counted.</div>`;
   document.getElementById('stats-backdrop').classList.add('open');
   document.getElementById('stats-drawer').classList.add('open');
