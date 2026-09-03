@@ -376,6 +376,8 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .cv-tb-actions{display:flex;gap:6px;flex-shrink:0;margin-left:6px}
 .cv-scroll{flex:1;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding:0 0 32px}
 #client-view.detail-open .cv-scroll{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+body.kb-open .cvd-foot{display:none!important}
+body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0px) + 24px)}
 #client-view.detail-open .cv-topbar{display:none}
 .cv-inner{max-width:600px;margin:0 auto;padding:16px 16px 0}
 /* week hero */
@@ -487,14 +489,8 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .set-txt{font-size:14px;color:var(--text);line-height:1.4;min-width:0;overflow-wrap:anywhere}
 .set-row.set-done .set-txt{color:var(--muted2);text-decoration:line-through;opacity:.6}
 .cex-note-wrap{margin-top:4px;border-top:1px solid var(--bg3);padding-top:4px}
-.cex-note-btn{background:none;border:none;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;
-  padding:0 2px;min-height:36px;display:inline-flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent}
-.cex-note-btn:active{color:var(--text)}
-.cex-note-wrap.open .cex-note-btn{display:none}
-.cex-note-lbl{display:none;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted2);margin-top:6px}
-.cex-note-wrap.open .cex-note-lbl{display:block}
-.cex-note-wrap textarea{display:none;min-height:44px;font-size:16px;border-radius:9px;background:var(--bg3);margin:4px 0 6px}
-.cex-note-wrap.open textarea{display:block}
+.cex-note-lbl{display:block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted2);margin-top:6px}
+.cex-note-wrap textarea{display:block;min-height:44px;font-size:16px;border-radius:9px;background:var(--bg3);margin:4px 0 6px}
 .cvd-overall{margin-top:8px}
 .cvd-overall-lbl{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:2px}
 .cvd-overall-sub{font-size:12px;color:var(--muted2);margin-bottom:8px}
@@ -1307,6 +1303,7 @@ async function initApp(){
     show('client-view','flex');
     cvWeekOffset=0;
     await loadClientWorkouts();
+    await loadClientProfile();
     renderClientWeek();
   }
 }
@@ -1324,10 +1321,23 @@ async function loadWorkoutsForClient(clientId){
   if(error){notify('Error loading workouts');return;}
   workoutsCache[clientId]=data||[];
 }
+let clientProfileName='';   // real name from the clients table (client role)
+async function loadClientProfile(){
+  clientProfileName='';
+  try{
+    const {data}=await sb.from('clients').select('name').eq('email',currentUser.email).limit(1);
+    if(data&&data[0]&&data[0].name)clientProfileName=data[0].name.trim();
+  }catch{}
+  if(!clientProfileName){
+    // fall back to the name joined onto the client's workouts
+    const w=(workoutsCache['__client__']||[]).find(x=>x.clients&&x.clients.name);
+    if(w)clientProfileName=(w.clients.name||'').trim();
+  }
+}
 async function loadClientWorkouts(){
   // for client view — find client record by email
   const {data,error}=await sb.from('workouts')
-    .select('*, clients!inner(email)')
+    .select('*, clients!inner(email,name)')
     .eq('clients.email',currentUser.email)
     .order('date');
   if(error){console.error(error);return;}
@@ -2320,7 +2330,7 @@ function cvShiftWeek(dir){cvWeekOffset+=dir;renderClientWeek();}
 function cvGoToday(){cvWeekOffset=0;renderClientWeek();}
 function cvFirstName(){
   const m=(currentUser&&currentUser.user_metadata)||{};
-  const n=(m.name||(currentUser&&currentUser.email?currentUser.email.split('@')[0]:'')||'').trim();
+  const n=(clientProfileName||m.name||(currentUser&&currentUser.email?currentUser.email.split('@')[0]:'')||'').trim();
   return n.split(/\s+/)[0]||'';
 }
 function cvGreeting(){const h=new Date().getHours();return h<5?'Good night':h<12?'Good morning':h<17?'Good afternoon':'Good evening';}
@@ -2452,8 +2462,7 @@ function cvOpen(wid){
         ${coachEx.trim()?`<div class="cex-coach"><b>Coach</b>${esc(coachEx)}</div>`:''}
         ${setLines.map((l,li)=>`<div class="set-row${setsDone[`${gi}_${ei}_${li}`]?' set-done':''}" onclick="cvToggleSet(this,${gi},${ei},${li})">
           <span class="set-box">✓</span><span class="set-txt">${esc(l)}</span></div>`).join('')}
-        <div class="cex-note-wrap${saved.trim()?' open':''}" id="cex-note-wrap-${gi}-${ei}">
-          <button class="cex-note-btn" onclick="cvOpenNote(${gi},${ei})">✎ Add a note</button>
+        <div class="cex-note-wrap" id="cex-note-wrap-${gi}-${ei}">
           <div class="cex-note-lbl">Your note</div>
           <textarea id="ex-note-${gi}-${ei}" placeholder="Weight used, how it felt, any pain…">${esc(saved)}</textarea>
         </div></div>`;
@@ -2476,11 +2485,6 @@ function cvOpen(wid){
   // Auto-save overall note on blur too, so it isn't lost if client never marks done
   const on=document.getElementById('cv-note');
   if(on)on.addEventListener('blur',()=>saveOverallNote(capturedWid));
-}
-function cvOpenNote(gi,ei){
-  const w=document.getElementById(`cex-note-wrap-${gi}-${ei}`);if(!w)return;
-  w.classList.add('open');
-  const ta=document.getElementById(`ex-note-${gi}-${ei}`);if(ta)ta.focus();
 }
 function cvRenderHead(wk){
   const st=cvSetStats(wk);
@@ -2719,6 +2723,49 @@ document.addEventListener('visibilitychange',async()=>{
   el.addEventListener('touchend',e=>{if(!on)return;on=false;
     const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
     if(Math.abs(dx)>70&&Math.abs(dy)<50)cvShiftWeek(dx<0?1:-1);},{passive:true});
+})();
+
+// iOS keyboard: keep the focused note above the keyboard, hide the bottom bar
+// while typing, and undo the layout-viewport shift Safari leaves behind on close.
+(function(){
+  const vv=window.visualViewport;if(!vv)return;
+  let kbOpen=false;
+  function sync(){
+    const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
+    const open=kb>80;
+    document.documentElement.style.setProperty('--kb',kb+'px');
+    if(open!==kbOpen){
+      kbOpen=open;
+      document.body.classList.toggle('kb-open',open);
+      if(!open)window.scrollTo(0,0);
+    }
+  }
+  function reveal(){
+    const a=document.activeElement;
+    if(!a||a.tagName!=='TEXTAREA')return;
+    const sc=a.closest('.cv-scroll');if(!sc)return;
+    const visBottom=vv.offsetTop+vv.height-12;
+    const head=document.getElementById('cvd-head');
+    const visTop=(head?head.getBoundingClientRect().bottom:0)+8;
+    const r=a.getBoundingClientRect();
+    if(r.bottom>visBottom)sc.scrollTop+=r.bottom-visBottom;
+    else if(r.top<visTop)sc.scrollTop-=visTop-r.top;
+  }
+  vv.addEventListener('resize',()=>{sync();if(kbOpen)setTimeout(reveal,60);});
+  vv.addEventListener('scroll',sync);
+  document.addEventListener('focusin',e=>{
+    if(e.target&&e.target.tagName==='TEXTAREA')setTimeout(reveal,250);
+  });
+  document.addEventListener('focusout',()=>{
+    setTimeout(()=>{
+      const a=document.activeElement;
+      if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT'))return;
+      kbOpen=false;
+      document.body.classList.remove('kb-open');
+      document.documentElement.style.setProperty('--kb','0px');
+      window.scrollTo(0,0);
+    },120);
+  });
 })();
 
 // ══════════════════════════════════
