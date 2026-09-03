@@ -2733,12 +2733,19 @@ document.addEventListener('visibilitychange',async()=>{
   // Safari's layout viewport (100dvh / innerHeight) can be taller than what's
   // actually on screen, which leaves dead space under the bottom bar. vv.height
   // is always the real visible height, so drive the shell off that instead.
+  // Tallest visible height seen since the last orientation change — i.e. the
+  // screen with no keyboard. Comparing against it is far more reliable than
+  // window.innerHeight, which on iOS is the layout viewport and can be stale.
+  let fullH=vv.height;
   function setAppHeight(){
-    if(kbOpen)return;              // keyboard shrinks vv.height — don't follow it
-    document.documentElement.style.setProperty('--appvh',vv.height+'px');
+    if(vv.height>fullH)fullH=vv.height;
+    const kb=fullH-vv.height;
+    // Never commit a keyboard-shrunk height, or the whole shell collapses.
+    if(kb<80)document.documentElement.style.setProperty('--appvh',vv.height+'px');
+    return kb;
   }
   function sync(){
-    const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
+    const kb=setAppHeight();
     const open=kb>80;
     document.documentElement.style.setProperty('--kb',kb+'px');
     if(open!==kbOpen){
@@ -2746,7 +2753,6 @@ document.addEventListener('visibilitychange',async()=>{
       document.body.classList.toggle('kb-open',open);
       if(!open)window.scrollTo(0,0);
     }
-    setAppHeight();
   }
   function reveal(){
     const a=document.activeElement;
@@ -2761,7 +2767,7 @@ document.addEventListener('visibilitychange',async()=>{
   }
   vv.addEventListener('resize',()=>{sync();if(kbOpen)setTimeout(reveal,60);});
   vv.addEventListener('scroll',sync);
-  window.addEventListener('orientationchange',()=>setTimeout(setAppHeight,300));
+  window.addEventListener('orientationchange',()=>setTimeout(()=>{fullH=vv.height;setAppHeight();},300));
   setAppHeight();
   document.addEventListener('focusin',e=>{
     if(e.target&&e.target.tagName==='TEXTAREA')setTimeout(reveal,250);
