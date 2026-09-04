@@ -596,6 +596,53 @@ body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0
 .stat-sub{font-size:11px;color:var(--muted2);margin-top:3px}
 .stat-foot{font-size:11px;color:var(--muted);line-height:1.6;margin-top:6px}
 
+/* ── ACHIEVEMENTS DRAWER ── */
+#badges-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+#badges-backdrop.open{opacity:1;pointer-events:all}
+#badges-drawer{position:fixed;top:0;right:0;bottom:0;width:min(340px,100vw);background:var(--bg2);
+  z-index:301;display:flex;flex-direction:column;transform:translateX(100%);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-4px 0 24px rgba(0,0,0,.12)}
+#badges-drawer.open{transform:translateX(0)}
+.bdg-scroll{flex:1;overflow-y:auto;padding:14px 16px max(28px,env(safe-area-inset-bottom))}
+.bdg-count{font-size:11px;color:var(--muted2);margin-bottom:12px}
+.bdg-sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--muted);margin:16px 0 8px}
+.bdg-sec:first-child{margin-top:0}
+.bdg-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bdg{background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:12px 10px;text-align:center}
+.bdg.locked{opacity:.4;filter:grayscale(1)}
+.bdg-ico{font-size:22px;line-height:1;display:block;margin-bottom:6px}
+.bdg-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;line-height:1.25;display:block}
+.bdg-sub{font-size:10px;color:var(--muted2);line-height:1.35;margin-top:3px}
+.bdg.earned{background:var(--bg2);border-color:#cc1f35}
+.bdg.earned .bdg-sub{color:#cc1f35;font-weight:700}
+.bdg-foot{font-size:11px;color:var(--muted);line-height:1.6;margin-top:14px}
+
+/* ── BADGE EARNED POPUP ── */
+.bpop{position:fixed;inset:0;z-index:9100;background:rgba(17,17,17,.985);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;
+  flex-direction:column;align-items:center;justify-content:center;color:#fff;
+  animation:fadein .2s ease;gap:5px;padding:24px;text-align:center}
+.bpop.out{animation:fadeout .25s ease forwards}
+.bpop-kicker{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:#cc1f35}
+.bpop-ico{font-size:64px;line-height:1;margin:14px 0 6px;animation:setpop .45s cubic-bezier(.3,1.6,.6,1)}
+.bpop-name{font-family:'Syne',sans-serif;font-size:24px;font-weight:800}
+.bpop-desc{font-size:13px;color:rgba(255,255,255,.6);max-width:280px}
+.bpop-more{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.bpop-btn{margin-top:22px;min-height:46px;padding:0 34px;border:none;border-radius:12px;
+  background:#cc1f35;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bpop-btn:active{opacity:.85}
+
+/* ── COACH: client badge strip ── */
+.coach-bdg{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;
+  padding:8px 14px;border-bottom:1px solid var(--border);background:var(--bg3);font-size:11px}
+.coach-bdg-lbl{color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.7px;font-size:10px}
+.coach-bdg-ico{font-size:15px}
+.coach-bdg-run{color:#cc1f35;font-weight:700}
+.mob-coach-bdg{margin:0}
+
 /* ── HISTORY DRAWER ── */
 #history-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
 #history-backdrop.open{opacity:1;pointer-events:all}
@@ -931,6 +978,7 @@ body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0
         <div id="cmenu-panel">
           <button class="cmenu-item" onclick="cmenuGo('stats')"><span class="cmenu-ico">📊</span>Statistics</button>
           <button class="cmenu-item" onclick="cmenuGo('history')"><span class="cmenu-ico">🗂</span>History</button>
+          <button class="cmenu-item" onclick="cmenuGo('badges')"><span class="cmenu-ico">🏅</span>Achievements</button>
           <button class="cmenu-item" onclick="cmenuGo('password')"><span class="cmenu-ico">🔒</span>Password</button>
           <button class="cmenu-item" onclick="cmenuGo('logout')"><span class="cmenu-ico">↩</span>Sign out</button>
         </div>
@@ -955,6 +1003,7 @@ body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0
     </div>
 
     <div class="content-area" id="cal-content" style="display:none">
+      <div class="coach-bdg" id="coach-bdg" style="display:none"></div>
       <div class="paste-banner" id="paste-banner"></div>
       <!-- Desktop: calendar -->
       <div class="cal-day-headers">
@@ -982,6 +1031,7 @@ body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0
         <div class="cv-tb-actions">
           <button class="btn btn-ghost btn-sm" onclick="openStats()">Stats</button>
           <button class="btn btn-ghost btn-sm" onclick="openHistory()">History</button>
+          <button class="btn btn-ghost btn-sm" onclick="openBadges()">Badges</button>
         </div>
       </div>
       <div class="cv-scroll" id="cv-scroll">
@@ -1003,6 +1053,7 @@ body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0
   </div>
   <!-- Mobile: client workout list overlay (fixed, same pattern as editor overlay) -->
   <div id="mob-client-overlay" style="display:none">
+    <div class="coach-bdg mob-coach-bdg" id="coach-bdg-mob" style="display:none"></div>
     <div id="mob-coach-list"></div>
   </div>
   <!-- Mobile fullscreen editor overlay -->
@@ -1018,6 +1069,16 @@ body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0
   </div>
   <div class="hist-month-tabs" id="history-tabs"></div>
   <div class="hist-scroll" id="history-scroll"></div>
+</div>
+
+<!-- ACHIEVEMENTS DRAWER -->
+<div id="badges-backdrop" onclick="closeBadges()"></div>
+<div id="badges-drawer">
+  <div class="hist-header">
+    <div class="hist-title">Achievements</div>
+    <div class="hist-close" onclick="closeBadges()">✕</div>
+  </div>
+  <div class="bdg-scroll" id="badges-body"></div>
 </div>
 
 <!-- STATISTICS DRAWER -->
@@ -1313,6 +1374,9 @@ async function initApp(){
     cvWeekOffset=0;
     await loadClientWorkouts();
     await loadClientProfile();
+    await loadAchievements();
+    await evaluateBadges();   // silent backfill — an existing client earns several at once,
+                              // and popping them all would be a bug, not a feature
     renderClientWeek();
   }
 }
@@ -1331,11 +1395,13 @@ async function loadWorkoutsForClient(clientId){
   workoutsCache[clientId]=data||[];
 }
 let clientProfileName='';   // real name from the clients table (client role)
+let clientRowId='';         // our own clients.id (client role) — needed for achievements
 async function loadClientProfile(){
   clientProfileName='';
   try{
-    const {data}=await sb.from('clients').select('name').eq('email',currentUser.email).limit(1);
+    const {data}=await sb.from('clients').select('id,name').eq('email',currentUser.email).limit(1);
     if(data&&data[0]&&data[0].name)clientProfileName=data[0].name.trim();
+    if(data&&data[0]&&data[0].id)clientRowId=data[0].id;
   }catch{}
   if(!clientProfileName){
     // fall back to the name joined onto the client's workouts
@@ -1346,11 +1412,14 @@ async function loadClientProfile(){
 async function loadClientWorkouts(){
   // for client view — find client record by email
   const {data,error}=await sb.from('workouts')
-    .select('*, clients!inner(email,name)')
+    .select('*, clients!inner(id,email,name)')
     .eq('clients.email',currentUser.email)
     .order('date');
   if(error){console.error(error);return;}
   workoutsCache['__client__']=data||[];
+  // the client role has no selectedClientId — grab our own clients.id off the join
+  const withId=(data||[]).find(w=>w.clients&&w.clients.id);
+  if(withId)clientRowId=withId.clients.id;
 }
 
 // ══════════════════════════════════
@@ -1383,12 +1452,33 @@ function renderClientList(){
 }
 function isMobile(){return window.innerWidth<=768;}
 
+// Coach view: read-only strip of the selected client's badges. The coach never writes them.
+async function renderCoachBadges(clientId){
+  const els=['coach-bdg','coach-bdg-mob'].map(i=>document.getElementById(i)).filter(Boolean);
+  if(!els.length)return;
+  els.forEach(e=>{e.style.display='none';e.innerHTML='';});
+  try{
+    const {data}=await sb.from('achievements').select('badge_id').eq('client_id',clientId);
+    const got=new Set((data||[]).map(r=>r.badge_id));
+    const ctx=badgeCtx(workoutsCache[clientId]);
+    const icons=BADGES.filter(b=>got.has(b.id));
+    const html=`<span class="coach-bdg-lbl">Badges</span>`+
+      (icons.length
+        ? icons.map(b=>`<span class="coach-bdg-ico" title="${esc(b.name)}">${b.icon}</span>`).join('')+
+          `<span style="color:var(--muted2)">${icons.length} of ${BADGES.length}</span>`
+        : `<span style="color:var(--muted)">None yet</span>`)+
+      (ctx.currentRun>=2?`<span class="coach-bdg-run">🔥 ${ctx.currentRun} week run</span>`:'');
+    els.forEach(e=>{e.innerHTML=html;e.style.display='flex';});
+  }catch(e){console.error('coach badges',e);}
+}
+
 async function selectClient(id){
   selectedClientId=id;localStorage.setItem('lastClientId',id);cancelCopy();closeEditor();
   const p=document.getElementById('vol-tb-panel');if(p)p.style.display='none';
   renderClientList();
   hide('coach-empty');show('cal-content','flex');
   if(!workoutsCache[id])await loadWorkoutsForClient(id);
+  renderCoachBadges(id);
   if(isMobile()){
     hide('sidebar');
     hide('cal-content');
@@ -2353,6 +2443,148 @@ function cvSetStats(w){
   }));
   return{t,d};
 }
+// ══════════════════════════════════
+//  ACHIEVEMENTS
+// ══════════════════════════════════
+// One array — adding a badge later is one line, not a new branch.
+// Every check() reads the object built by badgeCtx() below.
+const BADGES=[
+  {id:'first',    grp:'Milestones',  icon:'🔰', name:'First Rep',          desc:'Complete your first workout',      check:c=>c.total>=1},
+  {id:'w10',      grp:'Milestones',  icon:'💪', name:'10 Sessions',        desc:'Complete 10 workouts',             check:c=>c.total>=10},
+  {id:'w25',      grp:'Milestones',  icon:'💪', name:'25 Sessions',        desc:'Complete 25 workouts',             check:c=>c.total>=25},
+  {id:'w50',      grp:'Milestones',  icon:'🏋️', name:'50 Sessions',  desc:'Complete 50 workouts',             check:c=>c.total>=50},
+  {id:'w100',     grp:'Milestones',  icon:'🏆', name:'100 Sessions',       desc:'Complete 100 workouts',            check:c=>c.total>=100},
+  {id:'w250',     grp:'Milestones',  icon:'👑', name:'250 Sessions',       desc:'Complete 250 workouts',            check:c=>c.total>=250},
+  {id:'fullweek', grp:'Consistency', icon:'✅', name:'Full Week',              desc:'Finish every workout in one week', check:c=>c.fullWeeks>=1},
+  {id:'run2',     grp:'Consistency', icon:'🔥', name:'Two Weeks Strong',   desc:'2 full weeks in a row',            check:c=>c.bestRun>=2},
+  {id:'run4',     grp:'Consistency', icon:'🔥', name:'Four Weeks Strong',  desc:'4 full weeks in a row',            check:c=>c.bestRun>=4},
+  {id:'run8',     grp:'Consistency', icon:'⚡', name:'Eight Weeks Strong',     desc:'8 full weeks in a row',            check:c=>c.bestRun>=8},
+  {id:'run12',    grp:'Consistency', icon:'⚡', name:'Iron Habit',             desc:'12 full weeks in a row',           check:c=>c.bestRun>=12},
+  {id:'t10',      grp:'Time',        icon:'⏱️', name:'10 Hours',         desc:'10 hours under the bar',           check:c=>c.hours>=10},
+  {id:'t25',      grp:'Time',        icon:'⏱️', name:'25 Hours',         desc:'25 hours under the bar',           check:c=>c.hours>=25},
+  {id:'t50',      grp:'Time',        icon:'⌛', name:'50 Hours',               desc:'50 hours under the bar',           check:c=>c.hours>=50},
+  {id:'t100',     grp:'Time',        icon:'🥇', name:'100 Hours',          desc:'100 hours under the bar',          check:c=>c.hours>=100},
+];
+let earnedBadges={};   // badge_id -> earned_at (client role)
+
+// Badges use `done === true`. Note this deliberately differs from statCounts()
+// (which requires a note) and histWorkouts() (done OR a note) — three predicates,
+// on purpose: `done` is the one the client actually controls.
+// Weeks are keyed on workouts.date (the coach-scheduled date) because there is no
+// completion timestamp in the schema. That also means badges work against history.
+function badgeCtx(list){
+  const all=(list||[]).filter(w=>w.date);
+  const done=all.filter(w=>w.done);
+  let secs=0;
+  done.forEach(w=>{const d=parseClientNotes(w.client_notes).dur;if(typeof d==='number'&&d>0)secs+=d;});
+
+  // group every workout by its Monday; a week is "full" if it has work and all of it is done
+  const weeks={};
+  all.forEach(w=>{
+    const mon=DS(mondayOf(new Date(w.date+'T12:00')));
+    if(mon>TODAY)return;                       // ignore weeks still ahead
+    (weeks[mon]=weeks[mon]||[]).push(w);
+  });
+  // The current week is still in progress — until it's finished it must not count
+  // as a broken week, or a client's run would vanish every Monday and come back Friday.
+  const thisMon=DS(mondayOf(new Date()));
+  const fullOf=m=>weeks[m].length>0&&weeks[m].every(w=>w.done);
+  if(weeks[thisMon]&&!fullOf(thisMon))delete weeks[thisMon];
+  const mons=Object.keys(weeks).sort();
+  const fullWeeks=mons.filter(fullOf).length;
+
+  // walk consecutive Mondays across the whole span. A week with nothing scheduled
+  // skips without breaking the run (a planned deload shouldn't kill a streak),
+  // but it doesn't extend it either.
+  let bestRun=0,currentRun=0;
+  if(mons.length){
+    let run=0;
+    for(let d=new Date(mons[0]+'T12:00');DS(d)<=mons[mons.length-1];d=addDays(d,7)){
+      const m=DS(d);
+      if(!weeks[m])continue;                   // empty week — skip, don't reset
+      if(fullOf(m)){run++;if(run>bestRun)bestRun=run;}
+      else run=0;
+    }
+    currentRun=run;                            // run ending at the last non-empty week
+  }
+  return{total:done.length,hours:secs/3600,fullWeeks,bestRun,currentRun};
+}
+
+async function loadAchievements(){
+  earnedBadges={};
+  if(!clientRowId)return;
+  try{
+    const {data}=await sb.from('achievements').select('badge_id,earned_at').eq('client_id',clientRowId);
+    (data||[]).forEach(r=>{earnedBadges[r.badge_id]=r.earned_at;});
+  }catch(e){console.error('achievements load',e);}
+}
+
+// Returns the badges earned by THIS call (empty on a no-op re-check).
+// Never throws — a badge failure must not break the workout flow.
+async function evaluateBadges(){
+  if(!clientRowId)return[];
+  try{
+    const ctx=badgeCtx(workoutsCache['__client__']);
+    const fresh=BADGES.filter(b=>!earnedBadges[b.id]&&b.check(ctx));
+    if(!fresh.length)return[];
+    const now=new Date().toISOString();
+    const {error}=await sb.from('achievements')
+      .upsert(fresh.map(b=>({client_id:clientRowId,badge_id:b.id,earned_at:now})),
+              {onConflict:'client_id,badge_id',ignoreDuplicates:true});
+    if(error){console.error('achievements save',error);return[];}
+    fresh.forEach(b=>{earnedBadges[b.id]=now;});
+    return fresh;
+  }catch(e){console.error('achievements eval',e);return[];}
+}
+
+// Full-screen "badge earned" celebration. Queues if several land at once.
+// Chained AFTER cvSplash so the client never gets two celebrations stacked.
+function badgePopup(list,onDone){
+  const queue=list.slice();
+  (function next(){
+    const b=queue.shift();
+    if(!b){if(onDone)onDone();return;}
+    const el=document.createElement('div');el.className='bpop';
+    el.innerHTML=`<div class="bpop-kicker">Achievement unlocked</div>
+      <div class="bpop-ico">${b.icon}</div>
+      <div class="bpop-name">${esc(b.name)}</div>
+      <div class="bpop-desc">${esc(b.desc)}</div>
+      ${queue.length?`<div class="bpop-more">+${queue.length} more</div>`:''}
+      <button class="bpop-btn">${queue.length?'Next':'Nice'}</button>`;
+    el.querySelector('.bpop-btn').onclick=()=>{
+      el.classList.add('out');setTimeout(()=>{el.remove();next();},250);
+    };
+    document.body.appendChild(el);
+  })();
+}
+
+function openBadges(){
+  const ctx=badgeCtx(workoutsCache['__client__']);
+  const n=BADGES.filter(b=>earnedBadges[b.id]).length;
+  const groups=['Milestones','Consistency','Time'];
+  let html=`<div class="bdg-count">${n} of ${BADGES.length} earned`+
+    (ctx.currentRun>=2?` · 🔥 ${ctx.currentRun} week run`:'')+`</div>`;
+  groups.forEach(g=>{
+    html+=`<div class="bdg-sec">${g==='Time'?'Time under the bar':esc(g)}</div><div class="bdg-grid">`+
+      BADGES.filter(b=>b.grp===g).map(b=>{
+        const at=earnedBadges[b.id];
+        const sub=at?'Earned '+new Date(at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):b.desc;
+        return `<div class="bdg ${at?'earned':'locked'}">
+          <span class="bdg-ico">${b.icon}</span>
+          <span class="bdg-name">${esc(b.name)}</span>
+          <div class="bdg-sub">${esc(sub)}</div></div>`;
+      }).join('')+`</div>`;
+  });
+  html+=`<div class="bdg-foot">Weeks run Monday to Sunday. A week counts as full when every workout your coach scheduled is done. A week with nothing scheduled won't break your run.</div>`;
+  document.getElementById('badges-body').innerHTML=html;
+  document.getElementById('badges-backdrop').classList.add('open');
+  document.getElementById('badges-drawer').classList.add('open');
+}
+function closeBadges(){
+  document.getElementById('badges-backdrop').classList.remove('open');
+  document.getElementById('badges-drawer').classList.remove('open');
+}
+
 function renderClientWeek(){
   const mon=mondayOf(addDays(new Date(),cvWeekOffset*7));
   const cap=cvWeekOffset===0?'This week':cvWeekOffset===1?'Next week':cvWeekOffset===-1?'Last week'
@@ -2382,7 +2614,9 @@ function renderClientWeek(){
     else if(next)sub=`${doneN} of ${wks.length} done · next up ${new Date(next.date+'T12:00').toLocaleDateString('en-US',{weekday:'long'})}`;
     else sub=`${doneN} of ${wks.length} done this week`;
   } else sub=`${doneN} of ${wks.length} workout${wks.length>1?'s':''} done`;
+  const run=cvWeekOffset===0?badgeCtx(all).currentRun:0;
   document.getElementById('cv-hero').innerHTML=`<div class="cv-hello">${esc(title)}</div><div class="cv-hero-sub">${esc(sub)}</div>`+
+    (run>=2?`<div class="cv-hero-sub">🔥 ${run} full weeks in a row</div>`:'')+
     (wks.length?`<div class="cv-prog"><i style="width:${Math.round(doneN/wks.length*100)}%"></i></div>`:'');
 
   // Day strip Mon–Sun
@@ -2713,6 +2947,11 @@ async function markDone(){
   if(error){notify('Error saving');return;}
   wk.done=true;wk.client_notes=JSON.stringify(cn);
   cvSplash(cn.dur);cvBack();
+  // Land the popup right as the splash clears (~1.45s), not 1.5s after the network
+  // returns — on a slow connection that would slam over whatever the client opened next.
+  const t0=Date.now();
+  const fresh=await evaluateBadges();
+  if(fresh.length)setTimeout(()=>badgePopup(fresh),Math.max(0,1500-(Date.now()-t0)));
 }
 async function markUndone(){
   const wk=(workoutsCache['__client__']||[]).find(w=>w.id===viewingWorkoutId);if(!wk)return;
@@ -2725,6 +2964,7 @@ document.addEventListener('visibilitychange',async()=>{
   if(document.visibilityState!=='visible'||currentRole!=='client'||!currentUser)return;
   await flushSetSave();
   await loadClientWorkouts();
+  await evaluateBadges();   // silent — a no-op unless something new was earned elsewhere
   if(!viewingWorkoutId)renderClientWeek();
 });
 // Swipe left/right on the week list to change weeks
@@ -2798,6 +3038,7 @@ function cmenuGo(what){
   closeClientMenu();
   if(what==='stats')openStats();
   else if(what==='history')openHistory();
+  else if(what==='badges')openBadges();
   else if(what==='password')showChangePassword();
   else if(what==='logout')doLogout();
 }

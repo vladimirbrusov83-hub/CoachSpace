@@ -5,7 +5,7 @@
 Single-page coaching platform. Coaches plan workouts on a calendar; clients log in separately, see their week, add notes, mark workouts done.
 
 - **Live:** https://coach-space.vercel.app
-- **Stack:** Single `index.html` (~2040 lines) — all CSS, HTML, JS in one file. No build step, no frameworks.
+- **Stack:** Single `index.html` (~3230 lines) — all CSS, HTML, JS in one file. No build step, no frameworks.
 - **Auth + DB:** Supabase (project: `zgmybxpaserhlgiugwpb`)
 - **Fonts:** DM Sans (body) + Syne (headings) via Google Fonts
 - **Supabase SDK:** loaded from `cdn.jsdelivr.net/npm/@supabase/supabase-js@2`
@@ -70,9 +70,41 @@ Vercel auto-deploys in ~30s. PAT is baked into the git remote — no extra auth.
   v: 2,
   overall: '',              // overall session note from client
   ex: { '0_0': '' },        // client notes keyed by "groupIdx_exIdx"
-  coach_ex: { '0_0': '' }   // coach notes per exercise
+  coach_ex: { '0_0': '' },  // coach notes per exercise
+  sets: { '0_0_0': true },  // ticked set lines, keyed "groupIdx_exIdx_lineIdx"
+  dur: 2840                 // elapsed seconds, written only by markDone()
 }
 ```
+
+### `achievements`
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | uuid PK | |
+| `client_id` | uuid | FK → clients, cascade delete |
+| `badge_id` | text | matches an `id` in the `BADGES` array in index.html |
+| `earned_at` | timestamptz | |
+
+`unique (client_id, badge_id)` — earning is an upsert with `ignoreDuplicates`, so a badge
+can never be awarded twice no matter how often `evaluateBadges()` runs.
+
+## Achievements / Badges
+
+15 badges defined in one `BADGES` array (grouped Milestones / Consistency / Time). Adding
+one is a single array entry — do not scatter conditionals.
+
+Three things to know before touching this:
+
+- **Badges use `w.done === true`.** This deliberately differs from `statCounts()` (needs a
+  note) and `histWorkouts()` (done OR a note). Three predicates, on purpose. Badge counts
+  will not match the Stats drawer, and that is not a bug.
+- **Weeks anchor on `workouts.date`, the coach-scheduled date.** There is no completion
+  timestamp in the schema. Do not add one — every historic workout would be NULL and every
+  client would see zero badges.
+- **A week with nothing scheduled skips without breaking a run** (planned deload), and the
+  *current* week never breaks a run until it's finished.
+
+`evaluateBadges()` runs silently on load and on tab refocus, and with a popup after
+`markDone()` — chained 1.5s behind `cvSplash` so celebrations never stack.
 
 ## Auth & Roles
 
