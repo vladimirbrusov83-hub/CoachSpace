@@ -286,11 +286,10 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
 .day-cell[data-col="7"] .cell-editor{left:auto;right:0}
 
 /* ── PREVIOUS SESSIONS PANEL (desktop, inside editor) ── */
-.prev-panel{position:absolute;top:0;left:calc(100% + 8px);width:290px;
+.prev-panel{position:fixed;top:0;left:0;width:290px;
   max-height:min(600px,70vh);overflow:auto;
   background:var(--bg2);border:1px solid var(--border);border-radius:8px;
   box-shadow:0 8px 32px rgba(0,0,0,.14);padding:10px 12px 12px;z-index:99}
-.prev-panel.flip-left{left:auto;right:calc(100% + 8px)}
 .prev-panel-hd{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
   letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .prev-panel-sel{width:100%;background:var(--bg3);color:var(--text);
@@ -2103,6 +2102,39 @@ async function _prevLoad(id){
   if(!sel||sel.value!==id)return; // selection changed while loading
   body.innerHTML=_prevRenderBody(wk);
 }
+// Keeps the panel pinned in view while the calendar scrolls.
+let _prevPinTick=false;
+function _prevPin(panel,prev){
+  const place=()=>{
+    if(!document.getElementById('prev-panel')||!panel.isConnected){
+      window.removeEventListener('scroll',onMove,true);
+      window.removeEventListener('resize',onMove);
+      return;
+    }
+    // .cal-scroll has overflow-x:hidden, so its edges are the real bounds
+    const sc=document.getElementById('cal-scroll');
+    const b=sc?sc.getBoundingClientRect()
+            :{top:0,bottom:window.innerHeight,left:0,right:window.innerWidth};
+    const r=panel.getBoundingClientRect();
+    const roomRight=b.right-(r.right+8), roomLeft=(r.left-8)-b.left;
+    const goLeft=roomRight<PREV_PANEL_W&&roomLeft>roomRight;
+    const left=goLeft?r.left-8-PREV_PANEL_W:r.right+8;
+    const top=Math.max(r.top,b.top+8);
+    prev.style.left=Math.round(left)+'px';
+    prev.style.top=Math.round(top)+'px';
+    prev.style.maxHeight=Math.max(120,Math.round(b.bottom-top-8))+'px';
+    // editor scrolled out of the calendar viewport → hide but keep measurable
+    prev.style.visibility=(r.bottom<b.top||r.top>b.bottom)?'hidden':'visible';
+  };
+  const onMove=()=>{
+    if(_prevPinTick)return;
+    _prevPinTick=true;
+    requestAnimationFrame(()=>{_prevPinTick=false;place();});
+  };
+  place();
+  window.addEventListener('scroll',onMove,true);
+  window.addEventListener('resize',onMove);
+}
 function _buildPrevPanel(panel,existing){
   const list=_prevSessionList();
   const prev=document.createElement('div');
@@ -2119,12 +2151,7 @@ function _buildPrevPanel(panel,existing){
       <div id="prev-panel-body"></div>`;
   }
   panel.appendChild(prev);
-  // .cal-scroll has overflow-x:hidden, so its edges are the real bounds
-  const sc=document.getElementById('cal-scroll');
-  const b=sc?sc.getBoundingClientRect():{left:0,right:window.innerWidth};
-  const r=panel.getBoundingClientRect();
-  const roomRight=b.right-(r.right+8), roomLeft=(r.left-8)-b.left;
-  if(roomRight<PREV_PANEL_W&&roomLeft>roomRight)prev.classList.add('flip-left');
+  _prevPin(panel,prev);
   if(list.length){
     const sel=prev.querySelector('#prev-panel-sel');
     sel.onchange=()=>_prevLoad(sel.value);
