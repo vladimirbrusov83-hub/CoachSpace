@@ -495,6 +495,35 @@ body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0
 @keyframes setpop{0%{transform:scale(.7)}100%{transform:scale(1)}}
 .set-txt{font-size:14px;color:var(--text);line-height:1.4;min-width:0;overflow-wrap:anywhere}
 .set-row.set-done .set-txt{color:var(--muted2);text-decoration:line-through;opacity:.6}
+/* RIR/RPE pill — margin-left:auto parks it on the right edge of the row.
+   The pill is the same width rated or not, so rows never jump as sets are rated. */
+.set-rir{flex:0 0 auto;margin-left:auto;min-width:58px;max-width:104px;min-height:44px;
+  display:flex;align-items:center;justify-content:center;padding:0;background:none;border:none;
+  cursor:pointer;-webkit-tap-highlight-color:transparent}
+.set-rir>span{display:block;width:100%;height:30px;line-height:30px;padding:0 8px;border-radius:8px;
+  background:var(--bg3);color:var(--muted2);font-size:11px;font-weight:700;letter-spacing:.3px;
+  text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.set-rir.has>span{background:rgba(37,99,235,.1);color:var(--blue);font-size:12.5px;letter-spacing:0}
+.set-row.set-done .set-rir>span{opacity:.65}
+/* Top-aligned, not centred: the input opens the iOS keyboard and a centred card
+   ends up underneath it. Sits below .cv-splash (9000). */
+.rir-back{position:fixed;inset:0;z-index:8000;background:rgba(17,17,17,.5);
+  display:flex;align-items:flex-start;justify-content:center;padding:12vh 16px 16px;animation:fadein .15s ease}
+.rir-card{width:100%;max-width:320px;background:var(--bg2);border-radius:16px;padding:16px;
+  box-shadow:0 18px 50px rgba(0,0,0,.22)}
+.rir-kick{font-size:9.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.rir-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-top:1px;line-height:1.25}
+.rir-sub{font-size:12px;color:var(--muted2);margin-top:1px;overflow-wrap:anywhere}
+.rir-card input{margin-top:11px;text-align:center;font-size:18px;font-weight:700;padding:10px;border-radius:9px}
+.rir-hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+.rir-btns{display:flex;align-items:center;gap:8px;margin-top:13px}
+.rir-btns button{min-height:42px;border-radius:999px;border:none;padding:0 15px;font-size:13px;
+  font-family:'DM Sans',sans-serif;cursor:pointer;background:none;color:var(--muted2)}
+.rir-btns .rir-ok{margin-left:auto;background:var(--blue);color:#fff;font-weight:700;padding:0 20px}
+/* Coach-side: the rating sits on the prescribed set line it belongs to. */
+.rir-tag{display:inline-block;margin-left:5px;padding:0 4px;border-radius:3px;
+  background:rgba(37,99,235,.1);color:var(--blue);font-weight:700}
+.ed-note-rir{color:var(--blue);background:rgba(37,99,235,.06);border-left-color:var(--blue)}
 .cex-note-wrap{margin-top:4px;border-top:1px solid var(--bg3);padding-top:4px}
 .cex-note-lbl{display:block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted2);margin-top:6px}
 .cex-note-wrap textarea{display:block;min-height:44px;font-size:16px;border-radius:9px;background:var(--bg3);margin:4px 0 6px}
@@ -1699,7 +1728,8 @@ function buildWorkoutBlock(wk,ds){
       const clientNote=cn.ex&&cn.ex[key];
       const coachNote=cn.coach_ex&&cn.coach_ex[key];
       gd.innerHTML+=`<div class="ex-line-preview"><b>${lbl}) ${esc(ex.name)}</b></div>
-        ${lines.map(l=>`<div class="ex-free-preview">${esc(l)}</div>`).join('')}
+        ${lines.map((l,li)=>{const rv=(cn.rir||{})[`${gi}_${ei}_${li}`]||'';
+          return `<div class="ex-free-preview">${esc(l)}${rv?`<span class="rir-tag">${esc(rv)}</span>`:''}</div>`;}).join('')}
         ${clientNote?`<div class="preview-note preview-note-client">👤 ${esc(clientNote)}</div>`:''}
         ${coachNote?`<div class="preview-note preview-note-coach">📝 ${esc(coachNote)}</div>`:''}`;
     });
@@ -2020,6 +2050,16 @@ function _buildEditorContent(panel,existing){
           if(item){
             const clientNote=(cn.ex||{})[`${gi}_${ei}`];
             const coachNote=(cn.coach_ex||{})[`${gi}_${ei}`];
+            const rirs=Object.entries(cn.rir||{})
+              .filter(([k,v])=>k.startsWith(`${gi}_${ei}_`)&&(v||'').trim())
+              .map(([k,v])=>[parseInt(k.split('_')[2],10),v])
+              .sort((a,b)=>a[0]-b[0]);
+            if(rirs.length){
+              const nd=document.createElement('div');
+              nd.className='ed-note-display ed-note-rir';
+              nd.textContent='\u26A1 '+rirs.map(([i,v])=>`S${i+1} ${v}`).join(' \u00B7 ');
+              item.appendChild(nd);
+            }
             if(clientNote){
               const nd=document.createElement('div');
               nd.className='ed-note-display ed-note-client';
@@ -2082,7 +2122,8 @@ function _prevRenderBody(wk){
       const clientNote=cn.ex&&cn.ex[key];
       const coachNote=cn.coach_ex&&cn.coach_ex[key];
       gh+=`<div class="ex-line-preview"><b>${lbl}) ${esc(ex.name)}</b></div>
-        ${lines.map(l=>`<div class="ex-free-preview">${esc(l)}</div>`).join('')}
+        ${lines.map((l,li)=>{const rv=(cn.rir||{})[`${gi}_${ei}_${li}`]||'';
+          return `<div class="ex-free-preview">${esc(l)}${rv?`<span class="rir-tag">${esc(rv)}</span>`:''}</div>`;}).join('')}
         ${clientNote?`<div class="preview-note preview-note-client">\u{1F464} ${esc(clientNote)}</div>`:''}
         ${coachNote?`<div class="preview-note preview-note-coach">\u{1F4DD} ${esc(coachNote)}</div>`:''}`;
     });
@@ -2730,8 +2771,13 @@ function cvOpen(wid){
         <div class="cex-hd"><span class="cex-lbl">${lbl}</span><div class="cex-name">${esc(ex.name)}</div>
           ${setLines.length?`<span class="cex-cnt" id="cex-cnt-${gi}-${ei}">${dn}/${setLines.length}</span>`:''}</div>
         ${coachEx.trim()?`<div class="cex-coach"><b>Coach</b>${esc(coachEx)}</div>`:''}
-        ${setLines.map((l,li)=>`<div class="set-row${setsDone[`${gi}_${ei}_${li}`]?' set-done':''}" onclick="cvToggleSet(this,${gi},${ei},${li})">
-          <span class="set-box">✓</span><span class="set-txt">${esc(l)}</span></div>`).join('')}
+        ${setLines.map((l,li)=>{const rv=(cn.rir||{})[`${gi}_${ei}_${li}`]||'';
+          return `<div class="set-row${setsDone[`${gi}_${ei}_${li}`]?' set-done':''}" onclick="cvToggleSet(this,${gi},${ei},${li})">
+          <span class="set-box">✓</span><span class="set-txt">${esc(l)}</span>
+          <button type="button" class="set-rir${rv?' has':''}" id="rir-${gi}-${ei}-${li}"
+            aria-label="${esc(ex.name)}, set ${li+1}: ${rv?'rated '+esc(rv)+'. Change':'rate RIR or RPE'}"
+            onclick="event.stopPropagation();rirOpen(${gi},${ei},${li})"><span>${rv?esc(rv):'RIR'}</span></button>
+        </div>`;}).join('')}
         <div class="cex-note-wrap" id="cex-note-wrap-${gi}-${ei}">
           <div class="cex-note-lbl">Your note</div>
           <textarea id="ex-note-${gi}-${ei}" placeholder="Weight used, how it felt, any pain…">${esc(saved)}</textarea>
@@ -2826,6 +2872,7 @@ async function saveExNote(gi,ei,wid){
   // Keep set checks / duration the client just recorded — the DB copy may predate them
   const local=parseClientNotes(wk.client_notes);
   cn.sets=local.sets||cn.sets;
+  cn.rir=local.rir||cn.rir;
   cn.dur=local.dur??cn.dur;
   const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
   if(error){notify('Error saving note');return;}
@@ -2851,6 +2898,7 @@ async function saveOverallNote(wid){
   // Keep set checks / duration the client just recorded — the DB copy may predate them
   const local=parseClientNotes(wk.client_notes);
   cn.sets=local.sets||cn.sets;
+  cn.rir=local.rir||cn.rir;
   cn.dur=local.dur??cn.dur;
   const {error}=await sb.from('workouts').update({client_notes:JSON.stringify(cn)}).eq('id',wk.id);
   if(error){notify('Error saving note');return;}
@@ -2959,6 +3007,67 @@ async function flushSetSave(){
   const wk=(workoutsCache['__client__']||[]).find(w=>w.id===wid);if(!wk)return;
   const {error}=await sb.from('workouts').update({client_notes:wk.client_notes}).eq('id',wid);
   if(error)notify('Error saving sets');
+}
+
+// ── Per-set RIR/RPE (client, phone) ──
+// Free text on purpose: "2", "RIR 2", "@8", "8-9" all have to survive being typed.
+// Nothing parses it — the coach reads it, that's all.
+// Writes ride flushSetSave, the same single writer as the ticks: a separate
+// fetch-then-merge save would not see un-flushed ticks and would drop them.
+let rirOn=null; // {gi,ei,li} of the open dialog, or null
+function rirOpen(gi,ei,li){
+  const wk=(workoutsCache['__client__']||[]).find(w=>w.id===viewingWorkoutId);if(!wk)return;
+  const cn=parseClientNotes(wk.client_notes);
+  const cur=(cn.rir||{})[`${gi}_${ei}_${li}`]||'';
+  const ex=((wk.groups||[])[gi]||{}).exercises||[];
+  const name=(ex[ei]||{}).name||'Exercise';
+  const line=((ex[ei]||{}).freeText||'').split('\n').filter(l=>l.trim())[li]||'';
+  rirOn={gi,ei,li};
+  const back=document.createElement('div');back.className='rir-back';back.id='rir-back';
+  back.innerHTML=`<div class="rir-card">
+      <div class="rir-kick">How did it feel?</div>
+      <div class="rir-name">${esc(name)}</div>
+      <div class="rir-sub">Set ${li+1}${line?' · '+esc(line):''}</div>
+      <input type="text" id="rir-input" maxlength="24" inputmode="decimal" autocomplete="off"
+        placeholder="RIR 2 · @8" aria-label="RIR or RPE" value="${esc(cur)}">
+      <div class="rir-hint">Reps in reserve, RPE, anything — saved exactly as you type it.</div>
+      <div class="rir-btns">
+        ${cur?'<button type="button" onclick="rirSave(\'\')">Clear</button>':''}
+        <button type="button" onclick="rirClose()" style="margin-left:auto">Cancel</button>
+        <button type="button" class="rir-ok" onclick="rirSave()">Save</button>
+      </div></div>`;
+  // Backdrop taps close; taps inside the card must not bubble out to it.
+  back.addEventListener('click',e=>{if(e.target===back)rirClose();});
+  document.body.appendChild(back);
+  const inp=document.getElementById('rir-input');
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();rirSave();}
+    else if(e.key==='Escape'){e.preventDefault();rirClose();}
+  });
+  inp.focus();inp.select();
+}
+function rirClose(){
+  const b=document.getElementById('rir-back');if(b)b.remove();
+  rirOn=null;
+}
+function rirSave(forced){
+  if(!rirOn)return;
+  const {gi,ei,li}=rirOn;
+  const inp=document.getElementById('rir-input');
+  const val=(forced!==undefined?forced:(inp?inp.value:'')).trim();
+  const wk=(workoutsCache['__client__']||[]).find(w=>w.id===viewingWorkoutId);
+  if(!wk){rirClose();return;}
+  const cn=parseClientNotes(wk.client_notes);
+  cn.v=2;cn.rir=cn.rir||{};
+  const key=`${gi}_${ei}_${li}`;
+  if(val)cn.rir[key]=val;else delete cn.rir[key];
+  wk.client_notes=JSON.stringify(cn);
+  const btn=document.getElementById(`rir-${gi}-${ei}-${li}`);
+  if(btn){btn.classList.toggle('has',!!val);btn.querySelector('span').textContent=val||'RIR';}
+  rirClose();
+  setSavePending=wk.id;
+  clearTimeout(setSaveTimer);
+  setSaveTimer=setTimeout(flushSetSave,700);
 }
 
 async function markDone(){

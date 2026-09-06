@@ -72,6 +72,7 @@ Vercel auto-deploys in ~30s. PAT is baked into the git remote — no extra auth.
   ex: { '0_0': '' },        // client notes keyed by "groupIdx_exIdx"
   coach_ex: { '0_0': '' },  // coach notes per exercise
   sets: { '0_0_0': true },  // ticked set lines, keyed "groupIdx_exIdx_lineIdx"
+  rir: { '0_0_0': 'RIR 2' },// client's RIR/RPE per set line, same key as `sets`
   dur: 2840                 // elapsed seconds, written only by markDone()
 }
 ```
@@ -161,6 +162,12 @@ calGridBuilt      // bool, prevents rebuilding DOM calendar
 - **Calendar** is built once (`calGridBuilt` flag): 3 months back, 12 months forward. Re-built only on client switch.
 - **Editor** is inline in the day cell; on mobile it's a fullscreen overlay. Column 5–7 flips it left.
 - **Delete undo**: optimistic delete from cache + 5s timeout before actual DB delete. Undo restores from `undoData`.
+- **RIR/RPE per set**: pill button on the right of each client set row opens a small dialog
+  (`rirOpen`/`rirSave`). Free text on purpose — "2", "RIR 2", "@8" all survive; nothing parses it.
+  Writes ride the ticks' debounced writer (`setSavePending`/`flushSetSave`), never a fetch-then-merge
+  save, or a pending tick would be dropped. Coach sees it inline on the set line in the calendar block
+  and previous-sessions panel, and as a summary row (`⚡ S1 RIR 2 · S3 @8`) under each exercise in the
+  editor — `freeText` is one raw textarea there, so per-line is impossible.
 - **Volume tracker**: draggable floating panel, position saved to `localStorage`. Keys: `vol_{clientId}_{monDate}`.
 - **Exercise autocomplete**: fuzzy match against `EXERCISE_DB` constant (~130 exercises, 12 groups) defined around line 801.
 - **Mobile breakpoint**: `window.innerWidth <= 768`.
