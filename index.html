@@ -3028,7 +3028,7 @@ function rirOpen(gi,ei,li){
       <div class="rir-kick">How did it feel?</div>
       <div class="rir-name">${esc(name)}</div>
       <div class="rir-sub">Set ${li+1}${line?' · '+esc(line):''}</div>
-      <input type="text" id="rir-input" maxlength="24" inputmode="decimal" autocomplete="off"
+      <input type="text" id="rir-input" maxlength="24" inputmode="text" enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
         placeholder="RIR 2 · @8" aria-label="RIR or RPE" value="${esc(cur)}">
       <div class="rir-hint">Reps in reserve, RPE, anything — saved exactly as you type it.</div>
       <div class="rir-btns">
