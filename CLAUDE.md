@@ -25,6 +25,7 @@ Vercel auto-deploys in ~30s. PAT is baked into the git remote — no extra auth.
 - **CSP is on line 8.** Any new external resource (CDN, API endpoint) must be added to the `<meta http-equiv="Content-Security-Policy">` tag or the browser will block it.
 - **Don't refactor for its own sake.** Fix what's asked, leave everything else alone.
 - **No TypeScript, no modules, no imports.** Everything is inline script tags.
+- **PWA files are the one exception to single-file** (Sep 2026, asked for): `manifest.webmanifest`, `sw.js`, `icons/`. `sw.js` is navigation-only and **caches nothing on purpose** — it only swaps the browser error page for a "No connection" screen. A caching worker would serve stale workouts; don't add one. Registered by the last `<script>` in `index.html`.
 
 ## Database Schema
 
