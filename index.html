@@ -3214,10 +3214,11 @@ document.addEventListener('click',e=>{
   if(w&&!w.contains(e.target))closeClientMenu();
 });
 // Light/dark is a per-device client choice (localStorage cs_theme); dark is the default.
-// Coaches always get dark — the toggle only exists in the client UI.
+// Coaches have no toggle: light on a laptop (the calendar), dark on a phone.
 function applyTheme(){
   let light=false;
   if(currentRole==='client'){try{light=localStorage.getItem('cs_theme')==='light'}catch(e){}}
+  else if(currentRole==='coach')light=!isMobile();
   if(light)document.documentElement.dataset.theme='light';
   else delete document.documentElement.dataset.theme;
   const meta=document.querySelector('meta[name="theme-color"]');
