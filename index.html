@@ -736,8 +736,7 @@ body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0
   .app-body{overflow-x:hidden}
 
   /* Topbar: fixed so nothing can push it off screen */
-  .topbar{position:fixed;top:0;left:0;right:0;width:100%;box-sizing:border-box;z-index:200;
-    height:calc(48px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top)}
+  .topbar{position:fixed;top:env(safe-area-inset-top);left:0;right:0;width:100%;box-sizing:border-box;z-index:200}
   .safe-area-top{height:env(safe-area-inset-top)}
   #app{padding-top:48px}
   .topbar-center,#cal-nav-bar{display:none!important}
@@ -868,7 +867,7 @@ body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0
 
   /* Small phone (320px) safety */
   @media(max-width:375px){
-    .topbar{padding:env(safe-area-inset-top) 10px 0;gap:6px}
+    .topbar{padding:0 10px;gap:6px}
     .topbar-logo-name{font-size:12px}
   }
 }
