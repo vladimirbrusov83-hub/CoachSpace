@@ -7,7 +7,8 @@ Single-page coaching platform. Coaches plan workouts on a calendar; clients log 
 - **Live:** https://coach-space.vercel.app
 - **Stack:** Single `index.html` (~3230 lines) — all CSS, HTML, JS in one file. No build step, no frameworks.
 - **Auth + DB:** Supabase (project: `zgmybxpaserhlgiugwpb`)
-- **Fonts:** DM Sans (body) + Syne (headings) via Google Fonts
+- **Look:** IronLog design (Oct 2026) — Barlow (body) + Barlow Condensed (display) via Google Fonts, orange accent on near-black. Every colour is a token in the two `:root` blocks at the top of `<style>`; the brand colour is `--accent` alone. Login screen is always dark (hardcoded on purpose).
+- **Theme:** dark by default. Clients can switch to light (menu → Light mode, desktop: topbar button); stored per device in `cs_theme`, applied pre-paint by a `<head>` script and by `applyTheme()`. Coaches are always dark.
 - **Supabase SDK:** loaded from `cdn.jsdelivr.net/npm/@supabase/supabase-js@2`
 
 ## How to Deploy
@@ -180,6 +181,7 @@ calGridBuilt      // bool, prevents rebuilding DOM calendar
 | `lastClientId` | UUID — last selected client (coach desktop) |
 | `vol_{clientId}_{monDate}` | JSON — manual volume sets per muscle |
 | `vol_panel_pos` | JSON `{top, left}` — volume panel position |
+| `cs_theme` | `'light'` \| `'dark'` — client's theme choice (ignored for coaches) |
 
 ## CSP (line 8)
 
