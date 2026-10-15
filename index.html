@@ -988,6 +988,19 @@ body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0
 </div>
 
 <!-- CHANGE PASSWORD MODAL -->
+<div id="a2hs-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;align-items:center;justify-content:center" onclick="if(event.target===this)hideA2hs()">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:380px;margin:0 16px;padding:24px">
+    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;font-family:var(--font-display)">Add to Home Screen</div>
+    <div style="font-size:13px;color:var(--muted2);margin-bottom:16px">Open your workouts like an app, one tap from your phone.</div>
+    <ol style="margin:0 0 16px 18px;padding:0;font-size:14px;line-height:1.7;color:var(--text)">
+      <li>Tap the <b>Share</b> button (square with an arrow) in your browser</li>
+      <li>Scroll down and tap <b>Add to Home Screen</b></li>
+      <li>Tap <b>Add</b></li>
+    </ol>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:18px">On Android: tap the <b>⋮</b> menu, then <b>Add to Home screen</b> (or <b>Install app</b>).</div>
+    <button class="btn btn-accent" style="width:100%" onclick="hideA2hs()">Got it</button>
+  </div>
+</div>
 <div id="change-pw-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;align-items:center;justify-content:center">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:380px;margin:0 16px;padding:28px 24px">
     <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;font-family:var(--font-display)">Change Password</div>
@@ -1047,6 +1060,7 @@ body.kb-open #client-view.detail-open .cv-scroll{padding-bottom:calc(var(--kb, 0
           <button class="cmenu-item" onclick="cmenuGo('history')"><span class="cmenu-ico">🗂</span>History</button>
           <button class="cmenu-item" onclick="cmenuGo('badges')"><span class="cmenu-ico">🏅</span>Achievements</button>
           <button class="cmenu-item" onclick="cmenuGo('theme')"><span class="cmenu-ico" id="cmenu-theme-ico">☀️</span><span id="cmenu-theme-lbl">Light mode</span></button>
+          <button class="cmenu-item" id="cmenu-a2hs" onclick="cmenuGo('a2hs')"><span class="cmenu-ico">📲</span>Add to Home Screen</button>
           <button class="cmenu-item" onclick="cmenuGo('password')"><span class="cmenu-ico">🔒</span>Password</button>
           <button class="cmenu-item" onclick="cmenuGo('logout')"><span class="cmenu-ico">↩</span>Sign out</button>
         </div>
@@ -1376,6 +1390,19 @@ async function doSetNewPassword(){
 // ══════════════════════════════════
 //  CHANGE PASSWORD (in-app)
 // ══════════════════════════════════
+// Add-to-Home-Screen hint: auto-popup at most twice per device (cs_a2hs_n), never once installed.
+function isStandalone(){return window.navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);}
+function showA2hs(){document.getElementById('a2hs-modal').style.display='flex';}
+function hideA2hs(){document.getElementById('a2hs-modal').style.display='none';}
+function maybeShowA2hs(){
+  const item=document.getElementById('cmenu-a2hs');
+  if(isStandalone()){if(item)item.style.display='none';return;}
+  if(!isMobile())return;
+  let n=0;try{n=parseInt(localStorage.getItem('cs_a2hs_n')||'0',10)||0}catch(e){}
+  if(n>=2)return;
+  try{localStorage.setItem('cs_a2hs_n',String(n+1))}catch(e){return;}
+  setTimeout(showA2hs,1500);
+}
 function showChangePassword(){
   document.getElementById('change-pw-input').value='';
   document.getElementById('change-pw-err').style.display='none';
@@ -1449,6 +1476,7 @@ async function initApp(){
     await evaluateBadges();   // silent backfill — an existing client earns several at once,
                               // and popping them all would be a bug, not a feature
     renderClientWeek();
+    maybeShowA2hs();
   }
 }
 
@@ -3239,6 +3267,7 @@ function cmenuGo(what){
   else if(what==='history')openHistory();
   else if(what==='badges')openBadges();
   else if(what==='theme')toggleTheme();
+  else if(what==='a2hs')showA2hs();
   else if(what==='password')showChangePassword();
   else if(what==='logout')doLogout();
 }
