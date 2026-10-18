@@ -170,7 +170,7 @@ calGridBuilt      // bool, prevents rebuilding DOM calendar
   save, or a pending tick would be dropped. Coach sees it inline on the set line in the calendar block
   and previous-sessions panel, and as a summary row (`⚡ S1 RIR 2 · S3 @8`) under each exercise in the
   editor — `freeText` is one raw textarea there, so per-line is impossible.
-- **Volume tracker**: draggable floating panel, position saved to `localStorage`. Keys: `vol_{clientId}_{monDate}`.
+- **Volume tracker**: draggable floating panel, position saved to `localStorage`. Sets per muscle are counted automatically from the week's workouts (`countPlannedSets` + `classifyMuscle`: exact `EXERCISE_DB` match, then ordered keyword rules `VOL_RULES`). A line with `*reps` = 1 set, `4 sets…`/`3 to failure` = N, `3x5` = 3; note lines don't count. Exercises it can't place show under "Not counted". +/− is a per-week adjustment on top, key `voladj_{clientId}_{monDate}`. Old `vol_…` keys (hand totals) are ignored.
 - **Exercise autocomplete**: fuzzy match against `EXERCISE_DB` constant (~130 exercises, 12 groups) defined around line 801.
 - **Mobile breakpoint**: `window.innerWidth <= 768`.
 
@@ -179,7 +179,7 @@ calGridBuilt      // bool, prevents rebuilding DOM calendar
 | Key | Value |
 |-----|-------|
 | `lastClientId` | UUID — last selected client (coach desktop) |
-| `vol_{clientId}_{monDate}` | JSON — manual volume sets per muscle |
+| `voladj_{clientId}_{monDate}` | JSON — +/− adjustment per muscle on top of the auto count |
 | `vol_panel_pos` | JSON `{top, left}` — volume panel position |
 | `cs_theme` | `'light'` \| `'dark'` — client's theme choice (ignored for coaches) |
 

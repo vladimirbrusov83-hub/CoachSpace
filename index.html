@@ -193,6 +193,7 @@ label{display:block;font-size:10px;font-weight:700;color:var(--muted2);text-tran
   padding:0;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle}
 .vol-adj-btn:hover{background:var(--bg5);color:var(--text)}
 .vol-manual-badge{font-size:9px;color:var(--blue);font-weight:700;margin:0 2px;vertical-align:middle}
+.vol-skipped{margin-top:8px;max-width:220px;font-size:10px;line-height:1.4;color:var(--muted)}
 
 /* ── SHELL ── */
 #app{display:none;height:100vh;height:100dvh;flex-direction:column}
@@ -1205,6 +1206,7 @@ let currentUser=null, currentRole='client', selectedClientId=null;
 let clientsCache=[], workoutsCache={};
 let copyState=null;
 let editorDate=null, editorWorkoutId=null;
+let volAuto={};  // last auto set counts per muscle, for clamping +/−
 let viewingWorkoutId=null;
 let undoTimer=null, undoData=null;
 let cvWeekOffset=0;
@@ -1927,11 +1929,12 @@ function doUndo(){
 // ══════════════════════════════════
 //  VOLUME PANEL HELPERS
 // ══════════════════════════════════
-const DISPLAY_MUSCLES=['Chest','Back','Quads','Hamstrings','Biceps','Triceps','Shoulders'];
+const DISPLAY_MUSCLES=['Chest','Back','Shoulders','Biceps','Triceps','Quads','Hamstrings','Glutes','Calves'];
 const MUSCLE_MAP={
   'Chest':'Chest','Back':'Back','Shoulders':'Shoulders',
   'Biceps':'Biceps','Triceps':'Triceps',
-  'Legs — Quads':'Quads','Legs — Hamstrings':'Hamstrings'
+  'Legs — Quads':'Quads','Legs — Hamstrings':'Hamstrings',
+  'Legs — Glutes':'Glutes','Calves':'Calves'
 };
 function getMuscleGroup(name){
   if(!name)return null;
@@ -1948,6 +1951,38 @@ function getMuscleDisplay(name){
 function countSetsFromText(freeText){
   return(freeText||'').split('\n').filter(l=>l.trim()).length;
 }
+// Planned working sets in one exercise's text.
+// Any line with "*reps" (95*10, b*10, bw*15, 42.5*8-12) = 1 set; "4 sets…" / "3x5" = N sets; note lines don't count.
+function countPlannedSets(freeText){
+  let lines=0,declared=0;
+  (freeText||'').split('\n').forEach(raw=>{
+    const l=raw.trim().toLowerCase();
+    if(!l)return;
+    const m=l.match(/^(\d{1,2})\s*(x\s*\d|sets?\b|by\b|to\b)/);   // "3x5" / "4 sets…" / "4 by 12" / "3 to failure"
+    if(m&&+m[1]<=10){if(m[2][0]==='x')lines+=+m[1];else declared=Math.max(declared,+m[1]);return;}
+    if(/\*\W*\d/.test(l)||/^(?:bw|b|bar|\d+(?:[.,]\d+)?)\s*(?:kg|lbs?)?\s*[×x]\s*\d/.test(l))lines++;  // weight*reps
+  });
+  return lines+declared;
+}
+// Ordered: specific names before general words ("leg curl" before "curl").
+const VOL_RULES=[
+  ['Hamstrings',/leg curl|ham(string)? curl|nordic|glute[- ]?ham|romanian|\brdl|stiff|good ?morning/],
+  ['Glutes',/hip th?rust|glute|bridge|abduct|clamshell|cable kickback|sumo/],
+  ['Calves',/calf|calves|tibialis/],
+  ['Shoulders',/military|overhead press|\bohp|shoulder|arnold|lateral|front raise|rear delt|face ?pull|upright|landmine press|push press|delt/],
+  ['Triceps',/tricep|pushdown|push-down|skull|kickback|close[- ]grip|jm press|french press/],
+  ['Biceps',/curl|bicep|hammer/],
+  ['Quads',/squat|leg press|lunge|step[- ]?up|legs? ext|hack|sissy|split|slit|\bsq\b/],
+  ['Back',/pull[- ]?up|\bchin|pulldown|pull-down|\brow\b|rows\b|deadlift|\bdl\b|rack pull|hyperext|back ext|lat\b|lats\b|pullover|shrug/],
+  ['Chest',/bench|chest|incline|decline|fly|flye|push[- ]?up|dip|pec/],
+];
+function classifyMuscle(name){
+  const g=getMuscleGroup(name);
+  if(g&&MUSCLE_MAP[g])return MUSCLE_MAP[g];
+  const l=(name||'').toLowerCase();
+  for(const[m,re]of VOL_RULES)if(re.test(l))return m;
+  return null;
+}
 function getWeekRange(ds){
   const d=new Date(ds+'T12:00');
   const day=d.getDay();
@@ -1956,14 +1991,14 @@ function getWeekRange(ds){
   const sun=new Date(mon);sun.setDate(mon.getDate()+6);
   return{mon:mon.toISOString().slice(0,10),sun:sun.toISOString().slice(0,10)};
 }
-function getVolManualKey(mon){return`vol_${selectedClientId}_${mon}`;}
+function getVolManualKey(mon){return`voladj_${selectedClientId}_${mon}`;}  // +/- on top of the auto count (old vol_ keys were hand totals)
 function getVolManual(mon){try{return JSON.parse(localStorage.getItem(getVolManualKey(mon))||'{}')}catch{return{};}}
 function setVolManual(mon,adj){localStorage.setItem(getVolManualKey(mon),JSON.stringify(adj));}
 function adjustManualSets(muscle,delta){
   const ref=editorDate||TODAY;
   const{mon}=getWeekRange(ref);
   const adj=getVolManual(mon);
-  adj[muscle]=Math.max(0,(adj[muscle]||0)+delta);
+  adj[muscle]=Math.max(-(volAuto[muscle]||0),(adj[muscle]||0)+delta);
   setVolManual(mon,adj);
   renderVolTopbar();
 }
@@ -2016,14 +2051,25 @@ function renderVolTopbar(){
     rangeEl.textContent=fmt(mon)+' – '+fmt(sun);
   }
 
+  // Auto count: planned sets from this week's workouts, by muscle
+  const auto={},skipped=[];
+  (workoutsCache[selectedClientId]||[]).filter(w=>w.date>=mon&&w.date<=sun).forEach(w=>{
+    (w.groups||[]).forEach(g=>(g.exercises||[]).forEach(ex=>{
+      if(!(ex.name||'').trim())return;
+      const m=classifyMuscle(ex.name),n=countPlannedSets(ex.freeText);
+      if(m&&n)auto[m]=(auto[m]||0)+n;
+      else skipped.push(esc(ex.name.trim())+(m?' <span class="vol-unknown">no sets</span>':''));
+    }));
+  });
+  volAuto=auto;
   const adj=getVolManual(mon);
   let html='<table class="vol-table"><thead><tr><th>Muscle</th><th>Sets</th><th></th></tr></thead><tbody>';
   DISPLAY_MUSCLES.forEach(muscle=>{
-    const sets=adj[muscle]||0;
+    const a=adj[muscle]||0,sets=Math.max(0,(auto[muscle]||0)+a);
     const cls=sets>=20?'vol-hi':sets>=10?'vol-ok':sets>0?'vol-lo':'';
     html+=`<tr>
       <td>${muscle}</td>
-      <td class="${cls}" style="font-weight:600">${sets||'—'}</td>
+      <td class="${cls}" style="font-weight:600">${sets||'—'}${a?`<span class="vol-manual-badge" title="Your +/− adjustment">${a>0?'+':''}${a}</span>`:''}</td>
       <td class="vol-adj">
         <button class="vol-adj-btn" onclick="event.stopPropagation();adjustManualSets('${muscle}',-1)">−</button>
         <button class="vol-adj-btn" onclick="event.stopPropagation();adjustManualSets('${muscle}',1)">+</button>
@@ -2031,6 +2077,7 @@ function renderVolTopbar(){
     </tr>`;
   });
   html+='</tbody></table>';
+  if(skipped.length)html+=`<div class="vol-skipped">Not counted: ${[...new Set(skipped)].join(', ')}</div>`;
   body.innerHTML=html;
 }
 
@@ -2559,6 +2606,7 @@ function refreshDay(ds){
   [...cell.querySelectorAll('.workout-block,.cell-editor')].forEach(b=>b.remove());
   const wks=workoutsCache[selectedClientId]||[];
   wks.filter(w=>w.date===ds).forEach(wk=>cell.appendChild(buildWorkoutBlock(wk,ds)));
+  if(document.getElementById('vol-tb-panel')?.style.display!=='none')renderVolTopbar();
 }
 
 // ══════════════════════════════════
